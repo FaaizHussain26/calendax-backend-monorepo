@@ -4,7 +4,7 @@ import { OtpService } from "./services/otp.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { OTP } from "./database/otp.entity";
 import { ConfigModule} from "@nestjs/config";
-import { EmailService } from "../utils/commonservices/email.service";
+import { EmailService } from "../utils/mailers/email.service";
 import { UserModule } from "../user/user.module";
 
 const Services = [OtpService, EmailService]

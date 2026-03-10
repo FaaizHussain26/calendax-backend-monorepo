@@ -4,9 +4,10 @@ import { UserController } from "./controllers/user.controller";
 import { UserRepository } from "./repositories/user.repository";
 import { UserService } from "./services/user.service";
 import { Module } from "@nestjs/common";
+import { HashingService } from "../utils/commonservices/hashing.service";
 
 const controllers = [UserController];
-const services = [UserService];
+const services = [UserService, HashingService];
 const repositories = [UserRepository];
 
 @Module({

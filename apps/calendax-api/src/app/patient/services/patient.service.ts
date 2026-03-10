@@ -14,6 +14,9 @@ import { PatientAlreadyExistsException } from "../../utils/exceptions/patient-al
 import { validatePositiveIntegerId } from "../../utils/commonErrors/permission-id.error";
 import { BadRequestException } from "../../utils/exceptions/common.exceptions";
 import { DataSource } from "typeorm";
+import { UpdatePatientDto } from "../dtos/update-patient-response-status.dto";
+import { Patient } from "../database/patient.entity";
+import { EmailService } from "../../utils/mailers/email.service";
 
 @Injectable()
 export class PatientService {
@@ -23,6 +26,7 @@ export class PatientService {
         private readonly userService: UserService,
         private readonly DBError: HandleDBError,
         private readonly dataSource: DataSource,
+        private readonly emailService: EmailService
     ) {}
 
     async getPatients(
@@ -67,7 +71,7 @@ export class PatientService {
 
     public async createPatient(patient: CreatePatientRequestDto): Promise<PatientResponseDto> {
         if(!patient || !patient.user) {
-            throw new BadRequestException('Invlid Patient Data');
+            throw new BadRequestException('Inva lid Patient Data');
         }
         try {
             const result = await this.dataSource.transaction(async (manager) => {
@@ -98,6 +102,37 @@ export class PatientService {
         }catch (error) {
             return this.DBError.handleDBError(error, new UserExistsException(error.message));
         }
+    }
+
+    public async updatePatientStatus(
+        id: number,
+        payload: UpdatePatientDto,
+    ): Promise<Patient> {
+        validatePositiveIntegerId(id, 'Patient ID');
+        const existingPatient = await this.patientRepository.getById(id);
+        if(!existingPatient) {
+            throw new NotFoundException("Patient not found");
+        }
+        existingPatient.isActive = payload.isActive ?? existingPatient.isActive;
+        existingPatient.status = payload?.status ?? existingPatient.status;
+
+        const updatedPatient = await this.patientRepository.update(
+            id,
+            existingPatient,
+        );
+        if(updatedPatient.status) {
+            await this.emailService.sendDynamicEmail({
+                toEmail: existingPatient.user.email,
+                data: {
+                    recipient_name:
+                    existingPatient.user.firstName +
+                    " " +
+                    existingPatient.user.lastName,
+                    profile_url: existingPatient.id.toString(),
+                },
+            });
+        }
+        return updatedPatient;
     }
 
     public async delete(id: number) {

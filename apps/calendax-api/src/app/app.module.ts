@@ -13,6 +13,10 @@ import { SiteModule } from './site/site.module';
 import { PermissionModule } from './permission/permission.module';
 import { RoleModule } from './roles/role.module';
 import { PermissionGroupModule } from './permission-group/permission-group.module';
+import { PatientSiteModule } from './patient-site/patient-site.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AppMailerModule } from './utils/mailers/email.module';
+import { LeadsModule } from './leads/lead.module';
 
 @Module({
   imports: [
@@ -28,6 +32,15 @@ import { PermissionGroupModule } from './permission-group/permission-group.modul
     PermissionModule,
     RoleModule,
     PermissionGroupModule,
+    PatientSiteModule,
+    AppMailerModule,
+    LeadsModule,
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+      uri: config.get<string>('MONGODB_URI'),
+      }),
+    }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({

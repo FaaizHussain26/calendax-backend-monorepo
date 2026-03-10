@@ -1,5 +1,5 @@
 import { Column, Entity, OneToMany } from "typeorm";
-import { BaseOrmEntity } from "../../utils/bse-orm/base.orm-entity";
+import { BaseOrmEntity } from "../../utils/entities/base.orm-entity";
 import { Permission } from "../../permission/database/permission.entity";
 
 @Entity({ name: 'permission_group'})

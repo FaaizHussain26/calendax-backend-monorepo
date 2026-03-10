@@ -1,7 +1,8 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinTable, ManyToMany, Timestamp, UpdateDateColumn } from "typeorm";
-import { BaseOrmEntity } from "../../utils/bse-orm/base.orm-entity";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinTable, ManyToMany, OneToMany, Timestamp, UpdateDateColumn } from "typeorm";
+import { BaseOrmEntity } from "../../utils/entities/base.orm-entity";
 import { Exclude } from "class-transformer";
 import { User } from "../../user/database/user.orm";
+import { PatientSite } from "../../patient-site/database/patient-site.entity";
 
 @Entity('sites')
 export class Site extends BaseOrmEntity {
@@ -44,6 +45,9 @@ export class Site extends BaseOrmEntity {
     @ManyToMany(() => User, (user) => user.sites)
     @JoinTable()
     principleInvetigators: User[]
+
+    @OneToMany(() => PatientSite, (ps) => ps.site)
+    patientSites: PatientSite[];
 
     @CreateDateColumn({ name: "created_at" })
     @Exclude()

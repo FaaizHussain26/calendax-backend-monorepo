@@ -1,4 +1,4 @@
-import { BaseOrmEntity } from "../../utils/bse-orm/base.orm-entity";
+import { BaseOrmEntity } from "../../utils/entities/base.orm-entity";
 import { Column, Entity, ManyToMany, OneToOne } from "typeorm";
 import { UserStatus } from "../../utils/value-objects/user-status.vo";
 import type { PlainPassword } from "../../utils/value-objects/password.vo";

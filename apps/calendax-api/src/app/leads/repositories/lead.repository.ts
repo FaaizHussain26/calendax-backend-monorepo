@@ -1,0 +1,95 @@
+import { BadGatewayException, Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { LeadsPlatform } from "../database/leads-platform.orm-entity";
+import { Repository } from "typeorm";
+import { PaginationService } from "../../utils/pagination/services/pagination.service";
+import { PaginationRequest } from "../../utils/pagination/interfaces";
+import { DeepPartial } from "mongoose";
+import { DeleteResult } from "typeorm/browser";
+
+@Injectable()
+export class LeadRepository {
+    constructor(
+        @InjectRepository(LeadsPlatform)
+        private readonly leadRepository: Repository<LeadsPlatform>,
+        private readonly paginationService: PaginationService,
+    ) {}
+
+    async getLeads(
+        pagination: PaginationRequest
+    ): Promise<[leadEntities: LeadsPlatform[], totalLeads: number]> {
+        const params = pagination.params;
+        const hasConditions = Boolean(params.eventId);
+
+        const whereCondition = hasConditions
+        ? (qb) => {
+            const conditions = [];
+            const parameters = {};
+
+            if(params.eventId) {
+                conditions.push("entity_event.id = :eventId");
+                parameters['eventId'] = params.eventId;
+            }
+
+            if(conditions.length) {
+                qb.where(conditions.join(" AND "), parameters);
+            }
+        }
+        :null;
+        return await this.paginationService.getPaginatedDataWithCount(
+            this.leadRepository,
+            [],
+            pagination,
+            whereCondition
+        );
+    }
+
+    async getById(
+        leadId: LeadsPlatform['id'],
+    ): Promise<LeadsPlatform | null> {
+        const lead = await this.leadRepository.findOne({
+            where: {
+                id: leadId,
+            },
+        });
+
+        if(lead === null) {
+            return null;
+        }
+        return lead;
+    }
+
+    async create(
+        lead: DeepPartial<LeadsPlatform>
+    ): Promise<LeadsPlatform | null> {
+        const newLead = this.leadRepository.create(lead);
+        return await this.leadRepository.save(newLead);
+    }
+
+    async update(
+        id: LeadsPlatform['id'],
+        lead: LeadsPlatform
+    ): Promise<LeadsPlatform | null> {
+        const existingLead = await this.leadRepository.findOne({ where: { id } });
+
+        if(!existingLead) {
+            throw new BadGatewayException("Appointment not found");
+        }
+
+        await this.leadRepository.update(id, lead);
+        return await this.leadRepository.findOneBy({ id });
+    }
+
+    async delete(
+        leadId: LeadsPlatform['id'],
+    ): Promise<DeleteResult | null> {
+        const lead = await this.leadRepository.findOneBy({ id: leadId });
+        if(!lead) return null;
+        const result = await this.leadRepository.delete(leadId);
+        result.raw = {
+            ...result.raw,
+            deleteLead: lead,
+        };
+        return result;
+    }
+}

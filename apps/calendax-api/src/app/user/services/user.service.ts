@@ -7,7 +7,8 @@ import { DeleteResult, EntityManager } from "typeorm";
 import { CreateUserRequestDto } from "../dtos/create-user-request.dto";
 import { EmailAlreadyExistsException } from "../../utils/exceptions/email-already-exists.exception";
 import { UpdateResult } from "typeorm/browser";
-import * as bcrypt from 'bcrypt';
+// import * as bcrypt from 'bcrypt';
+import { HashingService } from "../../utils/commonservices/hashing.service";
 import { UpdateUserRequestDto } from "../dtos/update-user-request.dto";
 import { PlainPassword } from "../../utils/value-objects/password.vo";
 import { validatePositiveIntegerId } from "../../utils/commonErrors/permission-id.error";
@@ -16,6 +17,7 @@ import { validatePositiveIntegerId } from "../../utils/commonErrors/permission-i
 export class UserService{
     constructor(
         private readonly userRepository: UserRepository,
+        private readonly hashingService: HashingService,
     ){}
 
 
@@ -68,7 +70,8 @@ export class UserService{
     ): Promise<User>{
         const exitingUser = await this.userRepository.getByEmail(payload.email);
         if (exitingUser){ throw new EmailAlreadyExistsException();}
-        const hashedPass = await bcrypt.hash(payload.password, 10);
+        // const hashedPass = await bcrypt.hash(payload.password, 10);
+        const hashedPass = await this.hashingService.hashPlainPassword(payload.password);
         const newUser = await this.userRepository.create({
             ...payload,
             password: hashedPass
@@ -86,7 +89,8 @@ export class UserService{
                 throw new NotFoundException("User Not Found");
             }
             if(payload.password) {
-                const hashedPass = await bcrypt.hash(payload.password, 10);
+                // const hashedPass = await bcrypt.hash(payload.password, 10);
+                const hashedPass = await this.hashingService.hashPlainPassword(payload.password);
                 payload.password = hashedPass as PlainPassword;
             }
             await this.userRepository.update(id, payload);

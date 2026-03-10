@@ -1,7 +1,9 @@
-import { Column, Entity, JoinColumn, OneToOne } from "typeorm";
-import { BaseOrmEntity } from "../../utils/bse-orm/base.orm-entity";
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from "typeorm";
+import { BaseOrmEntity } from "../../utils/entities/base.orm-entity";
 import { BestTimeToCallEnum, PatientStatusEnum } from "../../utils/value-objects/patient-status.enum";
 import { User } from "../../user/database/user.orm";
+import { PatientSite } from "../../patient-site/database/patient-site.entity";
+import { Lead } from "../../leads/database/lead.orm-entity";
 
 @Entity("patients")
 export class Patient extends BaseOrmEntity {
@@ -61,6 +63,12 @@ export class Patient extends BaseOrmEntity {
         default: BestTimeToCallEnum.morning
     })
     bestTimeToCall: BestTimeToCallEnum;
+
+    @OneToMany(() => Lead, (lead) => lead.patient)
+    leads: Lead[];
+
+    @OneToMany(() => PatientSite, (ps) => ps.patient)
+    patientSites: PatientSite[];
 
     constructor(patient?: Partial<Patient>) {
         super();
