@@ -4,6 +4,9 @@ import { LeadsPlatform } from "../database/leads-platform.orm-entity";
 import { BadRequestException } from "../../utils/exceptions/common.exceptions";
 import { DeepPartial } from "typeorm";
 import { DeleteResult } from "typeorm/browser";
+import { CreateLeadDto } from "../dtos/create-lead.dto";
+import { validatePositiveIntegerId } from "../../utils/commonErrors/permission-id.error";
+import { leadNotFound } from "../../utils/exceptions/not-found.exception";
 
 @Injectable()
 export class LeadService {
@@ -14,21 +17,28 @@ export class LeadService {
     async getLeads(
         pagination: any
     ): Promise<[leadEntities: LeadsPlatform[], totalLeads: number]> {
-        return await this.leadRepository.getLeads(pagination);
+        try {
+            return await this.leadRepository.getLeads(pagination);
+        }catch(error) {
+            throw new BadRequestException(error.message);
+        }
     }
 
     async getLead(
-        eventId: LeadsPlatform['id']
+        leadId: LeadsPlatform['id']
     ): Promise<LeadsPlatform> {
         try {
-            return this.leadRepository.getById(eventId);
+            validatePositiveIntegerId(leadId, 'Lead ID');
+            const lead =  await this.leadRepository.getById(leadId);
+            leadNotFound(lead);
+            return lead;
         }catch(error) {
             throw new BadRequestException(error.message);
         }
     }
 
     async createLead(
-        lead: LeadsPlatform
+        lead: CreateLeadDto
     ): Promise<LeadsPlatform> {
         try {
             return await this.leadRepository.create(lead);
@@ -42,6 +52,9 @@ export class LeadService {
         data: DeepPartial<LeadsPlatform>
     ): Promise<LeadsPlatform | null> {
         try {
+            validatePositiveIntegerId(leadId, 'Lead ID');
+            const lead =  await this.leadRepository.getById(leadId);
+            leadNotFound(lead);
             return await this.leadRepository.update(leadId, data as LeadsPlatform);
         }catch(error) {
             throw new BadRequestException(error.message);
@@ -52,7 +65,10 @@ export class LeadService {
         leadId: LeadsPlatform['id']
     ): Promise<DeleteResult> {
         try {
-            return this.leadRepository.delete(leadId);
+            validatePositiveIntegerId(leadId, 'Lead ID');
+            const lead =  await this.leadRepository.getById(leadId);
+            leadNotFound(lead);
+            return await this.leadRepository.delete(leadId);
         }catch(error) {
             throw new  BadRequestException(error.message);
         }

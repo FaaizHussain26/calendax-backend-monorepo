@@ -16,7 +16,7 @@ export class Lead extends BaseV2OrmEntity {
     @Column({ nullable: true })
     phone?: string;
 
-    @Column()
+    @Column({ default: 'outside' })
     source: string;
 
     @Column({ type: 'jsonb', nullable: true })

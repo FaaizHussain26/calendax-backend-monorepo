@@ -4,6 +4,8 @@ import { BadRequestException } from "../../utils/exceptions/common.exceptions";
 import { DeepPartial } from "typeorm";
 import { DeleteResult } from "typeorm/browser";
 import { OutsideLeadRepository } from "../repositories/outside-lead.repository";
+import { CreateOutsideLeadDto } from "../dtos/create-outside-lead.dto";
+import { leadNotFound } from "../../utils/exceptions/not-found.exception";
 
 @Injectable()
 export class OutSideLeadService {
@@ -14,21 +16,27 @@ export class OutSideLeadService {
     async getLeads(
         pagination: any
     ): Promise<[leadEntities: Lead[], totalLeads: number]> {
-        return await this.leadRepository.getLeads(pagination);
+        try {
+            return await this.leadRepository.getLeads(pagination);
+        }catch(error) {
+            throw new BadRequestException(error.message);
+        }
     }
 
     async getLead(
         eventId: Lead['id']
     ): Promise<Lead> {
         try {
-            return this.leadRepository.getById(eventId);
+            const lead = await this.leadRepository.getById(eventId);
+            leadNotFound(lead);
+            return lead;
         }catch(error) {
             throw new BadRequestException(error.message);
         }
     }
 
     async createLead(
-        lead: Lead
+        lead: CreateOutsideLeadDto
     ): Promise<Lead> {
         try {
             return await this.leadRepository.create(lead);
@@ -42,6 +50,8 @@ export class OutSideLeadService {
         data: DeepPartial<Lead>
     ): Promise<Lead | null> {
         try {
+            const lead = await this.leadRepository.getById(leadId);
+            leadNotFound(lead);
             return await this.leadRepository.update(leadId, data as Lead);
         }catch(error) {
             throw new BadRequestException(error.message);
@@ -52,7 +62,9 @@ export class OutSideLeadService {
         leadId: Lead['id']
     ): Promise<DeleteResult> {
         try {
-            return this.leadRepository.delete(leadId);
+            const lead = await this.leadRepository.getById(leadId);
+            leadNotFound(lead);
+            return await this.leadRepository.delete(leadId);
         }catch(error) {
             throw new  BadRequestException(error.message);
         }

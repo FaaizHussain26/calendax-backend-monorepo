@@ -5,9 +5,9 @@ import { Lead } from "../database/lead.orm-entity";
 import { Repository } from "typeorm";
 import { PaginationRequest } from "../../utils/pagination/interfaces";
 import { Patient } from "../../patient/database/patient.entity";
-import { DeepPartial } from "mongoose";
+import { DeepPartial } from "typeorm";
 import { BadRequestException } from "../../utils/exceptions/common.exceptions";
-import { DeleteResult } from "typeorm/browser";
+import { DeleteResult } from "typeorm";
 
 @Injectable()
 export class OutsideLeadRepository {
@@ -27,11 +27,6 @@ export class OutsideLeadRepository {
         ? (qb) => {
             const conditions = [];
             const parameters = {};
-
-            if(params.eventId) {
-                conditions.push("entity_event.id = :eventId");
-                parameters["eventId"] = params.eventId;
-            }
             
             if(conditions.length) {
                 qb.where(conditions.join(" AND "), parameters);
@@ -40,7 +35,7 @@ export class OutsideLeadRepository {
         : null;
         return await this.paginationService.getPaginatedDataWithCount(
             this.leadRepository,
-            ['patients'],
+            [],
             pagination,
             whereCondition,
         );
@@ -49,13 +44,9 @@ export class OutsideLeadRepository {
     async getById(
         leadId: Lead['id']
     ): Promise<Lead | null> {
-        const lead = await this.leadRepository.findOne({
-            where: { id: leadId, }
+        return await this.leadRepository.findOne({
+            where: { id: leadId }
         });
-        if(lead === null) {
-            return null;
-        }
-        return lead;
     };
 
     async getByPatientId(
@@ -82,7 +73,7 @@ export class OutsideLeadRepository {
     ): Promise<Lead | null> {
         const existingLead = await this.leadRepository.findOne({ where: { id } });
         if(!existingLead) {
-            throw new BadRequestException("Appointment not found");
+            throw new BadRequestException("Lead not found");
         }
 
         await this.leadRepository.update(id, lead);

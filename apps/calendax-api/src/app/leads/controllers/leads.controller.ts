@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Post, Put } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { LeadService } from "../services/lead.service";
 import { ApiPaginationQueries } from "../../utils/pagination/decorators/api-paginated-queries.decorators";
@@ -7,7 +7,6 @@ import { PaginationParams } from "../../utils/pagination/decorators";
 import type { PaginationRequest } from "../../utils/pagination/interfaces";
 import { CreateLeadDto } from "../dtos/create-lead.dto";
 import { UpdateLeadDto } from "../dtos/update-lead.dto";
-import { skipAuth } from "../../utils/decorators/skip-auth.decorator";
 // import { UserDecorator } from "../../utils/decorators/user.decorator";
 // import { User } from "../../user/database/user.orm";
 
@@ -18,17 +17,9 @@ export class LeadsController {
         private readonly leadService: LeadService,
     ) {}
 
-    @ApiPaginationQueries([
-        {
-            name: 'eventId',
-            type: Number,
-            description: 'Event Id',
-            required: false,
-        }
-    ])
+    @ApiPaginationQueries([])
     @Get('/')
     @Permissions('lead.view')
-    @skipAuth()
     async getLeads(
         @PaginationParams() pagination: PaginationRequest
     ) {
@@ -39,9 +30,8 @@ export class LeadsController {
     @Get('/:id')
     @Permissions('lead.view')
     @HttpCode(200)
-    @skipAuth()
     public getLead(
-        @Param('id') id: number
+        @Param('id', ParseIntPipe) id: number
     ) {
         return this.leadService.getLead(id);
     }
@@ -49,7 +39,6 @@ export class LeadsController {
     @Post('/')
     @HttpCode(201)
     @Permissions('lead.create')
-    @skipAuth()
     public create(
         @Body() createLeadDto: CreateLeadDto
     ) {
@@ -60,9 +49,8 @@ export class LeadsController {
     @Put('/:id')
     @HttpCode(201)
     @Permissions('lead.update')
-    @skipAuth()
     public update(
-        @Param('id') id: number,
+        @Param('id', ParseIntPipe) id: number,
         @Body() updateLeadDto: UpdateLeadDto,
         // @UserDecorator() user: User
     ) {
@@ -73,9 +61,8 @@ export class LeadsController {
     @Delete('/:id')
     @HttpCode(201)
     @Permissions('lead.delete')
-    @skipAuth()
     public delete(
-        @Param('id') id: number,
+        @Param('id', ParseIntPipe) id: number,
         // @UserDecorator() user: User
     ) {
         const data = this.leadService.deleteLead(id);

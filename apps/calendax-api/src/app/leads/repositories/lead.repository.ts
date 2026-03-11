@@ -26,11 +26,6 @@ export class LeadRepository {
             const conditions = [];
             const parameters = {};
 
-            if(params.eventId) {
-                conditions.push("entity_event.id = :eventId");
-                parameters['eventId'] = params.eventId;
-            }
-
             if(conditions.length) {
                 qb.where(conditions.join(" AND "), parameters);
             }
@@ -47,16 +42,11 @@ export class LeadRepository {
     async getById(
         leadId: LeadsPlatform['id'],
     ): Promise<LeadsPlatform | null> {
-        const lead = await this.leadRepository.findOne({
+        return await this.leadRepository.findOne({
             where: {
                 id: leadId,
             },
         });
-
-        if(lead === null) {
-            return null;
-        }
-        return lead;
     }
 
     async create(
@@ -73,7 +63,7 @@ export class LeadRepository {
         const existingLead = await this.leadRepository.findOne({ where: { id } });
 
         if(!existingLead) {
-            throw new BadGatewayException("Appointment not found");
+            throw new BadGatewayException("Lead not found");
         }
 
         await this.leadRepository.update(id, lead);

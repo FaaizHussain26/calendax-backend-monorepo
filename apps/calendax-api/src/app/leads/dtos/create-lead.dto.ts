@@ -29,7 +29,6 @@ export class CreateLeadDto {
     required: true,
   })
   @IsString()
-  @IsOptional()
   site_id?: string;
 
   @ApiProperty({
@@ -38,7 +37,6 @@ export class CreateLeadDto {
     required: true,
   })
   @IsString()
-  @IsOptional()
   study_id?: number;
 
   @ApiProperty({
@@ -47,7 +45,6 @@ export class CreateLeadDto {
     required: true,
   })
   @IsString()
-  @IsOptional()
   name?: string;
 
   @ApiProperty({
@@ -56,7 +53,6 @@ export class CreateLeadDto {
     required: true,
   })
   @IsString()
-  @IsOptional()
   phone?: string;
 
   @ApiProperty({
@@ -66,6 +62,5 @@ export class CreateLeadDto {
   })
   @IsString()
   @IsEmail()
-  @IsOptional()
   email?: string;
 }

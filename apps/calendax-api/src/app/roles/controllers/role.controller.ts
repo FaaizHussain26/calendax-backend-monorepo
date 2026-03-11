@@ -8,7 +8,6 @@ import type { PaginationRequest } from "../../utils/pagination/interfaces";
 import { RoleResponseDto } from "../dtos/role-response.dto";
 import { CreateRoleRequestDto } from "../dtos/create-role-dto";
 import { UpdateRoleRequestDto } from "../dtos/update-role.dto";
-import { skipAuth } from "../../utils/decorators/skip-auth.decorator";
 
 @ApiTags('Roles')
 @ApiBearerAuth()
@@ -24,7 +23,6 @@ export class RoleController {
     @Get('/')
     @Permissions()
     @ApiPaginationQueries([])
-    @skipAuth()
     public getRoles(
         @PaginationParams() pagination: PaginationRequest
     ) {
@@ -33,7 +31,6 @@ export class RoleController {
 
     @Get('/:id')
     @Permissions('role.view')
-    @skipAuth()
     public getRoleById(
         @Param('id', ParseIntPipe) id: number
     ): Promise<RoleResponseDto> {
@@ -42,7 +39,6 @@ export class RoleController {
 
     @Post('/')
     @Permissions('role.add')
-    @skipAuth()
     public createRole(
         @Body(ValidationPipe) roleDto: CreateRoleRequestDto
     ) {
@@ -51,7 +47,6 @@ export class RoleController {
 
     @Put('/:id')
     @Permissions('role.update')
-    @skipAuth()
     public updateRole(
         @Param('id', ParseIntPipe) id: number,
         @Body(ValidationPipe) roleDto: UpdateRoleRequestDto
@@ -61,7 +56,6 @@ export class RoleController {
 
     @Delete('/:id')
     @Permissions('role.delete')
-    @skipAuth()
     public deleteUser(
         @Param('id', ParseIntPipe) id: number
     ) {

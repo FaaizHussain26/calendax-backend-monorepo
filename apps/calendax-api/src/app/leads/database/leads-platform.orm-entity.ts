@@ -19,7 +19,7 @@ export class LeadsPlatform extends BaseOrmEntity {
     @Column({ nullable: true })
     pageName?: string;
 
-    @CreateDateColumn({ name: 'created_at ' })
+    @CreateDateColumn({ name: 'created_at' })
     @Exclude()
     public override createdAt?: Timestamp;
 

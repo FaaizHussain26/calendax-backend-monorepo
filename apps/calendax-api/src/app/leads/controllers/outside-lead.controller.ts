@@ -4,10 +4,10 @@ import { ApiPaginationQueries } from "../../utils/pagination/decorators/api-pagi
 import { Permissions } from "../../utils/decorators/permission.decorator";
 import { PaginationParams } from "../../utils/pagination/decorators";
 import type { PaginationRequest } from "../../utils/pagination/interfaces";
-import { CreateLeadDto } from "../dtos/create-lead.dto";
-import { UpdateLeadDto } from "../dtos/update-lead.dto";
 import { skipAuth } from "../../utils/decorators/skip-auth.decorator";
 import { OutSideLeadService } from "../services/outside-lead.service";
+import { CreateOutsideLeadDto } from "../dtos/create-outside-lead.dto";
+import { UpdateOutSideLeadDto } from "../dtos/update-outsidelead.dto";
 // import { UserDecorator } from "../../utils/decorators/user.decorator";
 // import { User } from "../../user/database/user.orm";
 
@@ -18,17 +18,9 @@ export class OutSideLeadsController {
         private readonly leadService: OutSideLeadService,
     ) {}
 
-    @ApiPaginationQueries([
-        {
-            name: 'eventId',
-            type: Number,
-            description: 'Event Id',
-            required: false,
-        }
-    ])
+    @ApiPaginationQueries([])
     @Get('/')
     @Permissions('lead.view')
-    @skipAuth()
     async getLeads(
         @PaginationParams() pagination: PaginationRequest
     ) {
@@ -39,7 +31,6 @@ export class OutSideLeadsController {
     @Get('/:id')
     @Permissions('lead.view')
     @HttpCode(200)
-    @skipAuth()
     public getLead(
         @Param('id', ParseUUIDPipe) id: string
     ) {
@@ -49,21 +40,19 @@ export class OutSideLeadsController {
     @Post('/')
     @HttpCode(201)
     @Permissions('lead.create')
-    @skipAuth()
     public create(
-        @Body() createLeadDto: CreateLeadDto
+        @Body() createLeadDto: CreateOutsideLeadDto
     ) {
-        const data = this.leadService.createLead(createLeadDto as any);
+        const data = this.leadService.createLead(createLeadDto);
         return data;
     }
 
     @Put('/:id')
     @HttpCode(201)
     @Permissions('lead.update')
-    @skipAuth()
     public update(
         @Param('id', ParseUUIDPipe) id: string,
-        @Body() updateLeadDto: UpdateLeadDto,
+        @Body() updateLeadDto: UpdateOutSideLeadDto,
         // @UserDecorator() user: User
     ) {
         const data = this.leadService.updateLead(id, updateLeadDto);
@@ -73,7 +62,6 @@ export class OutSideLeadsController {
     @Delete('/:id')
     @HttpCode(201)
     @Permissions('lead.delete')
-    @skipAuth()
     public delete(
         @Param('id', ParseUUIDPipe) id: string,
         // @UserDecorator() user: User

@@ -13,6 +13,7 @@ import { validatePositiveIntegerId } from "../../utils/commonErrors/permission-i
 import { DeleteResult } from "typeorm";
 import { TimeoutError } from "rxjs";
 import { PermissionRepository } from "../../permission/repositories/permission.repository";
+import { roleNotFound } from "../../utils/exceptions/not-found.exception";
 
 @Injectable()
 export class RoleService {
@@ -36,9 +37,7 @@ export class RoleService {
     ): Promise<RoleResponseDto> {
         validatePositiveIntegerId(id, 'Role ID');
         const roleEntity =  await this.roleRepository.getById(id);
-        if(!roleEntity) {
-            throw new NotFoundException();
-        }
+        roleNotFound(roleEntity);
         return plainToInstance(RoleResponseDto, roleEntity);
     }
 
@@ -80,10 +79,7 @@ export class RoleService {
         validatePositiveIntegerId(id, 'Role ID');
         try {
             const roleEntity = await this.roleRepository.getById(id);
-            if (!roleEntity) {
-                throw new NotFoundException('Role not found');
-            }
-
+            roleNotFound(roleEntity);
             if (roleDto.permissions) {
                 const permissions = await this.permissionRepository.getByIds(roleDto.permissions);
                 if (permissions.length !== roleDto.permissions.length) {
@@ -110,9 +106,7 @@ export class RoleService {
     ): Promise<DeleteResult> {
         validatePositiveIntegerId(id, 'Role ID');
         let roleEntity = await this.roleRepository.getById(id);
-        if(!roleEntity) {
-            throw new NotFoundException();
-        }
+        roleNotFound(roleEntity);
         try {
             return await this.roleRepository.delete(id);
         }catch(error) {

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { PatientRepository } from "../repositories/patient.repository";
 import { UserExistsException } from "../../utils/exceptions/user-exists.exception";
 import { PatientResponseDto } from "../dtos/patient-response.dto";
@@ -17,6 +17,7 @@ import { DataSource } from "typeorm";
 import { UpdatePatientDto } from "../dtos/update-patient-response-status.dto";
 import { Patient } from "../database/patient.entity";
 import { EmailService } from "../../utils/mailers/email.service";
+import { patientNotFound, userNotFound } from "../../utils/exceptions/not-found.exception";
 
 @Injectable()
 export class PatientService {
@@ -51,9 +52,7 @@ export class PatientService {
         validatePositiveIntegerId(id, 'Patient ID');
         try {
             const patient = await this.patientRepository.getById(id);
-            if(!patient) {
-                throw new NotFoundException('Patient Not Found!');
-            }
+            patientNotFound(patient);
             return plainToInstance(PatientResponseDto, patient);
         }catch(error){throw new BadRequestException(error.message);}
     }
@@ -62,9 +61,7 @@ export class PatientService {
         validatePositiveIntegerId(userId, 'User ID');
         try{
             const patient = await this.patientRepository.getByUserId(userId);
-            if(!patient) {
-                throw new NotFoundException();
-            }
+            patientNotFound(patient);
             return  plainToInstance(PatientResponseDto, patient);
         }catch(error){throw new BadRequestException(error.message);}
     }
@@ -91,9 +88,7 @@ export class PatientService {
     public async updatePatient(id: number, patient: UpdatePatientRequestDto): Promise<PatientResponseDto> {
         validatePositiveIntegerId(id, 'Patient ID');
         let patientEntity = await this.patientRepository.getById(id);
-        if(!patientEntity) {
-            throw new NotFoundException("Patient not found");
-        }
+        patientNotFound(patientEntity);
         try {
             await this.userService.updateUser(patientEntity.user?.id, patient.user);
             const updatedUser = await this.userRepository.getById(patientEntity.user?.id);
@@ -110,9 +105,7 @@ export class PatientService {
     ): Promise<Patient> {
         validatePositiveIntegerId(id, 'Patient ID');
         const existingPatient = await this.patientRepository.getById(id);
-        if(!existingPatient) {
-            throw new NotFoundException("Patient not found");
-        }
+        patientNotFound(existingPatient);
         existingPatient.isActive = payload.isActive ?? existingPatient.isActive;
         existingPatient.status = payload?.status ?? existingPatient.status;
 
@@ -138,7 +131,9 @@ export class PatientService {
     public async delete(id: number) {
         validatePositiveIntegerId(id, 'Patient ID');
         const patient = await this.patientRepository.getById(id);
+        patientNotFound(patient);
         const user = await this.userService.getUser(patient.user?.id);
+        userNotFound(user);
         await this.patientRepository.delete(id);
         await this.userService.deleteUser(user.id);
     } 

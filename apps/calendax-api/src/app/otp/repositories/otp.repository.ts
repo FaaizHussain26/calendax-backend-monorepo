@@ -46,7 +46,10 @@ export class OtpRepository {
                 purpose,
                 isUsed: false,
                 expiredAt: MoreThan(new Date()),
-            }
+            },
+            order: {
+                createdAt: "DESC",
+            },
         });
     };
 
@@ -80,7 +83,6 @@ export class OtpRepository {
         await this.otpRepository.delete({
             userId,
             purpose,
-            isUsed: true,
         });
     };
 
@@ -97,7 +99,7 @@ export class OtpRepository {
             where: {
                 userId,
                 purpose,
-                createdAt: MoreThan(new Date()),
+                createdAt: MoreThan(sinceTime),
             }
         });
     };
