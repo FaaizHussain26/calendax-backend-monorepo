@@ -4,7 +4,7 @@ import { JWTService } from "../../utils/commonservices/jwt.service";
 import { TokenDto } from "../../auth/dtos/token.dto";
 import { UserNotFoundException } from "../../utils/exceptions/userNotFound.exception";
 import { UserService } from "../../user/services/user.service";
-import * as bcrypt from 'bcrypt';
+import { HashingService } from "../../utils/commonservices/hashing.service";
 import { plainToClass } from "class-transformer";
 import { OtpService } from "../../otp/services/otp.service";
 import { OtpPurpose } from "../../otp/database/otp.entity";
@@ -15,6 +15,7 @@ export class AuthenticationService {
         private readonly jwtService: JWTService,
         private readonly userService: UserService,
         private readonly otpService: OtpService,
+        private readonly hashingService: HashingService,
     ) {}
 
 
@@ -24,7 +25,11 @@ export class AuthenticationService {
             if (!user) {
                 throw new UserNotFoundException();
             }
-            const isMatch = await bcrypt.compare(pass, user.password);
+            const isMatch = await this.hashingService.assertSamePassword(
+                pass as PlainPassword,
+                user.password,
+            )
+            // const isMatch = await bcrypt.compare(pass, user.password);
             if (!isMatch){
                 throw new UnauthorizedException();
             }

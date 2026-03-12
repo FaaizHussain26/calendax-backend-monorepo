@@ -3,7 +3,6 @@ import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { PermissionGroupService } from "../services/permission-group.service";
 import { Permissions } from "../../utils/decorators/permission.decorator";
 import { ApiPaginatedResponse, PaginationParams } from "../../utils/pagination/decorators";
-import { skipAuth } from "../../utils/decorators/skip-auth.decorator";
 import type { PaginationRequest } from "../../utils/pagination/interfaces";
 import { PermissionGroupResponseDto } from "../dtos/permission-group-response.dto";
 import { CreatePermissionGroupRequestDto } from "../dtos/create-permission-group-response.dto";
@@ -23,7 +22,6 @@ export class PermissionGroupController {
     @Get('/')
     @Permissions('permission-group.view')
     @ApiPaginatedResponse(PermissionGroupResponseDto)
-    @skipAuth()
     public getPermissionGroups(
         @PaginationParams() pagination: PaginationRequest
     ) {
@@ -32,7 +30,6 @@ export class PermissionGroupController {
 
     @Get('/:id')
     @Permissions('permission-group.view')
-    @skipAuth()
     public getPermissionGroupById(
         @Param('id', ParseIntPipe) id: number
     ) {
@@ -41,7 +38,6 @@ export class PermissionGroupController {
 
     @Post('/')
     @Permissions('permission-group.create')
-    @skipAuth()
     public createPermissionGroup(
         @Body(ValidationPipe) permissionGroupDto: CreatePermissionGroupRequestDto,
     ) {
@@ -50,7 +46,6 @@ export class PermissionGroupController {
 
     @Put('/:id')
     @Permissions('permission-group.update')
-    @skipAuth()
     public updatePermissionGroup(
         @Param('id', ParseIntPipe) id: number,
         @Body(ValidationPipe) permissionGroupDto: UpdatePermissionGroupRequestDto
@@ -60,7 +55,6 @@ export class PermissionGroupController {
 
     @Delete('/:id')
     @Permissions('permission-group.delete')
-    @skipAuth()
     public deletePermissionGroup(
         @Param('id', ParseIntPipe) id: number,
     ) {

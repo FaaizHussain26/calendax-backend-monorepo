@@ -11,6 +11,7 @@ import { CreatePermissionGroupRequestDto } from "../dtos/create-permission-group
 import { PermissionGroupExistsException } from "../../utils/exceptions/permission-group-exists.exception";
 import { UpdatePermissionGroupRequestDto } from "../dtos/update-permission-group-response.dto";
 import { DeleteResult } from "typeorm";
+import { permissionGroupNotFound } from "../../utils/exceptions/not-found.exception";
 
 @Injectable()
 export class PermissionGroupService {
@@ -32,9 +33,7 @@ export class PermissionGroupService {
     ): Promise<PermissionGroupResponseDto> {
         validatePositiveIntegerId(id, 'Permission Group ID');
         const permissionGroupEntity = await this.permissionGroupRepository.getById(id);
-        if(!permissionGroupEntity) {
-            throw new NotFoundException();
-        }
+        permissionGroupNotFound(permissionGroupEntity);
         return plainToInstance(PermissionGroupResponseDto, permissionGroupEntity);
     }
 
@@ -66,9 +65,7 @@ export class PermissionGroupService {
         payload: UpdatePermissionGroupRequestDto,
     ): Promise<PermissionGroupResponseDto> {
         const existingPermissionGroup = await this.permissionGroupRepository.getById(id);
-        if(!existingPermissionGroup) {
-            throw new NotFoundException('Permission Group not found!');
-        }
+        permissionGroupNotFound(existingPermissionGroup);
         const updateData = {
             ...payload,
             permissions: payload.permissions?.map(permId => ({ id: permId }))
@@ -82,6 +79,8 @@ export class PermissionGroupService {
     async deletePermissionGroup(
         id: number
     ): Promise<DeleteResult> {
+        const permissionGroupEntity = await this.permissionGroupRepository.getById(id);
+        permissionGroupNotFound(permissionGroupEntity);
         return await this.permissionGroupRepository.delete(id);
     }
 }

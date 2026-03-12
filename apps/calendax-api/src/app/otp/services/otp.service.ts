@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { OtpRepository } from "../repositories/otp.repository";
 import { OtpPurpose } from "../database/otp.entity";
-import { EmailService } from "../../utils/commonservices/email.service";
+import { EmailService } from "../../utils/mailers/email.service";
 
 @Injectable()
 export class OtpService {
@@ -60,7 +60,14 @@ export class OtpService {
         );
 
         try{
-            await this.emailService.sendOtpEmail(email, name, code, purpose);
+            await this.emailService.sendOtp({
+                toEmail: email,
+                subject: 'Your OTP Code',
+                data: {
+                    otpCode: code,
+                    expiresIn: `${this.OTP_EXPIRY_MINUTES} minutes`,
+                },
+            });
         } catch (error) {
             throw new BadRequestException('Failed to send OTP, please try again.');
         }

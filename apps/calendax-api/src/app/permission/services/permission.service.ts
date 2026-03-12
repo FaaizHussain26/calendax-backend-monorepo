@@ -11,6 +11,8 @@ import { PermissionExistsException } from "../../utils/exceptions/permission-exi
 import { TimeoutError } from "rxjs";
 import { UpdatePermissionRequestDto } from "../dtos/update-permission-request.dto";
 import { validatePositiveIntegerId } from "../../utils/commonErrors/permission-id.error";
+import { permissionNotFound } from "../../utils/exceptions/not-found.exception";
+import { DeleteResult } from "typeorm";
 
 @Injectable()
 export class PermissionService {
@@ -39,9 +41,8 @@ export class PermissionService {
 
     public async getPermissionById(id: number): Promise<PermissionResponseDto> {
         const permissionEntity = await this.permissionRepository.getById(id);
-        if(!permissionEntity) {
-            throw new NotFoundException();
-        }return plainToInstance(PermissionResponseDto, permissionEntity);
+        permissionNotFound(permissionEntity);
+        return plainToInstance(PermissionResponseDto, permissionEntity);
     }
 
     public async createPermission(
@@ -62,9 +63,7 @@ export class PermissionService {
         validatePositiveIntegerId(id, 'Permission ID');
         try {
             let permissionEntity = await this.permissionRepository.getById(id);
-            if(!permissionEntity) {
-                throw new NotFoundException();
-        }
+            permissionNotFound(permissionEntity);
             const merged = {...permissionEntity, ...permissionDto};
             await this.permissionRepository.update(merged);
             const permissionUpdate = await this.permissionRepository.getById(id);
@@ -78,10 +77,12 @@ export class PermissionService {
         }
     }
 
-    public async deletePermission(id: number): Promise<void> {
+    public async deletePermission(id: number): Promise<DeleteResult> {
         validatePositiveIntegerId(id, 'Permission ID');
         try {
-            await this.permissionRepository.delete(id);
+            const permissionEntity = await this.permissionRepository.getById(id);
+            permissionNotFound(permissionEntity);
+            return await this.permissionRepository.delete(id);
         }catch(error) {
             if(error instanceof TimeoutError) {
                 throw new RequestTimeoutException();

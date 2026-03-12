@@ -8,9 +8,11 @@ import { PaginationService } from "../utils/pagination/services/pagination.servi
 import { UserModule } from "../user/user.module";
 import { UserService } from "../user/services/user.service";
 import { HandleDBError } from "../utils/commonErrors/handle-db.error";
+import { EmailService } from "../utils/mailers/email.service";
+import { HashingService } from "../utils/commonservices/hashing.service";
 
 const controllers = [PatientController];
-const services = [PatientService, PaginationService, UserService, HandleDBError];
+const services = [PatientService, PaginationService, UserService, HandleDBError, EmailService, HashingService];
 const repositories = [PatientRepository];
 
 @Module({
@@ -20,7 +22,7 @@ const repositories = [PatientRepository];
     ],
     controllers,
     providers: [...services, ...repositories],
-    exports: []
+    exports: [PatientRepository]
 })
 
 export class PatientModule {}

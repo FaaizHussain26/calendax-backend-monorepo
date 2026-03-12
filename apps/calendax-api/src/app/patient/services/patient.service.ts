@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { PatientRepository } from "../repositories/patient.repository";
 import { UserExistsException } from "../../utils/exceptions/user-exists.exception";
 import { PatientResponseDto } from "../dtos/patient-response.dto";
@@ -14,6 +14,11 @@ import { PatientAlreadyExistsException } from "../../utils/exceptions/patient-al
 import { validatePositiveIntegerId } from "../../utils/commonErrors/permission-id.error";
 import { BadRequestException } from "../../utils/exceptions/common.exceptions";
 import { DataSource } from "typeorm";
+import { UpdatePatientDto } from "../dtos/update-patient-response-status.dto";
+import { Patient } from "../database/patient.entity";
+import { EmailService } from "../../utils/mailers/email.service";
+import { patientNotFound, userNotFound } from "../../utils/exceptions/not-found.exception";
+import { DeleteResult } from "typeorm";
 
 @Injectable()
 export class PatientService {
@@ -23,6 +28,7 @@ export class PatientService {
         private readonly userService: UserService,
         private readonly DBError: HandleDBError,
         private readonly dataSource: DataSource,
+        private readonly emailService: EmailService
     ) {}
 
     async getPatients(
@@ -47,9 +53,7 @@ export class PatientService {
         validatePositiveIntegerId(id, 'Patient ID');
         try {
             const patient = await this.patientRepository.getById(id);
-            if(!patient) {
-                throw new NotFoundException('Patient Not Found!');
-            }
+            patientNotFound(patient);
             return plainToInstance(PatientResponseDto, patient);
         }catch(error){throw new BadRequestException(error.message);}
     }
@@ -58,16 +62,14 @@ export class PatientService {
         validatePositiveIntegerId(userId, 'User ID');
         try{
             const patient = await this.patientRepository.getByUserId(userId);
-            if(!patient) {
-                throw new NotFoundException();
-            }
+            patientNotFound(patient);
             return  plainToInstance(PatientResponseDto, patient);
         }catch(error){throw new BadRequestException(error.message);}
     }
 
     public async createPatient(patient: CreatePatientRequestDto): Promise<PatientResponseDto> {
         if(!patient || !patient.user) {
-            throw new BadRequestException('Invlid Patient Data');
+            throw new BadRequestException('Invalid Patient Data');
         }
         try {
             const result = await this.dataSource.transaction(async (manager) => {
@@ -87,9 +89,7 @@ export class PatientService {
     public async updatePatient(id: number, patient: UpdatePatientRequestDto): Promise<PatientResponseDto> {
         validatePositiveIntegerId(id, 'Patient ID');
         let patientEntity = await this.patientRepository.getById(id);
-        if(!patientEntity) {
-            throw new NotFoundException("Patient not found");
-        }
+        patientNotFound(patientEntity);
         try {
             await this.userService.updateUser(patientEntity.user?.id, patient.user);
             const updatedUser = await this.userRepository.getById(patientEntity.user?.id);
@@ -100,11 +100,48 @@ export class PatientService {
         }
     }
 
-    public async delete(id: number) {
+    public async updatePatientStatus(
+        id: number,
+        payload: UpdatePatientDto,
+    ): Promise<Patient> {
+        validatePositiveIntegerId(id, 'Patient ID');
+        const existingPatient = await this.patientRepository.getById(id);
+        patientNotFound(existingPatient);
+        existingPatient.isActive = payload.isActive ?? existingPatient.isActive;
+        existingPatient.status = payload?.status ?? existingPatient.status;
+
+        const updatedPatient = await this.patientRepository.update(
+            id,
+            existingPatient,
+        );
+        if(updatedPatient.status) {
+            await this.emailService.sendDynamicEmail({
+                toEmail: existingPatient.user.email,
+                subject: 'Your profile has been updated',
+                data: {
+                    recipient_name:
+                    existingPatient.user.firstName +
+                    " " +
+                    existingPatient.user.lastName,
+                    profile_url: existingPatient.id.toString(),
+                },
+            });
+        }
+        return updatedPatient;
+    }
+
+    public async delete(id: number): Promise<DeleteResult> {
         validatePositiveIntegerId(id, 'Patient ID');
         const patient = await this.patientRepository.getById(id);
+        patientNotFound(patient);
         const user = await this.userService.getUser(patient.user?.id);
-        await this.patientRepository.delete(id);
-        await this.userService.deleteUser(user.id);
+        userNotFound(user);
+        try {
+            const deletedPatient = await this.patientRepository.delete(id);
+            await this.userService.deleteUser(user.id);
+            return deletedPatient;
+        }catch(error) {
+            throw error;
+        }
     } 
 }
