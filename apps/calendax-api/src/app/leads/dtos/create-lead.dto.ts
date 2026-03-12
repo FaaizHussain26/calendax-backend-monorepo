@@ -1,67 +1,37 @@
-import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsEmail,
-  IsNumber,
-} from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsOptional } from 'class-validator';
+import { BaseOrmEntity } from '../../utils/entities/base.orm-entity';
 
-export class CreateLeadDto {
-  @ApiProperty({
-    description: 'Lead Platform',
-    example: 'Facebook',
-    required: true,
-  })
-  @IsString()
-  platform: string;
+export class CreateLeadDto extends BaseOrmEntity {
+    @ApiPropertyOptional({
+        description: 'Lead Platform Link',
+        example: 'https://facebook.com/page',
+    })
+    @IsString()
+    @IsOptional()
+    link?: string;
 
-  @ApiProperty({
-    description: 'Lead Link',
-    example: 'dummt.com',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  link?: string;
+    @ApiPropertyOptional({
+        description: 'Facebook Page ID',
+        example: '123456789',
+    })
+    @IsString()
+    @IsOptional()
+    pageId?: string;
 
-  @ApiProperty({
-    description: 'Lead Site Id',
-    example: '1',
-    required: true,
-  })
-  @IsString()
-  site_id: string;
+    @ApiPropertyOptional({
+        description: 'Facebook Form ID',
+        example: '987654321',
+    })
+    @IsString()
+    @IsOptional()
+    formId?: string;
 
-  @ApiProperty({
-    description: 'Lead Study Id',
-    example: '1',
-    required: true,
-  })
-  @IsNumber()
-  study_id: number;
-
-  @ApiProperty({
-    description: 'Lead Name',
-    example: 'John Doe',
-    required: true,
-  })
-  @IsString()
-  name: string;
-
-  @ApiProperty({
-    description: 'Lead Phone',
-    example: '1234567890',
-    required: true,
-  })
-  @IsString()
-  phone: string;
-
-  @ApiProperty({
-    description: 'Lead Email',
-    example: 'john.doe@example.com',
-    required: true,
-  })
-  @IsString()
-  @IsEmail()
-  email: string;
+    @ApiPropertyOptional({
+        description: 'Facebook Page Name',
+        example: 'My Facebook Page',
+    })
+    @IsString()
+    @IsOptional()
+    pageName?: string;
 }

@@ -8,11 +8,11 @@ import { LeadsPlatform } from "./database/leads-platform.orm-entity";
 import { PaginationService } from "../utils/pagination/services/pagination.service";
 import { OutsideLeadRepository } from "./repositories/outside-lead.repository";
 import { OutSideLeadsController } from "./controllers/outside-lead.controller";
-import { OutSideLeadService } from "./services/outside-lead.service";
+import { OutsideLeadService } from "./services/outside-lead.service";
 
 const controllers = [LeadsController, OutSideLeadsController];
 const repositories = [LeadRepository, OutsideLeadRepository];
-const services = [LeadService, OutSideLeadService, PaginationService];
+const services = [LeadService, OutsideLeadService, PaginationService];
 
 @Module({
     imports: [

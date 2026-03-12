@@ -5,7 +5,7 @@ import { Repository } from "typeorm";
 import { PaginationService } from "../../utils/pagination/services/pagination.service";
 import { PaginationRequest } from "../../utils/pagination/interfaces";
 import { DeepPartial } from "typeorm";
-import { DeleteResult } from "typeorm/browser";
+import { DeleteResult } from "typeorm";
 import { NotFoundException } from "../../utils/exceptions/common.exceptions";
 
 @Injectable()

@@ -4,17 +4,19 @@ import { OtpService } from "./services/otp.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { OTP } from "./database/otp.entity";
 import { ConfigModule} from "@nestjs/config";
-import { EmailService } from "../utils/mailers/email.service";
-import { UserModule } from "../user/user.module";
 
-const Services = [OtpService, EmailService]
-const Repositories = [OtpRepository]
+import { UserModule } from "../user/user.module";
+import { AppMailerModule } from "../utils/mailers/email.module";
+
+const Services = [OtpService];
+const Repositories = [OtpRepository];
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([OTP]),
         UserModule,
         ConfigModule,
+        AppMailerModule,
     ],
     providers: [...Services, ...Repositories],
     exports: [OtpService],

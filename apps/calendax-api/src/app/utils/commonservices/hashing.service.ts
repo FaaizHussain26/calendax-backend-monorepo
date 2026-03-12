@@ -11,7 +11,8 @@ export class HashingService {
     ): Promise<HashedPassword> {
         try {
             const hash = await bcrypt.hash(plainPassword, saltOrRounds);
-            return await HashedPasswordSchema.parseAsync(hash);
+            await HashedPasswordSchema.parseAsync(hash);
+            return hash as HashedPassword;
         } catch (error) {
             throw new BadRequestException(error.message);
         }

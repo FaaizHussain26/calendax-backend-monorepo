@@ -69,7 +69,7 @@ export class PatientSiteService {
 
                     if(!patientSite) {
                         await this.patientSiteRepository.create({
-                            patient: patientIdNum as any,
+                            patient,
                             protocolId: data.protocol_id,
                             site: null,
                         });

@@ -1,7 +1,7 @@
 import { BaseOrmEntity } from "../../utils/entities/base.orm-entity";
 import { Column, Entity, ManyToMany, OneToOne } from "typeorm";
 import { UserStatus } from "../../utils/value-objects/user-status.vo";
-import type { PlainPassword } from "../../utils/value-objects/password.vo";
+import type { HashedPassword } from "../../utils/value-objects/password.vo";
 import { Exclude } from "class-transformer";
 import { IsNotEmpty } from "class-validator";
 import { Patient } from "../../patient/database/patient.entity";
@@ -57,7 +57,7 @@ export class User extends BaseOrmEntity{
         length: 191,
         nullable: false
     })
-    password: PlainPassword;
+    password: HashedPassword;
 
     @Column({
         name: 'passwordExpiresAt',

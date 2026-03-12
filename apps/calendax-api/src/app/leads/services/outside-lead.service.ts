@@ -1,14 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { Lead } from "../database/lead.orm-entity";
 import { BadRequestException } from "../../utils/exceptions/common.exceptions";
-import { DeepPartial } from "typeorm";
-import { DeleteResult } from "typeorm/browser";
+import { DeepPartial, DeleteResult } from "typeorm";
 import { OutsideLeadRepository } from "../repositories/outside-lead.repository";
 import { CreateOutsideLeadDto } from "../dtos/create-outside-lead.dto";
 import { leadNotFound } from "../../utils/exceptions/not-found.exception";
 
 @Injectable()
-export class OutSideLeadService {
+export class OutsideLeadService {
     constructor(
         private readonly leadRepository: OutsideLeadRepository,
     ) {}

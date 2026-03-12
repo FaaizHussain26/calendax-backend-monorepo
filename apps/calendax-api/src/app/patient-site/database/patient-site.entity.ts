@@ -4,7 +4,7 @@ import { Patient } from "../../patient/database/patient.entity";
 import { Site } from "../../site/database/site.entity";
 
 @Entity('patient_sites')
-@Unique(['patient', 'site', 'protocolId'])
+@Unique(['patient', 'protocolId'])
 export class PatientSite extends BaseOrmEntity {
     @ManyToOne(() => Patient, (patient) => patient.patientSites, {
         onDelete: 'CASCADE'
@@ -12,7 +12,8 @@ export class PatientSite extends BaseOrmEntity {
     patient: Patient;
 
     @ManyToOne(() => Site, (site) => site.patientSites, {
-        onDelete: 'CASCADE'
+        onDelete: 'CASCADE',
+        nullable: true,
     })
     site: Site;
 

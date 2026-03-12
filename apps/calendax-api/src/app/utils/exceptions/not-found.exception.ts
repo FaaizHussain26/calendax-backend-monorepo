@@ -30,8 +30,8 @@ export const roleNotFound = (param) => {
     }
 }
 
-export const siteNotFound = (param) => {
-    if(param.length === 0) {
+export const siteNotFound = (param: unknown[] | null | undefined): void => {
+    if(!param || param.length === 0) {
         throw new NotFoundException("Site Not Found");
     }
 }

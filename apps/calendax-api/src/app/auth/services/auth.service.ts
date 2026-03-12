@@ -26,7 +26,7 @@ export class AuthenticationService {
                 throw new UserNotFoundException();
             }
             const isMatch = await this.hashingService.assertSamePassword(
-                pass,
+                pass as PlainPassword,
                 user.password,
             )
             // const isMatch = await bcrypt.compare(pass, user.password);

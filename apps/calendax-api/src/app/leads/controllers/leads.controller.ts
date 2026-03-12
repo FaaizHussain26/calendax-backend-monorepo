@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Post, Put } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Post, Put, ValidationPipe } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { LeadService } from "../services/lead.service";
 import { ApiPaginationQueries } from "../../utils/pagination/decorators/api-paginated-queries.decorators";
@@ -40,14 +40,14 @@ export class LeadsController {
     @HttpCode(201)
     @Permissions('lead.create')
     public create(
-        @Body() createLeadDto: CreateLeadDto
+        @Body(ValidationPipe) createLeadDto: CreateLeadDto
     ) {
         const data = this.leadService.createLead(createLeadDto as Parameters<LeadService['createLead']>[0]);
         return data;
     }
 
     @Put('/:id')
-    @HttpCode(201)
+    @HttpCode(200)
     @Permissions('lead.update')
     public update(
         @Param('id', ParseIntPipe) id: number,
@@ -59,7 +59,7 @@ export class LeadsController {
     }
 
     @Delete('/:id')
-    @HttpCode(201)
+    @HttpCode(200)
     @Permissions('lead.delete')
     public delete(
         @Param('id', ParseIntPipe) id: number,

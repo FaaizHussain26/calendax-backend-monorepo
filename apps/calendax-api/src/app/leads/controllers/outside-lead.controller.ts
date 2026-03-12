@@ -1,10 +1,10 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, ValidationPipe } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { ApiPaginationQueries } from "../../utils/pagination/decorators/api-paginated-queries.decorators";
 import { Permissions } from "../../utils/decorators/permission.decorator";
 import { PaginationParams } from "../../utils/pagination/decorators";
 import type { PaginationRequest } from "../../utils/pagination/interfaces";
-import { OutSideLeadService } from "../services/outside-lead.service";
+import { OutsideLeadService } from "../services/outside-lead.service";
 import { CreateOutsideLeadDto } from "../dtos/create-outside-lead.dto";
 import { UpdateOutSideLeadDto } from "../dtos/update-outsidelead.dto";
 // import { UserDecorator } from "../../utils/decorators/user.decorator";
@@ -14,7 +14,7 @@ import { UpdateOutSideLeadDto } from "../dtos/update-outsidelead.dto";
 @ApiTags('outside-leads')
 export class OutSideLeadsController {
     constructor(
-        private readonly leadService: OutSideLeadService,
+        private readonly leadService: OutsideLeadService,
     ) {}
 
     @ApiPaginationQueries([])
@@ -40,7 +40,7 @@ export class OutSideLeadsController {
     @HttpCode(201)
     @Permissions('lead.create')
     public create(
-        @Body() createLeadDto: CreateOutsideLeadDto
+        @Body(ValidationPipe) createLeadDto: CreateOutsideLeadDto
     ) {
         const data = this.leadService.createLead(createLeadDto);
         return data;
@@ -59,7 +59,7 @@ export class OutSideLeadsController {
     }
 
     @Delete('/:id')
-    @HttpCode(204)
+    @HttpCode(200)
     @Permissions('lead.delete')
     public delete(
         @Param('id', ParseUUIDPipe) id: string,

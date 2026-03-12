@@ -1,12 +1,9 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { BaseV2OrmEntity } from "../../utils/entities/basev2.orm-entity";
 import { Patient } from "../../patient/database/patient.entity";
 
 @Entity('leads')
 export class Lead extends BaseV2OrmEntity {
-    @PrimaryGeneratedColumn('uuid')
-    override id: string;
-
     @Column()
     name: string;
 

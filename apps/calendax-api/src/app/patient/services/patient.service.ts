@@ -141,7 +141,7 @@ export class PatientService {
             await this.userService.deleteUser(user.id);
             return deletedPatient;
         }catch(error) {
-            throw Error;
+            throw error;
         }
     } 
 }

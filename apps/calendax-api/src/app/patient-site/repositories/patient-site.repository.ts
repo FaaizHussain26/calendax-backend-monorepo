@@ -74,7 +74,7 @@ export class PatientSiteRepository {
 
     async findByPatientSiteAndProtocolId(
         patientId: number,
-        siteId: number,
+        siteId: number | null,
         protocolId: string,
     ): Promise<PatientSite | null> {
         return await this.repository.findOne({
@@ -89,7 +89,7 @@ export class PatientSiteRepository {
 
     async findByPatientSiteAndProtocolIds(
         patientIds: number[],
-        siteIds: number[],
+        siteIds: number[] | null[],
         protocolIds: string[],
     ): Promise<PatientSite[]> {
         return await this.repository.find({
