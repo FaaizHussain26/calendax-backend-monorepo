@@ -12,6 +12,7 @@ import { TimeoutError } from "rxjs";
 import { UpdatePermissionRequestDto } from "../dtos/update-permission-request.dto";
 import { validatePositiveIntegerId } from "../../utils/commonErrors/permission-id.error";
 import { permissionNotFound } from "../../utils/exceptions/not-found.exception";
+import { DeleteResult } from "typeorm";
 
 @Injectable()
 export class PermissionService {
@@ -76,12 +77,12 @@ export class PermissionService {
         }
     }
 
-    public async deletePermission(id: number): Promise<void> {
+    public async deletePermission(id: number): Promise<DeleteResult> {
         validatePositiveIntegerId(id, 'Permission ID');
         try {
             const permissionEntity = await this.permissionRepository.getById(id);
             permissionNotFound(permissionEntity);
-            await this.permissionRepository.delete(id);
+            return await this.permissionRepository.delete(id);
         }catch(error) {
             if(error instanceof TimeoutError) {
                 throw new RequestTimeoutException();

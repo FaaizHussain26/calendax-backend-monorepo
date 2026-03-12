@@ -5,7 +5,7 @@ import { EmailTemplates, OtpEmailTemplate, ResendLinkEmailTemplate } from "./ema
 import axios from "axios";
 
 interface Email {
-  subject?: string;
+  subject: string;
   toEmail: string;
   data: Record<string, string>;
 }
@@ -110,7 +110,7 @@ export class EmailService {
     try {
       const bodyTemplate = EmailTemplates({
         recipientName: email.data["recipient_name"] || "User",
-        profileUrl: `${this.configService.get("FRONTENT_BASE_EMAIL_URL")}${email.data["profile_url"] || "#"}`,
+        profileUrl: `${this.configService.get("FRONTEND_BASE_EMAIL_URL")}${email.data["profile_url"] || "#"}`,
       });
 
       const subject = email.subject || "Patient Status Update";
@@ -134,7 +134,7 @@ export class EmailService {
 
       await this.sendMail({
         to: email.toEmail,
-        subject: email.subject,
+        subject: email.subject ?? 'Your resend link',
         html: bodyTemplate,
       });
     } catch (err) {
@@ -156,6 +156,7 @@ export class EmailService {
       });
     } catch (err) {
       console.error("Error sending email:", err);
+      throw err;
     }
   }
 
@@ -163,7 +164,7 @@ export class EmailService {
     try {
       await this.sendMail({
         to: email.toEmail,
-        subject: email.subject,
+        subject: email.subject ?? 'Thank you for your submission',
         text:
           email.data["message"] || "We have received a new lead from Facebook",
       });

@@ -18,7 +18,7 @@ export class PatientSiteRepository {
     }
 
     async bulkCreate(
-        patientSites: Partial<PatientSite[]>
+        patientSites: Partial<PatientSite>[]
     ): Promise<PatientSite[]> {
         const entities = this.repository.create(patientSites);
         return await this.repository.save(entities);

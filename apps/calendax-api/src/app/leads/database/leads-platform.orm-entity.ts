@@ -4,11 +4,8 @@ import { Exclude } from "class-transformer";
 
 @Entity('leads_platform')
 export class LeadsPlatform extends BaseOrmEntity {
-    @Column({ nullable: false })
-    platform: string;
-
-    @Column({ nullable: false })
-    link: string;
+    @Column({ nullable: true })
+    link?: string;
 
     @Column({ nullable: true })
     pageId?: string;

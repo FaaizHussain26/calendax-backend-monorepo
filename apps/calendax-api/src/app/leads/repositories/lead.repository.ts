@@ -1,11 +1,12 @@
-import { BadGatewayException, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { LeadsPlatform } from "../database/leads-platform.orm-entity";
 import { Repository } from "typeorm";
 import { PaginationService } from "../../utils/pagination/services/pagination.service";
 import { PaginationRequest } from "../../utils/pagination/interfaces";
-import { DeepPartial } from "mongoose";
+import { DeepPartial } from "typeorm";
 import { DeleteResult } from "typeorm/browser";
+import { NotFoundException } from "../../utils/exceptions/common.exceptions";
 
 @Injectable()
 export class LeadRepository {
@@ -18,24 +19,11 @@ export class LeadRepository {
     async getLeads(
         pagination: PaginationRequest
     ): Promise<[leadEntities: LeadsPlatform[], totalLeads: number]> {
-        const params = pagination.params;
-        const hasConditions = Boolean(params.eventId);
-
-        const whereCondition = hasConditions
-        ? (qb) => {
-            const conditions = [];
-            const parameters = {};
-
-            if(conditions.length) {
-                qb.where(conditions.join(" AND "), parameters);
-            }
-        }
-        :null;
         return await this.paginationService.getPaginatedDataWithCount(
             this.leadRepository,
             [],
             pagination,
-            whereCondition
+            null
         );
     }
 
@@ -63,7 +51,7 @@ export class LeadRepository {
         const existingLead = await this.leadRepository.findOne({ where: { id } });
 
         if(!existingLead) {
-            throw new BadGatewayException("Lead not found");
+            throw new NotFoundException("Lead not found");
         }
 
         await this.leadRepository.update(id, lead);

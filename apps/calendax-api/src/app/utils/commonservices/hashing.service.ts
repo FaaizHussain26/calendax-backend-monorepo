@@ -10,8 +10,8 @@ export class HashingService {
         plainPassword: PlainPassword
     ): Promise<HashedPassword> {
         try {
-            const hash = bcrypt.hashSync(plainPassword, saltOrRounds);
-            return HashedPasswordSchema.parseAsync(hash);
+            const hash = await bcrypt.hash(plainPassword, saltOrRounds);
+            return await HashedPasswordSchema.parseAsync(hash);
         } catch (error) {
             throw new BadRequestException(error.message);
         }
@@ -19,10 +19,10 @@ export class HashingService {
 
     async assertSamePassword(
         plainPassword: PlainPassword,
-        hashedPasswrod: HashedPassword,
+        hashedPassword: HashedPassword,
     ):Promise<boolean> {
         try {
-            return bcrypt.compareSync(plainPassword, hashedPasswrod);
+            return await bcrypt.compare(plainPassword, hashedPassword);
         } catch(error) {
             throw new BadRequestException(error.message);
         }

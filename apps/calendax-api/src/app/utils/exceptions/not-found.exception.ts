@@ -31,7 +31,7 @@ export const roleNotFound = (param) => {
 }
 
 export const siteNotFound = (param) => {
-    if(!param) {
+    if(param.length === 0) {
         throw new NotFoundException("Site Not Found");
     }
 }

@@ -18,6 +18,7 @@ import { UpdatePatientDto } from "../dtos/update-patient-response-status.dto";
 import { Patient } from "../database/patient.entity";
 import { EmailService } from "../../utils/mailers/email.service";
 import { patientNotFound, userNotFound } from "../../utils/exceptions/not-found.exception";
+import { DeleteResult } from "typeorm";
 
 @Injectable()
 export class PatientService {
@@ -68,7 +69,7 @@ export class PatientService {
 
     public async createPatient(patient: CreatePatientRequestDto): Promise<PatientResponseDto> {
         if(!patient || !patient.user) {
-            throw new BadRequestException('Inva lid Patient Data');
+            throw new BadRequestException('Invalid Patient Data');
         }
         try {
             const result = await this.dataSource.transaction(async (manager) => {
@@ -116,6 +117,7 @@ export class PatientService {
         if(updatedPatient.status) {
             await this.emailService.sendDynamicEmail({
                 toEmail: existingPatient.user.email,
+                subject: 'Your profile has been updated',
                 data: {
                     recipient_name:
                     existingPatient.user.firstName +
@@ -128,13 +130,18 @@ export class PatientService {
         return updatedPatient;
     }
 
-    public async delete(id: number) {
+    public async delete(id: number): Promise<DeleteResult> {
         validatePositiveIntegerId(id, 'Patient ID');
         const patient = await this.patientRepository.getById(id);
         patientNotFound(patient);
         const user = await this.userService.getUser(patient.user?.id);
         userNotFound(user);
-        await this.patientRepository.delete(id);
-        await this.userService.deleteUser(user.id);
+        try {
+            const deletedPatient = await this.patientRepository.delete(id);
+            await this.userService.deleteUser(user.id);
+            return deletedPatient;
+        }catch(error) {
+            throw Error;
+        }
     } 
 }

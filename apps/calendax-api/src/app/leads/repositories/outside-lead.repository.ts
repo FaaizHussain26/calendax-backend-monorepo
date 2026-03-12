@@ -6,7 +6,7 @@ import { Repository } from "typeorm";
 import { PaginationRequest } from "../../utils/pagination/interfaces";
 import { Patient } from "../../patient/database/patient.entity";
 import { DeepPartial } from "typeorm";
-import { BadRequestException } from "../../utils/exceptions/common.exceptions";
+import { NotFoundException } from "../../utils/exceptions/common.exceptions";
 import { DeleteResult } from "typeorm";
 
 @Injectable()
@@ -20,24 +20,11 @@ export class OutsideLeadRepository {
     async getLeads(
         pagination: PaginationRequest
     ): Promise<[leadEntities: Lead[],totalLeads: number]> {
-        const params = pagination.params;
-        const hasConditions = Boolean(params.eventId);
-
-        const whereCondition = hasConditions
-        ? (qb) => {
-            const conditions = [];
-            const parameters = {};
-            
-            if(conditions.length) {
-                qb.where(conditions.join(" AND "), parameters);
-            }
-        }
-        : null;
         return await this.paginationService.getPaginatedDataWithCount(
             this.leadRepository,
             [],
             pagination,
-            whereCondition,
+            null,
         );
     }
 
@@ -73,7 +60,7 @@ export class OutsideLeadRepository {
     ): Promise<Lead | null> {
         const existingLead = await this.leadRepository.findOne({ where: { id } });
         if(!existingLead) {
-            throw new BadRequestException("Lead not found");
+            throw new NotFoundException("Lead not found");
         }
 
         await this.leadRepository.update(id, lead);

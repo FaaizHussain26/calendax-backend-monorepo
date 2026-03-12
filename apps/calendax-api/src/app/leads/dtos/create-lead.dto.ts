@@ -3,6 +3,7 @@ import {
   IsString,
   IsOptional,
   IsEmail,
+  IsNumber,
 } from 'class-validator';
 
 export class CreateLeadDto {
@@ -29,15 +30,15 @@ export class CreateLeadDto {
     required: true,
   })
   @IsString()
-  site_id?: string;
+  site_id: string;
 
   @ApiProperty({
     description: 'Lead Study Id',
     example: '1',
     required: true,
   })
-  @IsString()
-  study_id?: number;
+  @IsNumber()
+  study_id: number;
 
   @ApiProperty({
     description: 'Lead Name',
@@ -45,7 +46,7 @@ export class CreateLeadDto {
     required: true,
   })
   @IsString()
-  name?: string;
+  name: string;
 
   @ApiProperty({
     description: 'Lead Phone',
@@ -53,7 +54,7 @@ export class CreateLeadDto {
     required: true,
   })
   @IsString()
-  phone?: string;
+  phone: string;
 
   @ApiProperty({
     description: 'Lead Email',
@@ -62,5 +63,5 @@ export class CreateLeadDto {
   })
   @IsString()
   @IsEmail()
-  email?: string;
+  email: string;
 }

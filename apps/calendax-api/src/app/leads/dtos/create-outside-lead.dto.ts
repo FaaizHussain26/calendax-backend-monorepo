@@ -23,7 +23,7 @@ export class CreateOutsideLeadDto {
     @ApiPropertyOptional()
     @IsBoolean()
     @IsOptional()
-    isLinked?: false;
+    isLinked?: boolean;
 
     @ApiPropertyOptional()
     @IsString()

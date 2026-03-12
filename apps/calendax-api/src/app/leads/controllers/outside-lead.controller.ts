@@ -4,7 +4,6 @@ import { ApiPaginationQueries } from "../../utils/pagination/decorators/api-pagi
 import { Permissions } from "../../utils/decorators/permission.decorator";
 import { PaginationParams } from "../../utils/pagination/decorators";
 import type { PaginationRequest } from "../../utils/pagination/interfaces";
-import { skipAuth } from "../../utils/decorators/skip-auth.decorator";
 import { OutSideLeadService } from "../services/outside-lead.service";
 import { CreateOutsideLeadDto } from "../dtos/create-outside-lead.dto";
 import { UpdateOutSideLeadDto } from "../dtos/update-outsidelead.dto";
@@ -48,7 +47,7 @@ export class OutSideLeadsController {
     }
 
     @Put('/:id')
-    @HttpCode(201)
+    @HttpCode(200)
     @Permissions('lead.update')
     public update(
         @Param('id', ParseUUIDPipe) id: string,
@@ -60,7 +59,7 @@ export class OutSideLeadsController {
     }
 
     @Delete('/:id')
-    @HttpCode(201)
+    @HttpCode(204)
     @Permissions('lead.delete')
     public delete(
         @Param('id', ParseUUIDPipe) id: string,

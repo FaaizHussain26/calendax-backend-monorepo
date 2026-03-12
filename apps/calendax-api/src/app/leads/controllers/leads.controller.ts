@@ -42,7 +42,7 @@ export class LeadsController {
     public create(
         @Body() createLeadDto: CreateLeadDto
     ) {
-        const data = this.leadService.createLead(createLeadDto as any);
+        const data = this.leadService.createLead(createLeadDto as Parameters<LeadService['createLead']>[0]);
         return data;
     }
 
