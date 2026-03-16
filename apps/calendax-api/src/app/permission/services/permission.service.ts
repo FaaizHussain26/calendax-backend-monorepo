@@ -11,7 +11,7 @@ import { PermissionExistsException } from "../../utils/exceptions/permission-exi
 import { TimeoutError } from "rxjs";
 import { UpdatePermissionRequestDto } from "../dtos/update-permission-request.dto";
 import { validatePositiveIntegerId } from "../../utils/commonErrors/permission-id.error";
-import { permissionNotFound } from "../../utils/exceptions/not-found.exception";
+import { assertFound } from "../../utils/exceptions/not-found.exception";
 import { DeleteResult } from "typeorm";
 
 @Injectable()
@@ -41,7 +41,7 @@ export class PermissionService {
 
     public async getPermissionById(id: number): Promise<PermissionResponseDto> {
         const permissionEntity = await this.permissionRepository.getById(id);
-        permissionNotFound(permissionEntity);
+        assertFound(permissionEntity, "Permission");
         return plainToInstance(PermissionResponseDto, permissionEntity);
     }
 
@@ -63,7 +63,7 @@ export class PermissionService {
         validatePositiveIntegerId(id, 'Permission ID');
         try {
             let permissionEntity = await this.permissionRepository.getById(id);
-            permissionNotFound(permissionEntity);
+            assertFound(permissionEntity, "Permission");
             const merged = {...permissionEntity, ...permissionDto};
             await this.permissionRepository.update(merged);
             const permissionUpdate = await this.permissionRepository.getById(id);
@@ -81,7 +81,7 @@ export class PermissionService {
         validatePositiveIntegerId(id, 'Permission ID');
         try {
             const permissionEntity = await this.permissionRepository.getById(id);
-            permissionNotFound(permissionEntity);
+            assertFound(permissionEntity, "Permission");
             return await this.permissionRepository.delete(id);
         }catch(error) {
             if(error instanceof TimeoutError) {

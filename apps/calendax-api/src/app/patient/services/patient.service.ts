@@ -17,7 +17,7 @@ import { DataSource } from "typeorm";
 import { UpdatePatientDto } from "../dtos/update-patient-response-status.dto";
 import { Patient } from "../database/patient.entity";
 import { EmailService } from "../../utils/mailers/email.service";
-import { patientNotFound, userNotFound } from "../../utils/exceptions/not-found.exception";
+import { assertFound } from "../../utils/exceptions/not-found.exception";
 import { DeleteResult } from "typeorm";
 
 @Injectable()
@@ -53,7 +53,7 @@ export class PatientService {
         validatePositiveIntegerId(id, 'Patient ID');
         try {
             const patient = await this.patientRepository.getById(id);
-            patientNotFound(patient);
+            assertFound(patient, "Patient");
             return plainToInstance(PatientResponseDto, patient);
         }catch(error){throw new BadRequestException(error.message);}
     }
@@ -62,7 +62,7 @@ export class PatientService {
         validatePositiveIntegerId(userId, 'User ID');
         try{
             const patient = await this.patientRepository.getByUserId(userId);
-            patientNotFound(patient);
+            assertFound(patient, "Patient");
             return  plainToInstance(PatientResponseDto, patient);
         }catch(error){throw new BadRequestException(error.message);}
     }
@@ -89,7 +89,7 @@ export class PatientService {
     public async updatePatient(id: number, patient: UpdatePatientRequestDto): Promise<PatientResponseDto> {
         validatePositiveIntegerId(id, 'Patient ID');
         let patientEntity = await this.patientRepository.getById(id);
-        patientNotFound(patientEntity);
+        assertFound(patientEntity, "Patient");
         try {
             await this.userService.updateUser(patientEntity.user?.id, patient.user);
             const updatedUser = await this.userRepository.getById(patientEntity.user?.id);
@@ -106,7 +106,7 @@ export class PatientService {
     ): Promise<Patient> {
         validatePositiveIntegerId(id, 'Patient ID');
         const existingPatient = await this.patientRepository.getById(id);
-        patientNotFound(existingPatient);
+        assertFound(existingPatient, "Patient");
         existingPatient.isActive = payload.isActive ?? existingPatient.isActive;
         existingPatient.status = payload?.status ?? existingPatient.status;
 
@@ -133,9 +133,9 @@ export class PatientService {
     public async delete(id: number): Promise<DeleteResult> {
         validatePositiveIntegerId(id, 'Patient ID');
         const patient = await this.patientRepository.getById(id);
-        patientNotFound(patient);
+        assertFound(patient, "Patient");
         const user = await this.userService.getUser(patient.user?.id);
-        userNotFound(user);
+        assertFound(user, "User");
         try {
             const deletedPatient = await this.patientRepository.delete(id);
             await this.userService.deleteUser(user.id);

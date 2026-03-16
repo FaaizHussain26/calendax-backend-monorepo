@@ -4,7 +4,7 @@ import { BadRequestException } from "../../utils/exceptions/common.exceptions";
 import { DeepPartial, DeleteResult } from "typeorm";
 import { OutsideLeadRepository } from "../repositories/outside-lead.repository";
 import { CreateOutsideLeadDto } from "../dtos/create-outside-lead.dto";
-import { leadNotFound } from "../../utils/exceptions/not-found.exception";
+import { assertFound } from "../../utils/exceptions/not-found.exception";
 
 @Injectable()
 export class OutsideLeadService {
@@ -27,7 +27,7 @@ export class OutsideLeadService {
     ): Promise<Lead> {
         try {
             const lead = await this.leadRepository.getById(eventId);
-            leadNotFound(lead);
+            assertFound(lead, "Lead");
             return lead;
         }catch(error) {
             throw new BadRequestException(error.message);
@@ -50,7 +50,7 @@ export class OutsideLeadService {
     ): Promise<Lead | null> {
         try {
             const lead = await this.leadRepository.getById(leadId);
-            leadNotFound(lead);
+            assertFound(lead, "Lead");
             return await this.leadRepository.update(leadId, data as Lead);
         }catch(error) {
             throw new BadRequestException(error.message);
@@ -62,7 +62,7 @@ export class OutsideLeadService {
     ): Promise<DeleteResult> {
         try {
             const lead = await this.leadRepository.getById(leadId);
-            leadNotFound(lead);
+            assertFound(lead, "Lead");
             return await this.leadRepository.delete(leadId);
         }catch(error) {
             throw new  BadRequestException(error.message);

@@ -8,6 +8,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Matches,
   MaxLength,
 } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
@@ -63,9 +64,9 @@ export class UpdateUserRequestDto {
     example: "+1-516-316-4146",
   })
   @IsNotEmpty()
-  // @Matches(/^\+1-\d{3}-\d{3}-\d{4}$/, {
-  //   message: "Phone number must be in the format +1-516-316-4146",
-  // })
+  @Matches(/^\+1-\d{3}-\d{3}-\d{4}$/, {
+    message: "Phone number must be in the format +1-516-316-4146",
+  })
   phoneNumber1?: string;
 
   @ApiProperty({

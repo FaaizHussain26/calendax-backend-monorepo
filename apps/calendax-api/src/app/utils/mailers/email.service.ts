@@ -151,7 +151,7 @@ export class EmailService {
 
       await this.sendMail({
         to: email.toEmail,
-        subject: email.subject,
+        subject: email.subject ?? 'Your Otp Code',
         html: bodyTemplate,
       });
     } catch (err) {
