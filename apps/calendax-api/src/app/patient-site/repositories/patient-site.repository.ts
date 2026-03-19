@@ -50,6 +50,18 @@ export class PatientSiteRepository {
         });
     }
 
+    async findByPatientIds(
+        patientIds: number[]
+    ): Promise<PatientSite[]> {
+        if(!patientIds?.length) {
+            return [];
+        }
+        return await this.repository.find({
+            where: { patient: { id: In(patientIds) } },
+            relations: ["patient"],
+        });
+    }
+
     async findBySiteId(
         siteId: number
     ): Promise<PatientSite[]> {

@@ -5,7 +5,7 @@ import { BadRequestException } from "../../utils/exceptions/common.exceptions";
 import { DeepPartial, DeleteResult } from "typeorm";
 import { CreateLeadDto } from "../dtos/create-lead.dto";
 import { validatePositiveIntegerId } from "../../utils/commonErrors/permission-id.error";
-import { leadNotFound } from "../../utils/exceptions/not-found.exception";
+import { assertFound } from "../../utils/exceptions/not-found.exception";
 
 @Injectable()
 export class LeadService {
@@ -29,7 +29,7 @@ export class LeadService {
         try {
             validatePositiveIntegerId(leadId, 'Lead ID');
             const lead =  await this.leadRepository.getById(leadId);
-            leadNotFound(lead);
+            assertFound(lead, "Lead");
             return lead;
         }catch(error) {
             throw new BadRequestException(error.message);
@@ -53,7 +53,7 @@ export class LeadService {
         try {
             validatePositiveIntegerId(leadId, 'Lead ID');
             const lead =  await this.leadRepository.getById(leadId);
-            leadNotFound(lead);
+            assertFound(lead, "Lead");
             return await this.leadRepository.update(leadId, data as LeadsPlatform);
         }catch(error) {
             throw new BadRequestException(error.message);
@@ -66,7 +66,7 @@ export class LeadService {
         try {
             validatePositiveIntegerId(leadId, 'Lead ID');
             const lead =  await this.leadRepository.getById(leadId);
-            leadNotFound(lead);
+            assertFound(lead, "Lead");
             return await this.leadRepository.delete(leadId);
         }catch(error) {
             throw new  BadRequestException(error.message);

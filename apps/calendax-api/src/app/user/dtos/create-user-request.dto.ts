@@ -60,6 +60,7 @@ export class CreateUserRequestDto {
   isPrincipalInvestigator: boolean;
 
   @IsDateString()
+  @IsOptional()
   emailVerifiedAt?: Date;
 
   @IsOptional()

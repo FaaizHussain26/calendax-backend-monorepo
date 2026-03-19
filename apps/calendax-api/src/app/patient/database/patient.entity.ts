@@ -4,6 +4,7 @@ import { BestTimeToCallEnum, PatientStatusEnum } from "../../utils/value-objects
 import { User } from "../../user/database/user.orm";
 import { PatientSite } from "../../patient-site/database/patient-site.entity";
 import { Lead } from "../../leads/database/lead.orm-entity";
+import { PatientAppointment } from "../../patient-appointment/database/patient-appointment.orm-entity";
 
 @Entity("patients")
 export class Patient extends BaseOrmEntity {
@@ -66,6 +67,9 @@ export class Patient extends BaseOrmEntity {
 
     @OneToMany(() => Lead, (lead) => lead.patient)
     leads: Lead[];
+
+    @OneToMany(() => PatientAppointment, (patient_appointment) => patient_appointment.patient)
+    patientAppointments: PatientAppointment[];
 
     @OneToMany(() => PatientSite, (ps) => ps.patient)
     patientSites: PatientSite[];

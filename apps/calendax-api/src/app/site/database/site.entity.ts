@@ -3,6 +3,7 @@ import { BaseOrmEntity } from "../../utils/entities/base.orm-entity";
 import { Exclude } from "class-transformer";
 import { User } from "../../user/database/user.orm";
 import { PatientSite } from "../../patient-site/database/patient-site.entity";
+import { PatientAppointment } from "../../patient-appointment/database/patient-appointment.orm-entity";
 
 @Entity('sites')
 export class Site extends BaseOrmEntity {
@@ -48,6 +49,9 @@ export class Site extends BaseOrmEntity {
 
     @OneToMany(() => PatientSite, (ps) => ps.site)
     patientSites: PatientSite[];
+
+    @OneToMany(() => PatientAppointment, (patient_appointment) => patient_appointment.site)
+    patientAppointments: PatientAppointment[]
 
     @CreateDateColumn({ name: "created_at" })
     @Exclude()

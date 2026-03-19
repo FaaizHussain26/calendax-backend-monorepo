@@ -17,6 +17,8 @@ import { PatientSiteModule } from './patient-site/patient-site.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppMailerModule } from './utils/mailers/email.module';
 import { LeadsModule } from './leads/lead.module';
+import { PatientAppointmentModule } from './patient-appointment/patient-appointment.module';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { LeadsModule } from './leads/lead.module';
       isGlobal: true,
       envFilePath: '.env'
     }),
+    LoggerModule.forRoot(),
     UserModule,
     AuthenticationModule,
     OtpModule,
@@ -35,6 +38,7 @@ import { LeadsModule } from './leads/lead.module';
     PatientSiteModule,
     AppMailerModule,
     LeadsModule,
+    PatientAppointmentModule,
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
