@@ -36,7 +36,11 @@ export class PatientService {
     siteIds: number[] = [],
     isAdmin: boolean,
     ): Promise<PaginationResponseDto<any>> {
-        const [patients, total] = await this.patientRepository.getPatients(pagination);
+        const [patients, total] = await this.patientRepository.getPatients(
+            pagination,
+            siteIds,
+            isAdmin,
+        );
         const currentPage = pagination.page || Math.floor(pagination.skip / pagination.limit) + 1;
         const totalPages = Math.ceil(total / pagination.limit);
 

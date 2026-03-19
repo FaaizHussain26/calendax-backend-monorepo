@@ -3,7 +3,6 @@ import { AppointmentStatus } from "../../utils/value-objects/appointment-status.
 import { PatientResponseDto } from "../../patient/dtos/patient-response.dto";
 import { SiteResponseDto } from "../../site/dtos/site-response.dto";
 import { UserResponseDto } from "../../user/dtos/user-response.dto";
-import { Timestamp } from "typeorm";
 
 export class PatientAppointmentResponseDto {
   @ApiProperty({
@@ -65,11 +64,11 @@ export class PatientAppointmentResponseDto {
     example: "2025-11-10T09:00:00Z",
     description: "Timestamp when the appointment record was created",
   })
-  createdAt: Timestamp;
+  createdAt: Date;
 
   @ApiProperty({
     example: "2025-11-10T10:00:00Z",
     description: "Timestamp when the appointment record was last updated",
   })
-  updatedAt: Timestamp;
+  updatedAt: Date;
 }

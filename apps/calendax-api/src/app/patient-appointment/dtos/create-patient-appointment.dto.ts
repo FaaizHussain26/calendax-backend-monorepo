@@ -27,7 +27,7 @@ export class CreatePatientAppointmentDto {
   })
   @IsNotEmpty()
   @IsDateString({}, { message: "date must be in ISO format (yyyy-mm-dd)" })
-  date?: string;
+  date: string;
 
   @ApiPropertyOptional({
     description: "The appointment time (hh:mm:ss)",
@@ -35,7 +35,7 @@ export class CreatePatientAppointmentDto {
   })
   @IsNotEmpty()
   @IsString()
-  time?: string;
+  time: string;
 
   @ApiPropertyOptional({
     description: "The appointment status",
@@ -44,7 +44,7 @@ export class CreatePatientAppointmentDto {
   })
   @IsNotEmpty()
   @IsEnum(AppointmentStatus)
-  status?: AppointmentStatus;
+  status: AppointmentStatus;
 
   @ApiPropertyOptional({
     description: "Protocol identifier for the appointment",
@@ -52,7 +52,7 @@ export class CreatePatientAppointmentDto {
   })
   @IsNotEmpty()
   @IsString()
-  protocol_id?: string;
+  protocol_id: string;
 
   @ApiPropertyOptional({
     description: "Medical indication or reason for appointment",
@@ -60,7 +60,7 @@ export class CreatePatientAppointmentDto {
   })
   @IsNotEmpty()
   @IsString()
-  indication?: string;
+  indication: string;
 
   @ApiProperty({
     description: "The site where the appointment will take place",

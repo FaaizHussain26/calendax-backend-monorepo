@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": [
-      "node", "Multer"
+      "node", "multer"
     ],
     "rootDir": "src",
     "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",

@@ -55,7 +55,7 @@ export class PinoLoggerService extends ConsoleLogger {
   }
 
   override error(message: any, trace?: unknown, context?: string, ...args: any[]) {
-    let details: { trace: string, context: string } = { trace: '', context: '' };
+    let details: Record<string, string> = { trace: '', context: '' };
 
     if (context) {
       details[this.contextName] = context;

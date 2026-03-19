@@ -23,6 +23,7 @@ import { PatientSite } from "../patient-site/database/patient-site.entity";
 import { Site } from "../site/database/site.entity";
 import { ProtocolsSites } from "./database/protocol-site.entity-orm";
 import { PatientSiteService } from "../patient-site/services/patient-site.service";
+import { LoggerModule } from "../utils/logger/logger.module";
 
 const controllers = [PatientController];
 const services = [PatientService, PaginationService, UserService, HandleDBError, EmailService, HashingService, ExportPatientService, UpdatePatientStatusService, UploadExcelService, PinoLoggerService, PatientSiteService];
@@ -33,6 +34,7 @@ const repositories = [PatientRepository, SiteRepository, UserRepository, Patient
         TypeOrmModule.forFeature([Patient, User, Patient, PatientSite, Site, ProtocolsSites]),
         MongooseModule.forFeature([]),
         UserModule,
+        LoggerModule,
     ],
     controllers,
     providers: [...services, ...repositories],

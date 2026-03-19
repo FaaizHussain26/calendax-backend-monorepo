@@ -50,86 +50,81 @@ export class ExportPatientService {
         isAdmin: boolean,
         res: Response
     ): Promise<void> {
-        // 1. Set response headers before the streaming starts
-        res.setHeader(
-            "Content-Type",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        );
-        res.setHeader(
-            "Content-Disposition",
-            `attachment; filename=patients_export_${Date.now()}.xlsx`,
-        );
+        try {
+            const workbook = new ExcelJS.Workbook();
+            const sheet = workbook.addWorksheet("Patients");
 
-        // 2. Setup workbook with streaming writer
-        const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
-            stream: res,
-            useStyles: true,
-            useSharedStrings: true,
-        });
+            sheet.columns = [
+                { header: "No.", key: "no", width: 6 },
+                { header: "First Name", key: "firstName", width: 15 },
+                { header: "Last Name", key: "lastName", width: 15 },
+                { header: "Email", key: "email", width: 30 },
+                { header: "Phone Number", key: "phoneNumber", width: 18 },
+                { header: "Created Date", key: "createdDate", width: 16 },
+                { header: "Created Time", key: "createdTime", width: 14 },
+                { header: "Call Duration (seconds)", key: "callDuration", width: 22 },
+                { header: "Summary", key: "summary", width: 42 },
+                { header: "Status", key: "status", width: 16 },
+            ];
 
-        const sheet = workbook.addWorksheet("Patients");
-
-        // 3. Define Columns
-        sheet.columns = [
-            { header: "No.", key: "no", width: 6 },
-            { header: "First Name", key: "firstName", width: 15 },
-            { header: "Last Name", key: "lastName", width: 15 },
-            { header: "Email", key: "email", width: 30},
-            { header: "Phone Number", key: "phoneNumber", width: 18 },
-            { header: "Created Date", key: "createdDate", width: 16},
-            { header: "Created Time", key: "createdTime", width: 14 },
-            { header: "Call Duration (seconds)", key: "callDuration", width: 18 },
-            { header: "Summary", key: "summary", width: 42 },
-            { header: "Status", key: "status", width: 16 },
-        ];
-
-        // 4. Style Header Row
-        sheet.getRow(1).eachCell((cell) => {
-            cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-            cell.fill = {
-                type: "pattern",
-                pattern: "solid",
-                fgColor: { argb: "FFFF6B35" },
-            };
-            cell.alignment = { vertical: "middle", horizontal: "center" };
-        });
-        sheet.getRow(1).commit();
-
-        // 5. Get filtered patients stream
-        const stream = await this.patientService.streamPatientsForExport(
-            params,
-            siteIds,
-            isAdmin,
-        );
-
-        // 6. Buffer filtered rows so we can enrich via patient_sites + MongoDB
-        const rows = await this.collectStreamRows(stream);
-        const followUpMap = await this.getFollowUpDataMap(rows);
-
-        // 7. Write rows to the workbook
-        let rowIndex = 1;
-        for(const rawRow of rows) {
-            const patientId = this.getPatientId(rawRow);
-            const followUp = patientId ? followUpMap.get(patientId) : undefined;
-            const createdAt = this.getCreatedAt(rawRow);
-
-            const row = sheet.addRow({
-                no: rowIndex++,
-                firstName: rawRow.user_firstName ?? rawRow.firstName ?? "-",
-                lastName: rawRow.user_lastName ?? rawRow.lastName ?? "-",
-                email: rawRow.user_email ?? rawRow.email ?? "-",
-                phoneNumber: rawRow.user_phoneNumber1 ?? rawRow.phoneNumber ?? "-",
-                createdDate: createdAt?.toLocaleDateString() ?? "-",
-                createdTime: createdAt?. toLocaleTimeString() ?? "-",
-                callDuration: followUp?.callDuration ?? "-",
-                summary: followUp?.summary ?? rawRow.status ?? "-",
+            const headerRow = sheet.getRow(1);
+            headerRow.eachCell((cell) => {
+                cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+                cell.fill = {
+                    type: "pattern",
+                    pattern: "solid",
+                    fgColor: { argb: "FFFF6B35" },
+                };
+                cell.alignment = { vertical: "middle", horizontal: "center" };
             });
 
-            row.commit();
-        }
+            const stream = await this.patientService.streamPatientsForExport(
+                params,
+                siteIds,
+                isAdmin,
+            );
 
-        await sheet.commit();
-        await workbook.commit();
+            const rows = await this.collectStreamRows(stream);
+            const followUpMap = await this.getFollowUpDataMap(rows);
+
+            let rowIndex = 1;
+            for (const rawRow of rows) {
+                const patientId = this.getPatientId(rawRow);
+                const followUp = patientId ? followUpMap.get(patientId) : undefined;
+                const createdAt = this.getCreatedAt(rawRow);
+
+                sheet.addRow({
+                    no: rowIndex++,
+                    firstName: rawRow.user_firstName ?? rawRow.firstName ?? "-",
+                    lastName: rawRow.user_lastName ?? rawRow.lastName ?? "-",
+                    email: rawRow.user_email ?? rawRow.email ?? "-",
+                    phoneNumber: rawRow.user_phoneNumber1 ?? rawRow.phoneNumber ?? "-",
+                    createdDate: createdAt?.toLocaleDateString() ?? "-",
+                    createdTime: createdAt?.toLocaleTimeString() ?? "-",
+                    callDuration: followUp?.callDuration ?? "-",
+                    summary: followUp?.summary ?? rawRow.status ?? "-",
+                    status: (rawRow as any).entity_status ?? rawRow.status ?? "-",
+                });
+            }
+
+            const rawBuffer = await workbook.xlsx.writeBuffer();
+            const fileBuffer = Buffer.isBuffer(rawBuffer)
+                ? rawBuffer
+                : Buffer.from(rawBuffer as ArrayBuffer);
+            const fileName = `patients_export_${Date.now()}.xlsx`;
+
+            res.status(200);
+            res.setHeader(
+                "Content-Type",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            );
+            res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+            res.setHeader("Content-Length", fileBuffer.byteLength);
+            res.end(fileBuffer);
+        } catch (error) {
+            this.logger.error("Failed to export patient Excel file", error as Error);
+            throw error;
+        }
     }
 
     async collectStreamRows(
@@ -137,6 +132,10 @@ export class ExportPatientService {
     ): Promise<PatientExportRawRow[]> {
         return new Promise((resolve, reject) => {
             const rows: PatientExportRawRow[] = [];
+
+            stream.on("data", (row: PatientExportRawRow) => {
+                rows.push(row);
+            })
 
             stream.on("end", () => resolve(rows));
             stream.on("error", (err) => {

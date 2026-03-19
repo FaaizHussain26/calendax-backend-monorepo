@@ -68,7 +68,7 @@ export class PatientAppointmentRepository {
             payload: Partial<PatientAppointment>
         ): Promise<PatientAppointment> {
             await this.patientAppointmentRepository.update(id, payload);
-            return await this,this.findById(id);
+            return await this.findById(id);
         }
 
         async delete(

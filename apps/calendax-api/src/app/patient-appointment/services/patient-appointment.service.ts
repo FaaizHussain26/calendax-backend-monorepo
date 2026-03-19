@@ -50,14 +50,19 @@ export class PatientAppointmentService {
             throw new BadRequestException("Site ID is required");
         }
 
-        const site = await this.siteService.getSitesById(payload.siteId);
+        const site = await this.siteService.getSiteById(payload.siteId);
         if(!site) {
             throw new BadRequestException(`Site with ID ${payload.siteId} not found!`);
         }
 
-        const existingUser = await this.userService.getUserByEmail(
-            payload.patient.user.email
-        );
+        let existingUser;
+        try {
+            existingUser = await this.userService.getUserByEmail(
+                payload.patient.user.email
+            );
+        }catch (error) {
+            existingUser = null;
+        }
 
         existingUser
         ? await this.handleExistingUser(payload, existingUser)

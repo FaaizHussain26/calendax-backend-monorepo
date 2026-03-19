@@ -54,10 +54,10 @@ export class PatientAppointmentController {
 
     @Delete("/:id")
     @skipAuth()
-    public delete(
+    async delete(
         @Param('id', ParseIntPipe) id: number
     ) {
-        this.patientAppointmentService.delete(id);
+        await this.patientAppointmentService.delete(id);
         return { message: "Appointment deleted successfully"} ;
     }
 }

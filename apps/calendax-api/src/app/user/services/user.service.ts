@@ -27,7 +27,7 @@ export class UserService{
         validatePositiveIntegerId(userId, 'User ID');
         try{
             const user = await this.userRepository.getById(userId);
-            assertFound(user, "USer");
+            assertFound(user, "User");
             return user;
         }catch(error){
             throw new BadRequestException(error.message);

@@ -24,7 +24,7 @@ export class PatientRepository {
         const hasFilters = 
             (!isAdmin && siteIds && siteIds.length > 0) ||
             params.status ||
-            params.protocol_id ||
+            params.protocolId ||
             params.fromDate ||
             params.tillDate;
 
@@ -42,7 +42,7 @@ export class PatientRepository {
 
             if(!isAdmin && siteIds?.length > 0) {
                 qb.leftJoin("entity.user", "user").leftJoin("user.sites", "sites");
-                conditions.push("sites.Id IN (:...siteIds");
+                conditions.push("sites.Id IN (:...siteIds)");
                 parameters.siteIds = siteIds;
             }
 
@@ -111,8 +111,13 @@ export class PatientRepository {
 
         if(!isAdmin && siteIds?.length > 0) {
             qb.leftJoin("user.sites", "sites");
+            conditions.push("sites.id IN :...siteIds");
+            parameters.siteIds = siteIds;
+        }
+
+        if(params.protocolId) {
             conditions.push("patientSites.protocolId = :protocolId");
-            parameters.protocolId = params.protocolId;
+            parameters.protocolId = params.protocolId;   
         }
 
         if(params.status) {
@@ -179,7 +184,7 @@ export class PatientRepository {
 
     async getByUserIds(userIds: number[]): Promise<Patient[]> {
         return this.patientRepository.find({
-            where: { id: In(userIds) },
+            where: { user: { id: In(userIds) } },
             relations: ["user"],
         });
     }

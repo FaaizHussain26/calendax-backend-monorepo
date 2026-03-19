@@ -61,12 +61,20 @@ export class UploadExcelService {
                 errors: [],
                 processingTime: "0s",
             };
-        // Load Excel directly from memory buffer (no temp file needed)
+        // Load Excel or CSV directly from memory buffer (no temp file needed)
         const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(file.buffer as any);
+        const fileName = file.originalname || "";
+        const extension = fileName.split(".").pop()?.toLowerCase() || "";
+        const mimeType = (file.mimetype || "").toLowerCase();
+
+        if(extension === "csv" || mimeType === "text/csv") {
+            await workbook.csv.read(file.buffer as any);
+        }else {
+            await workbook.xlsx.load(file.buffer as any)
+        }
 
         const worksheet = workbook.worksheets[0];
-        if (!worksheet) throw new Error("No worksheet found in Excel file");
+        if (!worksheet) throw new Error("No worksheet found in Excel/CSV file");
 
         // Read ALL rows in one pass
         const allRows: Array<{ data: PatientRow; rowNumber: number }> = [];

@@ -1,5 +1,5 @@
 import { BaseOrmEntity } from "../../utils/entities/base.orm-entity";
-import { Column, Entity, ManyToMany, ManyToOne, OneToOne } from "typeorm";
+import { Column, Entity, ManyToMany, OneToMany, OneToOne } from "typeorm";
 import { UserStatus } from "../../utils/value-objects/user-status.vo";
 import type { HashedPassword } from "../../utils/value-objects/password.vo";
 import { Exclude } from "class-transformer";
@@ -136,7 +136,7 @@ export class User extends BaseOrmEntity{
     @ManyToMany(() => Site, (site) => site.principleInvetigators)
     sites: Site[]
 
-    @ManyToOne(() => PatientAppointment, (patient_appointment) => patient_appointment.user)
+    @OneToMany(() => PatientAppointment, (patient_appointment) => patient_appointment.user)
     patientAppointments: Promise<PatientAppointment[]>;
 
     @Column({

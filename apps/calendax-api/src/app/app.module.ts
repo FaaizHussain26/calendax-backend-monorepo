@@ -18,6 +18,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppMailerModule } from './utils/mailers/email.module';
 import { LeadsModule } from './leads/lead.module';
 import { PatientAppointmentModule } from './patient-appointment/patient-appointment.module';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { PatientAppointmentModule } from './patient-appointment/patient-appointm
       isGlobal: true,
       envFilePath: '.env'
     }),
+    LoggerModule.forRoot(),
     UserModule,
     AuthenticationModule,
     OtpModule,

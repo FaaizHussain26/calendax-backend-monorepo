@@ -5,7 +5,6 @@ import {
   IsEmail,
   IsEnum,
   IsInt,
-  IsNotEmpty,
   IsOptional,
   IsString,
   Matches,
@@ -63,7 +62,7 @@ export class UpdateUserRequestDto {
     description: "The primary phone number of the user",
     example: "+1-516-316-4146",
   })
-  @IsNotEmpty()
+  @IsOptional()
   @Matches(/^\+1-\d{3}-\d{3}-\d{4}$/, {
     message: "Phone number must be in the format +1-516-316-4146",
   })

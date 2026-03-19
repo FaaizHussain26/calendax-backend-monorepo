@@ -39,20 +39,19 @@ export class PatientController {
     @Permissions("patient.view")
     @Get("/export")
     async exportPatients(
+        @Res({ passthrough: false }) res: Response,
         @SiteIds() siteIds: number[],
         @isAdmin() isAdmin: boolean,
         @Query("status") status?: string,
         @Query("protocolId") protocolId?: string,
         @Query("fromDate") fromDate?: string,
         @Query("tillDate") tillDate?: string,
-        @Res() res?: Response,
     ): Promise<void> {
         await this.exportPatientService.execute(
             { status, protocolId, fromDate, tillDate },
             siteIds,
             isAdmin,
             res,
-
         );   
     }
 
@@ -120,6 +119,7 @@ export class PatientController {
         description: "Protocol ID to add MongoDB data for",
         required: true,
     })
+    @Permissions("patient.update")
     @Get("/patient-site/add-mongodb-data")
     async patientSite(@Query("protocolId") protocolId: string) {
         await this.patientSiteService.addMongodbDataToPatientSite(protocolId);
