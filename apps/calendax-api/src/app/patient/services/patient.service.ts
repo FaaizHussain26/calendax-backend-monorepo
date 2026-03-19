@@ -32,8 +32,10 @@ export class PatientService {
     ) {}
 
     async getPatients(
-    pagination: PaginationRequest
-    ): Promise<PaginationResponseDto<PatientResponseDto>> {
+    pagination: PaginationRequest,
+    siteIds: number[] = [],
+    isAdmin: boolean,
+    ): Promise<PaginationResponseDto<any>> {
         const [patients, total] = await this.patientRepository.getPatients(pagination);
         const currentPage = pagination.page || Math.floor(pagination.skip / pagination.limit) + 1;
         const totalPages = Math.ceil(total / pagination.limit);
@@ -47,6 +49,23 @@ export class PatientService {
             payloadSize: patients.length,
             totalRecords: total,
         }
+    }
+
+    async streamPatientsForExport(
+        params: {
+            status?: string;
+            protocolId?: string;
+            fromDate?: string;
+            tillDate?: string;
+        },
+        siteIds: number[] = [],
+        isAdmin: boolean,
+    ): Promise<NodeJS.ReadableStream> {
+        return await this.patientRepository.streamAllPatientsForExport(
+            params,
+            siteIds,
+            isAdmin,
+        );
     }
 
     public async getPatientById(id: number): Promise<PatientResponseDto> {
