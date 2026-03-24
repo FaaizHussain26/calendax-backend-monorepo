@@ -19,6 +19,7 @@ import { AppMailerModule } from './utils/mailers/email.module';
 import { LeadsModule } from './leads/lead.module';
 import { PatientAppointmentModule } from './patient-appointment/patient-appointment.module';
 import { LoggerModule } from 'nestjs-pino';
+import { PatientStatusModule } from './patient-status/patient-status.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { LoggerModule } from 'nestjs-pino';
     AppMailerModule,
     LeadsModule,
     PatientAppointmentModule,
+    PatientStatusModule,
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
