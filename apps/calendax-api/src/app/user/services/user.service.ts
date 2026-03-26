@@ -10,7 +10,7 @@ import { HashingService } from "../../utils/commonservices/hashing.service";
 import { UpdateUserRequestDto } from "../dtos/update-user-request.dto";
 import { PlainPassword } from "../../utils/value-objects/password.vo";
 import { validatePositiveIntegerId } from "../../utils/commonErrors/permission-id.error";
-import { userNotFound } from "../../utils/exceptions/not-found.exception";
+import { assertFound } from "../../utils/exceptions/not-found.exception";
 import { HandleDBError } from "../../utils/commonErrors/handle-db.error";
 import { UserExistsException } from "../../utils/exceptions/user-exists.exception";
 
@@ -27,7 +27,7 @@ export class UserService{
         validatePositiveIntegerId(userId, 'User ID');
         try{
             const user = await this.userRepository.getById(userId);
-            userNotFound(user);
+            assertFound(user, "User");
             return user;
         }catch(error){
             throw new BadRequestException(error.message);
@@ -40,7 +40,7 @@ export class UserService{
             throw new BadRequestException('Email is required');
         }
         const user = await this.userRepository.getByEmail(email)
-        userNotFound(user);
+        assertFound(user, "User");
         return user;
     }
 
@@ -53,7 +53,7 @@ export class UserService{
     async getUserByIdWithPI(id: number): Promise<User>{
         try{
             const user = await this.userRepository.getByIDWithPI(id);
-            userNotFound(user);
+            assertFound(user, "User");
             return user;
         }catch(error){
             throw new BadRequestException(error.message);
@@ -79,7 +79,7 @@ export class UserService{
         validatePositiveIntegerId(id, 'User ID');
         
         const user = await this.userRepository.getById(id);
-        userNotFound(user);
+        assertFound(user, "User");
 
         try {
             if (payload.password) {
@@ -96,7 +96,7 @@ export class UserService{
 
     async deleteUser(id: User['id']): Promise<DeleteResult>{
         let userEntity = await this.userRepository.getById(id);
-        userNotFound(userEntity);
+        assertFound(userEntity, "User");
         try{
             return await this.userRepository.delete(id);
         }catch(error){

@@ -11,7 +11,7 @@ export class PaginationService {
     repository: Repository<T>,
     relations: string[],
     pagination: PaginationRequest,
-    whereConditions?: (qb: WhereExpressionBuilder) => void
+    whereConditions?: (qb: WhereExpressionBuilder) => void,
   ): Promise<[entities: T[], totalCount: number]> {
     const {
       skip = this.defaultSkip,
@@ -60,17 +60,17 @@ export class PaginationService {
 
                 qb.orWhere(
                   `CAST(${aliasName}.${columnName} AS TEXT) ILIKE :${paramName}`,
-                  { [paramName]: `%${searchObject.searchText}%` }
+                  { [paramName]: `%${searchObject.searchText}%` },
                 );
               } else {
                 // For entity fields, prefix with 'entity.'
                 qb.orWhere(
                   `CAST(entity.${String(field)} AS TEXT) ILIKE :${paramName}`,
-                  { [paramName]: `%${searchObject.searchText}%` }
+                  { [paramName]: `%${searchObject.searchText}%` },
                 );
               }
             });
-          })
+          }),
         );
       }
     }
@@ -80,8 +80,17 @@ export class PaginationService {
 
       if (Object.keys(orderObject).length > 0) {
         Object.entries(orderObject).forEach(([field, sortOrder]) => {
+          let columnPath = "";
+
+          if(field.includes(".")) {
+            const [relation, column] = field.split(".");
+            const alias = `entity_${relation}`;
+            columnPath = `${alias}.${column}`;
+          }else {
+            columnPath = `entity.${field}`;
+          }
           query.addOrderBy(
-            `entity.${String(field)}`,
+            columnPath,
             sortOrder.toUpperCase() as "ASC" | "DESC"
           );
         });
@@ -90,7 +99,7 @@ export class PaginationService {
         Object.entries(this.defaultOrder).forEach(([field, sortOrder]) => {
           query.addOrderBy(
             `entity.${String(field)}`,
-            sortOrder.toUpperCase() as "ASC" | "DESC"
+            sortOrder.toUpperCase() as "ASC" | "DESC",
           );
         });
       }
@@ -112,7 +121,7 @@ export class PaginationService {
           column.type === "time" ||
           column.type === "bool" ||
           column.type === "boolean" ||
-          column.type === "date"
+          column.type === "date",
       )
       .map((column) => column.propertyName);
   }

@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { EmailTemplates, OtpEmailTemplate, ResendLinkEmailTemplate } from "./email-template";
 import axios from "axios";
+import { BadRequestException } from "../exceptions/common.exceptions";
 
 interface Email {
   subject: string;
@@ -121,7 +122,7 @@ export class EmailService {
         html: bodyTemplate,
       });
     } catch (err) {
-      console.error("Error sending email:", err);
+        throw new BadRequestException(err.message);
     }
   }
 
@@ -151,7 +152,7 @@ export class EmailService {
 
       await this.sendMail({
         to: email.toEmail,
-        subject: email.subject,
+        subject: email.subject ?? 'Your Otp Code',
         html: bodyTemplate,
       });
     } catch (err) {

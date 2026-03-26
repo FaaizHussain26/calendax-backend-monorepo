@@ -68,6 +68,17 @@ export class UserRepository{
         return user;
     }
 
+    async getByEmails(emails: User['email'][]): Promise<User[]> {
+        if(!emails || emails.length === 0) {
+            return [];
+        }
+        const users = await this.userRepository.find({
+            where: { email: In(emails) },
+            relations: ["roles", "permissions"],
+        })
+        return users || [];
+    }
+
 
     async create(user: DeepPartial<User>,
         manager?: EntityManager,

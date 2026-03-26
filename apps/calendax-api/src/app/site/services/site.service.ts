@@ -11,7 +11,7 @@ import { UserService } from "../../user/services/user.service";
 import { plainToInstance } from "class-transformer";
 import { TimeoutError } from "rxjs";
 import { DeleteResult } from "typeorm";
-import { siteNotFound } from "../../utils/exceptions/not-found.exception";
+import { assertFound } from "../../utils/exceptions/not-found.exception";
 
 @Injectable()
 export class SiteService {
@@ -34,7 +34,13 @@ export class SiteService {
 
     async getSitesById(id: Site["id"]): Promise<Site[] | SiteResponseDto[]> {
         const site = await this.siteRepository.getSitesById([id]);
-        siteNotFound(site);
+        assertFound(site, "Sites");
+        return site;
+    }
+
+    async getSiteById(id: Site['id']): Promise<Site> {
+        const site = await this.siteRepository.getById(id);
+        assertFound(site, "Site");
         return site;
     }
 
@@ -87,7 +93,7 @@ export class SiteService {
     ): Promise<SiteResponseDto> {
         try {
             const previousSite = await this.siteRepository.getById(siteId);
-            siteNotFound(previousSite);
+            assertFound(previousSite, "Site");
             const site = plainToInstance(Site, {...previousSite, ...payload});
 
             if(
@@ -121,7 +127,7 @@ export class SiteService {
 
     async deleteSite(id: number): Promise<DeleteResult> {
         const site = await this.siteRepository.getById(id);
-        siteNotFound(site);
+        assertFound(site, "Site");
         return await this.siteRepository.delete(id);
     }
 }

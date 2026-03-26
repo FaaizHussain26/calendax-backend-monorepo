@@ -1,11 +1,12 @@
 import { BaseOrmEntity } from "../../utils/entities/base.orm-entity";
-import { Column, Entity, ManyToMany, OneToOne } from "typeorm";
+import { Column, Entity, ManyToMany, OneToMany, OneToOne } from "typeorm";
 import { UserStatus } from "../../utils/value-objects/user-status.vo";
 import type { HashedPassword } from "../../utils/value-objects/password.vo";
 import { Exclude } from "class-transformer";
 import { IsNotEmpty } from "class-validator";
 import { Patient } from "../../patient/database/patient.entity";
 import { Site } from "../../site/database/site.entity";
+import { PatientAppointment } from "../../patient-appointment/database/patient-appointment.orm-entity";
 
 @Entity('users')
 export class User extends BaseOrmEntity{
@@ -134,6 +135,9 @@ export class User extends BaseOrmEntity{
 
     @ManyToMany(() => Site, (site) => site.principleInvetigators)
     sites: Site[]
+
+    @OneToMany(() => PatientAppointment, (patient_appointment) => patient_appointment.user)
+    patientAppointments: Promise<PatientAppointment[]>;
 
     @Column({
         name: 'isAdmin',

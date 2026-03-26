@@ -10,15 +10,31 @@ import { UserService } from "../user/services/user.service";
 import { HandleDBError } from "../utils/commonErrors/handle-db.error";
 import { EmailService } from "../utils/mailers/email.service";
 import { HashingService } from "../utils/commonservices/hashing.service";
+import { ExportPatientService } from "./services/export-patients.service";
+import { UpdatePatientStatusService } from "./services/update-patient-status.service";
+import { UploadExcelService } from "./services/upload-excel.service";
+import { SiteRepository } from "../site/repositories/site.repository";
+import { UserRepository } from "../user/repositories/user.repository";
+import { MongooseModule } from "@nestjs/mongoose";
+import { PinoLoggerService } from "../utils/logger/pinoLogger.service";
+import { PatientSiteRepository } from "../patient-site/repositories/patient-site.repository";
+import { User } from "../user/database/user.orm";
+import { PatientSite } from "../patient-site/database/patient-site.entity";
+import { Site } from "../site/database/site.entity";
+import { ProtocolsSites } from "./database/protocol-site.entity-orm";
+import { PatientSiteService } from "../patient-site/services/patient-site.service";
+import { LoggerModule } from "../utils/logger/logger.module";
 
 const controllers = [PatientController];
-const services = [PatientService, PaginationService, UserService, HandleDBError, EmailService, HashingService];
-const repositories = [PatientRepository];
+const services = [PatientService, PaginationService, UserService, HandleDBError, EmailService, HashingService, ExportPatientService, UpdatePatientStatusService, UploadExcelService, PinoLoggerService, PatientSiteService];
+const repositories = [PatientRepository, SiteRepository, UserRepository, PatientSiteRepository];
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Patient]),
+        TypeOrmModule.forFeature([Patient, User, Patient, PatientSite, Site, ProtocolsSites]),
+        MongooseModule.forFeature([]),
         UserModule,
+        LoggerModule,
     ],
     controllers,
     providers: [...services, ...repositories],
