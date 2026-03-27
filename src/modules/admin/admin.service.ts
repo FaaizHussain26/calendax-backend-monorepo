@@ -14,13 +14,13 @@ export class AdminService {
     async logIn(email: string, password: string) {
         const admin = await this.adminRepository.getAdminByEmail(email);
         if(!admin) {
-            throw new NotFoundException('Not found');
+            throw new NotFoundException('Admin Not found');
         }
         const isMatch = await bcrypt.compare(password, admin.password);
         if(!isMatch) {
             throw new UnauthorizedException('Invalid Password');
         }
-            const payload = {
+            const payload:any = {
             id: admin.id,
             role: admin.role,
         }
