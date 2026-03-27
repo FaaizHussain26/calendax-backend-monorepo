@@ -7,6 +7,7 @@ import strict from 'assert/strict';
 import { AdminModule } from './modules/admin/admin.module';
 import { PageModule } from './modules/page/page.module';
 import configuration from './config/configuration';
+import { TenantModule } from './modules/tenant/tenant.module';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import configuration from './config/configuration';
       load: [configuration],
     }),
     AdminModule,
-    PageModule,
+    PageModule,TenantModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({

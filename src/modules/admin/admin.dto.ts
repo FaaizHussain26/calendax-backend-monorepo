@@ -1,6 +1,6 @@
 import { Exclude, Expose } from "class-transformer";
 import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from "class-validator";
-import { AdminRoles } from "src/utils/enums/admin.enum";
+import { AdminRoles } from "../../utils/enums/admin.enum";
 
 export class AdminLoginDto {
     @IsEmail()

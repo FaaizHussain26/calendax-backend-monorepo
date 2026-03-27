@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PageRepository } from "./page.repository";
-import { entityNotFound } from "src/utils/exceptions/notFound.exception";
+
 import { CreatePageDto, PageResponseDto, UpdatePageDto } from "./page.dto";
 import { plainToInstance } from "class-transformer";
+import { entityNotFound } from "../../utils/exceptions/notFound.exception";
 
 @Injectable()
 export class PageService {
@@ -13,7 +14,7 @@ export class PageService {
     async getAllPages() {
         try {
             return await this.pageRepository.getAllPages();
-        }catch(error) {
+        }catch(error:any) {
             throw new BadRequestException(error.message);
         }
     }
@@ -23,7 +24,7 @@ export class PageService {
             const page = await this.pageRepository.getByPageId(id);
             entityNotFound(page, "Page");
             return page;
-        }catch(error) {
+        }catch(error:any) {
             throw new BadRequestException(error.message);
         }
     }
@@ -32,7 +33,7 @@ export class PageService {
         try {
             const createdEntity = await this.pageRepository.createPage(payload);
             return plainToInstance(PageResponseDto, createdEntity);
-        }catch(error) {
+        }catch(error:any) {
             throw new BadRequestException(error.message);
         }
     }
@@ -46,7 +47,7 @@ export class PageService {
             return plainToInstance(PageResponseDto, updatedEntity, {
                 excludeExtraneousValues: true
             });
-        }catch(error) {
+        }catch(error:any) {
             throw new BadRequestException(error.message);
         }
     }
@@ -56,7 +57,8 @@ export class PageService {
             const page = await this.pageRepository.getByPageId(id);
             entityNotFound(page, "Page");
             await this.pageRepository.delete(id);
-        }catch(error) {
+             return { message: "Page deleted successfully" };
+        }catch(error:any) {
             throw new BadRequestException(error.message);
         }
     }

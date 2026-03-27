@@ -3,10 +3,10 @@ import { AdminSeeder } from "./admin.seeder";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AdminService } from "./admin.service";
 import { AdminController } from "./admin.controller";
-import { JwtCommonModule } from "src/common/jwt/jwt.module";
 import { AdminRepository } from "./admin.repository";
 import { AdminEntity } from "./entities/admin.entity";
 import { AdminPermissions } from "./entities/admin-permissions.entity";
+import { JwtCommonModule } from "../../common/jwt/jwt.module";
 
 const services = [AdminService];
 const repositories = [AdminRepository];

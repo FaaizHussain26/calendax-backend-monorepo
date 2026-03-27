@@ -33,7 +33,7 @@ export class PageController {
 
     @Delete("/:id")
     async deletePage(@Param('id', ParseUUIDPipe) id: string) {
-        await this.pageService.deletePage(id);
-        return { message: "Page deleted successfully" };
+      return  await this.pageService.deletePage(id);
+       
     }
 }

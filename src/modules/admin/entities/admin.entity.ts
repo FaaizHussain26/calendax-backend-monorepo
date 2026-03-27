@@ -1,6 +1,6 @@
-import { AdminRoles } from 'src/utils/enums/admin.enum';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm'
 import { AdminPermissions } from './admin-permissions.entity';
+import { AdminRoles } from '../../../utils/enums/admin.enum';
 
 @Entity("admins")
 export class AdminEntity {

@@ -11,8 +11,8 @@ import { randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 
 import { TokenBlacklistService } from './token-blacklist';
-import { AdminRoles } from 'src/utils/enums/admin.enum';
 import { RedisService } from '../redis/redis.service';
+import { AdminRoles } from '../../utils/enums/admin.enum';
 
 export interface JwtPayload {
   sub: string;
@@ -31,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey:
-        configService.get<string>('JWT_ADMIN_SECRET_KEY') ||
+        configService.get<string>('jwt.secret') ||
         'default_secret',
       ignoreExpiration: false,
     });
@@ -95,7 +95,7 @@ export class JwtHelper {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly redisService: RedisService, // ✅ use your service
+    private readonly redisService: RedisService, 
   ) {}
 
   async issueToken(user: any, permissions?: any[]) {
