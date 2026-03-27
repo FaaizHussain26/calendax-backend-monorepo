@@ -1,29 +1,18 @@
 import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { AdminEntity } from "./entities/admin.entity";
-import { Repository } from "typeorm";
 import * as bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { ConfigService } from "@nestjs/config";
 import { JwtHelper } from "src/common/jwt/jwt.provider";
 import { AdminRoles } from "../../utils/enums/admin.enum";
-import { AdminPermissions } from "./entities/admin-permissions.entity";
+import { AdminRepository } from "./admin.repository";
 
 @Injectable()
 export class AdminService {
     constructor(
-        @InjectRepository(AdminEntity)
-        private readonly adminRepository: Repository<AdminEntity>,
-        @InjectRepository(AdminPermissions)
-        private readonly adminPermissionsRepository: Repository<AdminPermissions>,
-        private readonly configService: ConfigService,
+        private readonly adminRepository: AdminRepository,
         private readonly jwtHelper: JwtHelper,
     ) {}
 
     async logIn(email: string, password: string) {
-        const admin = await this.adminRepository.findOne({
-            where: { email },
-        });
+        const admin = await this.adminRepository.getAdminByEmail(email);
         if(!admin) {
             throw new NotFoundException('Not found');
         }
@@ -36,9 +25,7 @@ export class AdminService {
             role: admin.role,
         }
         if(admin.role === AdminRoles.ADMIN) {
-            const permissions = await this.adminPermissionsRepository.find({
-             relations: ['permissions']
-            })
+            await this.adminRepository.findPermissions();
         }
         return this.jwtHelper.issueToken(payload);
     }

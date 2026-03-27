@@ -23,4 +23,10 @@ export class AdminPermissions {
 
     @Column({ type: 'boolean' })
     write: boolean;
+
+    @Column({ type: 'boolean'})
+    update: boolean;
+
+    @Column({ type: 'boolean'})
+    delete: boolean;
 }

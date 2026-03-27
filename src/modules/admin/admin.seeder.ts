@@ -1,46 +1,31 @@
 import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { AdminEntity } from "./entities/admin.entity";
 import { AdminRoles } from "../../utils/enums/admin.enum";
-import { AdminPage } from "../../utils/enums/admin.enum";
-import { AdminPermissions } from "./entities/admin-permissions.entity";
+import { AdminRepository } from "./admin.repository";
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AdminSeeder {
     constructor(
-        @InjectRepository(AdminEntity)
-        private readonly adminRepository: Repository<AdminEntity>,
-        @InjectRepository(AdminPermissions)
-        private readonly adminPermissionsRepository: Repository<AdminPermissions>,
+        private readonly adminRepository: AdminRepository,
     ) {}
     async onModuleInit() {
         try {
-            const exists = await this.adminRepository.findOne({
-                where: { role: AdminRoles.SUPER_ADMIN },
-            });
+            const email = 'superadmin@dax.com';
+            const exists = await this.adminRepository.getAdminByEmail(email);
             if(exists) return;
 
-            const admin = this.adminRepository.create({
+            const hashedPassword = await bcrypt.hash('ChangeMe123', 10);
+
+            const payload = {
                 name: 'Super Admin',
                 email: 'superadmin@dax.com',
-                password: 'ChangeMe123',
+                password: hashedPassword,
                 role: AdminRoles.SUPER_ADMIN,
-            })
+            }
 
-            const savedAdmin = await this.adminRepository.save(admin);
+            await this.adminRepository.createAdmin(payload);
 
-            const permissions = this.adminPermissionsRepository.create({
-                //@ts-ignore
-                admin: savedAdmin,
-                page: AdminPage.TENANT,
-                read: true,
-                write: true,
-            });
-
-            await this.adminPermissionsRepository.save(permissions);
-
-            console.log("Admin initialized");
+            console.log("Super Admin initialized");
         }catch(error) {
             throw new Error("An Error Occured");
         }
