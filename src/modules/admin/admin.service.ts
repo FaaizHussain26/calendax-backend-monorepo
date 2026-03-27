@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import * as bcrypt from 'bcrypt';
 import { JwtHelper } from "src/common/jwt/jwt.provider";
 import { AdminRoles } from "../../utils/enums/admin.enum";
 import { AdminRepository } from "./admin.repository";
-
+import { entityNotFound } from "src/utils/exceptions/notFound.exception";
+import { AdminResponseDto, CreateAdminDto, UpdateAdminDto } from "./admin.dto";
+import { plainToInstance } from "class-transformer";
 @Injectable()
 export class AdminService {
     constructor(
@@ -25,8 +27,69 @@ export class AdminService {
             role: admin.role,
         }
         if(admin.role === AdminRoles.ADMIN) {
-            await this.adminRepository.findPermissions();
+            await this.adminRepository.findPermissions(admin.id);
         }
         return this.jwtHelper.issueToken(payload);
+    }
+
+    async getAllAdmins() {
+        try {
+            return await this.adminRepository.getAllAdmins();
+        }catch(error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    async getAdminById(id: string) {
+        try {
+            const admin = await this.adminRepository.getAdminById(id);
+            entityNotFound(admin, "Admin");
+            return admin;
+        }catch(error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    async createAdmin(payload: CreateAdminDto) {
+        try {
+            const exisitingEntity = await this.adminRepository.getAdminByEmail(payload.email);
+            if(exisitingEntity) {
+                throw new BadRequestException("Email already exists");
+            }
+            const hashedPass = await bcrypt.hash(payload.password, 10);
+            const admin = await this.adminRepository.createAdmin({
+                ...payload,
+                password: hashedPass,
+            });
+            return plainToInstance(AdminResponseDto, admin);
+        }catch(error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    async updateAdmin(id: string, payload: UpdateAdminDto) {
+        try {
+            const exisitingEntity = await this.adminRepository.getAdminById(id);
+            entityNotFound(exisitingEntity, "Admin");
+            if(payload.password) {
+                const hashedPass = await bcrypt.hash(payload.password, 10);
+                payload.password = hashedPass;
+            }
+            await this.adminRepository.updateAdmin(id, payload);
+            const admin = await this.adminRepository.getAdminById(id);
+            return plainToInstance(AdminResponseDto, admin, { excludeExtraneousValues: true });
+        }catch(error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    async deleteAdmin(id: string) {
+        try {
+            const exisitingEntity = await this.adminRepository.getAdminById(id);
+            entityNotFound(exisitingEntity, "Admin");
+            return await this.adminRepository.delete(id);
+        }catch(error) {
+            throw new BadRequestException(error.message);
+        }
     }
 }

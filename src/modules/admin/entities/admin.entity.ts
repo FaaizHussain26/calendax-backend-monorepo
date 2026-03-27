@@ -1,5 +1,5 @@
 import { AdminRoles } from 'src/utils/enums/admin.enum';
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm'
 import { AdminPermissions } from './admin-permissions.entity';
 
 @Entity("admins")
@@ -10,7 +10,9 @@ export class AdminEntity {
     @Column()
     name: string;
 
-    @Column()
+    @Column({
+        unique: true,
+    })
     email: string;
 
     @Column()

@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import strict from 'assert/strict';
 import { AdminModule } from './modules/admin/admin.module';
+import { PageModule } from './modules/page/page.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { AdminModule } from './modules/admin/admin.module';
       envFilePath: '.env',
     }),
     AdminModule,
+    PageModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({

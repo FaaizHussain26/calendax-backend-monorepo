@@ -1,8 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { AdminEntity } from "./entities/admin.entity";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { AdminPermissions } from "./entities/admin-permissions.entity";
+import { plainToInstance } from "class-transformer";
+import { AdminResponseDto } from "./admin.dto";
 
 @Injectable()
 export class AdminRepository {
@@ -20,14 +22,34 @@ export class AdminRepository {
     }
 
     async createAdmin(payload: Partial<AdminEntity>) {
-        const admin = await this.adminRepository.create(payload);
-        return await this.adminRepository.save(admin);
+        const createdEntity = this.adminRepository.create(payload);
+        return await this.adminRepository.save(createdEntity);
+    }
+
+    async getAdminById(id: string) {
+        return await this.adminRepository.findOne({
+            where: { id },
+        });
+    }
+
+    async getAllAdmins() {
+        const admins = await this.adminRepository.find();
+        return plainToInstance(AdminResponseDto, admins, {
+            excludeExtraneousValues: true,
+        })
+    }
+
+    async updateAdmin(id: string, payload: Partial<AdminEntity>) {
+        const updatedEntity = this.adminRepository.update(id, payload);
+        return updatedEntity;
+    }
+
+    async delete(id: string) {
+        return await this.adminRepository.delete(id);
     }
 
     //permissionRepository
-    async findPermissions() {
-        return await this.adminPermissionRepository.find({
-            relations: ['permissions'],
-        });
+    async findPermissions(id:string) {
+        return await this.adminPermissionRepository.find();
     }
 }
