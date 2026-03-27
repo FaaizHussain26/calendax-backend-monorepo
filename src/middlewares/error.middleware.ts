@@ -49,7 +49,7 @@ export class ErrorResponseFilter implements ExceptionFilter {
       'HTTP_EXCEPTION',
       JSON.stringify({
         level: 'error',
-        service: 'rentalink-api',
+        service:'calendax-api',
         method: request.method,
         path: request.url,
         statusCode: status,
