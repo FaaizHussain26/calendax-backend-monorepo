@@ -1,4 +1,4 @@
-import { AdminRoles } from 'src/modules/utils/enums/adminRoles.enum';
+import { AdminRoles } from 'src/utils/enums/admin.enum';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
 import { AdminPermissions } from './admin-permissions.entity';
 

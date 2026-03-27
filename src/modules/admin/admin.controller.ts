@@ -8,7 +8,7 @@ export class AdminController {
         private readonly adminService: AdminService,
     ) {}
 
-    @Post()    
+    @Post('/login')    
     async logIn(dto: AdminLoginDto) {
         return await this.adminService.logIn(dto.email, dto.password);
     }

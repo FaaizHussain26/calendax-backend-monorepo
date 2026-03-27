@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { AdminEntity } from "./admin.entity";
-import { AdminRoles } from "../utils/enums/adminRoles.enum";
-import { AdminPage } from "../utils/enums/adminPage.enum";
-import { AdminPermissions } from "./admin-permissions.entity";
+import { AdminEntity } from "./entities/admin.entity";
+import { AdminRoles } from "../../utils/enums/admin.enum";
+import { AdminPage } from "../../utils/enums/admin.enum";
+import { AdminPermissions } from "./entities/admin-permissions.entity";
 
 @Injectable()
 export class AdminSeeder {
@@ -22,7 +22,7 @@ export class AdminSeeder {
             if(exists) return;
 
             const admin = this.adminRepository.create({
-                name: 'Tariq',
+                name: 'Super Admin',
                 email: 'superadmin@dax.com',
                 password: 'ChangeMe123',
                 role: AdminRoles.SUPER_ADMIN,

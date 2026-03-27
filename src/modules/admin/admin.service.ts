@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { AdminEntity } from "./admin.entity";
+import { AdminEntity } from "./entities/admin.entity";
 import { Repository } from "typeorm";
 import * as bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { ConfigService } from "@nestjs/config";
 import { JwtHelper } from "src/common/jwt/jwt.provider";
-import { AdminRoles } from "../utils/enums/adminRoles.enum";
-import { AdminPermissions } from "./admin-permissions.entity";
+import { AdminRoles } from "../../utils/enums/admin.enum";
+import { AdminPermissions } from "./entities/admin-permissions.entity";
 
 @Injectable()
 export class AdminService {
