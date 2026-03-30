@@ -1,23 +1,24 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import strict from 'assert/strict';
 import { AdminModule } from './modules/admin/admin.module';
 import { PageModule } from './modules/page/page.module';
 import configuration from './config/configuration';
 import { TenantModule } from './modules/tenant/tenant.module';
+import { DecryptPayloadMiddleware } from './middlewares/decrypt-payload.middleware';
+import { JwtCommonModule } from './common/jwt/jwt.module';
 
 @Module({
   imports: [
-   ConfigModule.forRoot({
+    ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
     }),
-    AdminModule,
-    PageModule,TenantModule,
+
     TypeOrmModule.forRootAsync({
+      name: 'master',
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
@@ -29,9 +30,19 @@ import { TenantModule } from './modules/tenant/tenant.module';
         autoLoadEntities: true,
         synchronize: true,
       }),
-    })
+    }),
+    JwtCommonModule,
+    AdminModule,
+    PageModule,
+    TenantModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+   configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(DecryptPayloadMiddleware)
+      .forRoutes('patients'); // only patient routes
+  }
+}

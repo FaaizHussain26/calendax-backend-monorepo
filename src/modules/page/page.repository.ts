@@ -8,7 +8,7 @@ import { PageResponseDto } from "./page.dto";
 @Injectable()
 export class PageRepository {
     constructor(
-        @InjectRepository(PageEntity)
+        @InjectRepository(PageEntity,'master')
         private readonly pageRepository: Repository<PageEntity>,
     ) {}
 

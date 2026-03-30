@@ -1,6 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { AdminEntity } from "./admin.entity";
-import { AdminPage } from "../../../utils/enums/admin.enum";
+import { AdminPage } from "../../../enums/admin.enum";
 @Entity("admin_permissions")
 @Unique(['admin', 'page'])
 export class AdminPermissions {

@@ -12,7 +12,10 @@ import { ConfigService } from '@nestjs/config';
 
 import { TokenBlacklistService } from './token-blacklist';
 import { RedisService } from '../redis/redis.service';
-import { AdminRoles } from '../../utils/enums/admin.enum';
+import { AdminRoles } from '../../enums/admin.enum';
+import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { HelperFunctions } from '../utils/functions';
 
 export interface JwtPayload {
   sub: string;
@@ -30,9 +33,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey:
-        configService.get<string>('jwt.secret') ||
-        'default_secret',
+      secretOrKey: configService.get<string>('jwt.secret') || 'default_secret',
       ignoreExpiration: false,
     });
   }
@@ -58,12 +59,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!session) {
       throw new UnauthorizedException('Session expired');
     }
-
     const user = JSON.parse(session);
 
-    if (!user.isActive) {
-      throw new UnauthorizedException('User inactive');
-    }
+    // if (!user.isActive) {
+    //   throw new UnauthorizedException('User inactive');
+    // }
 
     // ✅ 3. Get permissions
     let permissions: any[] = [];
@@ -85,7 +85,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
+  constructor(private reflector: Reflector) {
+    super();
+  }
+
   canActivate(context: ExecutionContext) {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true; // ✅ skip JWT validation
+    }
+
     return super.canActivate(context);
   }
 }
@@ -95,7 +108,7 @@ export class JwtHelper {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly redisService: RedisService, 
+    private readonly redisService: RedisService,
   ) {}
 
   async issueToken(user: any, permissions?: any[]) {
@@ -109,14 +122,11 @@ export class JwtHelper {
       jti,
     };
 
-    const expiresIn =
-      this.configService.get<number>('JWT_ADMIN_TOKEN_EXPIRES_IN') ||
-      60 * 60 * 24;
-
+    const expiresIn = this.configService.get<number>('jwt.expiresIn') || `1d`;
+    const redisExpiresIn=HelperFunctions.parseExpiryToSeconds(expiresIn)
     const secret =
-      this.configService.get<string>('JWT_ADMIN_SECRET_KEY') ||
-      'default_secret';
-
+      this.configService.get<string>('jwt.secret') || 'default_secret';
+    console.log('jwt ex and sec:', expiresIn,redisExpiresIn, secret);
     // ✅ Store session
     await redis.set(
       `session:${jti}`,
@@ -126,7 +136,7 @@ export class JwtHelper {
         isActive: user.isActive,
       }),
       'EX',
-      expiresIn,
+      redisExpiresIn,
     );
 
     // ✅ Store permissions
@@ -135,14 +145,14 @@ export class JwtHelper {
         `admin_perm:${user.id}`,
         JSON.stringify(permissions),
         'EX',
-        expiresIn,
+        redisExpiresIn,
       );
     }
 
     return {
       accessToken: this.jwtService.sign(payload, {
         secret,
-        expiresIn,
+        expiresIn: this.configService.get<number>('jwt.expiresIn'),
       }),
     };
   }

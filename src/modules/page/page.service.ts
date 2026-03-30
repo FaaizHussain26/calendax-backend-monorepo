@@ -3,7 +3,7 @@ import { PageRepository } from "./page.repository";
 
 import { CreatePageDto, PageResponseDto, UpdatePageDto } from "./page.dto";
 import { plainToInstance } from "class-transformer";
-import { entityNotFound } from "../../utils/exceptions/notFound.exception";
+import { entityNotFound } from "../../common/exceptions/notFound.exception";
 
 @Injectable()
 export class PageService {

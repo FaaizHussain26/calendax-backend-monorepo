@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { AdminRoles } from "../../utils/enums/admin.enum";
+import { AdminRoles } from "../../enums/admin.enum";
 import { AdminRepository } from "./admin.repository";
 import * as bcrypt from 'bcrypt';
 

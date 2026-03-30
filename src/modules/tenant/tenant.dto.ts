@@ -1,9 +1,8 @@
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class TenantResponseDto {
-    id: string;
-    name: string;
-    slug: string;
+    id!: string;
+    name!: string;
     creadtedById?: string;
     updatedById?: string;
 }
@@ -13,9 +12,6 @@ export class CreateTenantDto {
     @IsNotEmpty()
     name: string;
 
-    @IsNotEmpty()
-    @IsNotEmpty()
-    slug: string;
 }
 
 export class UpdateTenantDto {
@@ -23,7 +19,4 @@ export class UpdateTenantDto {
     @IsOptional()
     name?: string;
 
-    @IsNotEmpty()
-    @IsOptional()
-    slug?: string;
 }

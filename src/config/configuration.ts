@@ -12,7 +12,13 @@ export default () => ({
     host:process.env.REDIS_HOST,
     port:process.env.REDIS_PORT,
     password:process.env.REDIS_PASSWORD,
-    username:process.env.REDIS_USERNAME
+    username:process.env.REDIS_USERNAME,
+  },
+  tenant:{
+    cacheSize:process.env.TENANT_CACHE_SIZE||100,
+    db:{
+      host:"localhost",port:5432
+    }
   }
 
 });

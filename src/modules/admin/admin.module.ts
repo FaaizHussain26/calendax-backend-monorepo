@@ -14,7 +14,7 @@ const controllers = [AdminController];
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([AdminEntity, AdminPermissions]),
+        TypeOrmModule.forFeature([AdminEntity, AdminPermissions],'master'),
         JwtCommonModule,
     ],
     controllers,
