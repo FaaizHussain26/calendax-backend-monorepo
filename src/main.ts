@@ -5,9 +5,24 @@ import { ErrorResponseFilter } from './middlewares/error.middleware';
 import { ResponseInterceptor } from './middlewares/response.middleware';
 import helmet from 'helmet';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  const config = new DocumentBuilder()
+    .setTitle('Calendax-Revamp')
+    .setVersion('1.0')
+    .addSecurity('bearer', {
+      type: 'http',
+      scheme: 'bearer'
+    })
+    .addSecurityRequirements('bearer')
+    .addTag('cats')
+    .build()
+  
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, documentFactory);
 
   app.use(
     helmet({
