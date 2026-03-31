@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomBytes, createHmac } from 'crypto';
+import { UserEntity } from '../../modules/tenant-modules/user/user.entity';
   const expiryMap: Record<string, number> = {
   's': 1,
   'm': 60,
@@ -55,4 +56,12 @@ static parseExpiryToSeconds(value: string | number): number {
   const amount = parseInt(value.slice(0, -1), 10);
   return amount * (expiryMap[unit] ?? 1);
 }
+static  resolvePermissions(user: UserEntity): string[] {
+  const fromRole = user.role?.permissions?.map((p) => p.key) ?? [];
+  const direct = user.permissions?.map((p) => p.key) ?? [];
+
+  // merge + deduplicate
+  return [...new Set([...fromRole, ...direct])];
+}
+
 }

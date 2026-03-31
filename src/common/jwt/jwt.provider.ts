@@ -22,6 +22,7 @@ export interface JwtPayload {
   role: string;
   jti: string;
   exp?: number;
+  tenantId?: string;
 }
 
 @Injectable()
@@ -29,7 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly configService: ConfigService,
     private readonly tokenBlacklist: TokenBlacklistService,
-    private readonly redisService: RedisService, // ✅ use your service
+    private readonly redisService: RedisService, // use your service
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -47,13 +48,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     const redis = this.redisService.getClient();
 
-    // ✅ 1. Check blacklist
+    // 1. Check blacklist
     const isBlacklisted = await this.tokenBlacklist.isBlacklisted(jti);
     if (isBlacklisted) {
       throw new UnauthorizedException('Token revoked');
     }
 
-    // ✅ 2. Get session from Redis
+    // 2. Get session from Redis
     const session = await redis.get(`session:${jti}`);
 
     if (!session) {
@@ -65,7 +66,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     //   throw new UnauthorizedException('User inactive');
     // }
 
-    // ✅ 3. Get permissions
+    // 3. Get permissions
     let permissions: any[] = [];
 
     if (user.role === AdminRoles.ADMIN) {
@@ -96,7 +97,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     ]);
 
     if (isPublic) {
-      return true; // ✅ skip JWT validation
+      return true; // skip JWT validation
     }
 
     return super.canActivate(context);
@@ -120,26 +121,30 @@ export class JwtHelper {
       sub: user.id?.toString(),
       role: user.role,
       jti,
+      tenantId: user.tenantId ?? null,
     };
 
     const expiresIn = this.configService.get<number>('jwt.expiresIn') || `1d`;
-    const redisExpiresIn=HelperFunctions.parseExpiryToSeconds(expiresIn)
+    const redisExpiresIn = HelperFunctions.parseExpiryToSeconds(expiresIn);
     const secret =
       this.configService.get<string>('jwt.secret') || 'default_secret';
-    console.log('jwt ex and sec:', expiresIn,redisExpiresIn, secret);
-    // ✅ Store session
+
+    // Store session
     await redis.set(
       `session:${jti}`,
       JSON.stringify({
         id: user.id,
         role: user.role,
         isActive: user.isActive,
+        tenantId: user.tenantId ?? null,
+        userType: user.userType ?? null,
+        roleId: user.roleId ?? null,
       }),
       'EX',
       redisExpiresIn,
     );
 
-    // ✅ Store permissions
+    // Store permissions
     if (permissions && permissions.length > 0) {
       await redis.set(
         `admin_perm:${user.id}`,

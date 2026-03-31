@@ -1,4 +1,5 @@
 export default () => ({
+  environment:process.env.NODE_ENV||"development",
   port: parseInt(process.env.PORT!, 10) || 3000,
   defaultPassword:'Assd@123',
   database: {
@@ -6,6 +7,7 @@ export default () => ({
   },
    jwt: {
     secret: process.env.JWT_ADMIN_SECRET_KEY||'dev_secret',
+     refreshSecret: process.env.JWT_REFRESH_SECRET||'dev_refresh_secret',
     expiresIn: process.env.JWT_ADMIN_TOKEN_EXPIRES_IN||'1d',
   },
   redis:{

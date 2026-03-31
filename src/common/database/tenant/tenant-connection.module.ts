@@ -3,14 +3,16 @@ import { Injectable, NotFoundException, OnModuleDestroy } from '@nestjs/common';
 import { LRUCache } from 'lru-cache';
 import { DataSource } from 'typeorm';
 import { TenantRepository } from '../../../modules/tenant/tenant.repository';
+import { ConfigService } from '@nestjs/config';
+import { TenantEntity } from '../../../modules/tenant/tenant.entity';
 
 @Injectable()
 export class TenantConnectionManager implements OnModuleDestroy {
   private cache: LRUCache<string, DataSource>;
 
-  constructor(private tenantRepo: TenantRepository) {
+  constructor(private tenantRepo: TenantRepository,private configService: ConfigService) {
     this.cache = new LRUCache<string, DataSource>({
-      max: 100, // max 100 tenant connections cached
+      max:  this.configService.get<number>('tenant.maxCacheSize') ?? 100,
 
       // Called automatically when an entry is evicted
       disposeAfter: async (connection: DataSource, tenantId: string) => {
@@ -22,11 +24,11 @@ export class TenantConnectionManager implements OnModuleDestroy {
     });
   }
 
-  async getConnection(tenantId: string): Promise<DataSource> {
- const cached = this.cache.get(tenantId);
+  async getConnection(credentials: TenantEntity): Promise<DataSource> {
+ const cached = this.cache.get(credentials.id);
   if (cached) return cached; 
 
-    const tenant = await this.tenantRepo.getByTenantId(tenantId);
+    const tenant = await this.tenantRepo.getByTenantId(credentials.id);
     if (!tenant) throw new NotFoundException('Tenant not found');
 
     const dataSource = new DataSource({
@@ -36,7 +38,7 @@ export class TenantConnectionManager implements OnModuleDestroy {
       username: tenant.dbUser,
       password: tenant.dbPassword,
       database: tenant.dbName,
-      synchronize: false,
+      synchronize: this.configService.get('environment')!=="production",
       entities: [
         __dirname + '/../../modules/tenant-modules/**/*.entity{.ts,.js}',
       ],
@@ -48,7 +50,7 @@ export class TenantConnectionManager implements OnModuleDestroy {
     });
 
     await dataSource.initialize();
-    this.cache.set(tenantId, dataSource);
+    this.cache.set(credentials.id, dataSource);
     return dataSource;
   }
 

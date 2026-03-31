@@ -4,7 +4,7 @@ import { PageRepository } from "./page.repository";
 import { PageService } from "./page.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { PageEntity } from "./page.entity";
-import { JwtCommonModule } from "../../common/jwt/jwt.module";
+import { AdminEntity } from "../admin/entities/admin.entity";
 
 const controllers = [PageController];
 const repostories = [PageRepository];
@@ -12,7 +12,7 @@ const services = [PageService];
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([PageEntity],'master'),JwtCommonModule
+        TypeOrmModule.forFeature([PageEntity],'master')
     ],
     controllers,
     providers: [...services, ...repostories]

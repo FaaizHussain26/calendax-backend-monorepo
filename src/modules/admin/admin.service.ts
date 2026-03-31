@@ -24,17 +24,20 @@ export class AdminService {
       throw new NotFoundException('Admin Not found');
     }
     if (!admin.isActive) {
-  throw new UnauthorizedException('Account is inactive');
-}
+      throw new UnauthorizedException('Account is inactive');
+    }
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
       throw new UnauthorizedException('Invalid Password');
     }
-    const payload: any = {
+    let payload: any = {
       id: admin.id,
       role: admin.role,
     };
-
+    if (admin.role === AdminRoles.ADMIN) {
+      const permissions = await this.adminRepository.findPermissions(admin.id);
+      if (permissions.length)  return this.jwtHelper.issueToken(payload);
+    }
     return this.jwtHelper.issueToken(payload);
   }
 

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
@@ -48,23 +49,16 @@ export class TenantService {
     }
   }
 
-  // async createTenant(payload: CreateTenantDto) {
-  //     try {
-  //         const createdEntity = await this.tenantRepository.createTenant(payload);
-  //         return plainToInstance(TenantResponseDto, createdEntity);
-  //     }catch(error:any) {
-  //         throw new BadRequestException(error.message);
-  //     }
-  // }
   async createTenant(dto: CreateTenantDto) {
     const slug = HelperFunctions.generateSlug(dto.name);
     const dbName = `tenant_${slug}`;
     const dbPassword = HelperFunctions.generateSecurePassword();
     let tenant: TenantEntity | null = null;
 
+    const existing = await this.tenantRepository.findBySlug(slug);
+    if (existing)
+      throw new ConflictException('Tenant with this name already exists');
     try {
-        const prev=await this.tenantRepository.findBySlug(slug)
-        if(prev) throw new Error("Tenant with this name already exists!")
       // 1. Provision the database first
       await this.provisionDatabase(dbName, slug, dbPassword);
 
@@ -77,11 +71,11 @@ export class TenantService {
         dbUser: slug,
         dbPassword,
         dbName,
-        status: TenantStatus.PROVISIONING, 
+        status: TenantStatus.PROVISIONING,
       });
 
       // 3. Run migrations on tenant DB
-      const connection = await this.connectionManager.getConnection(tenant.id);
+      const connection = await this.connectionManager.getConnection(tenant);
       await connection.runMigrations();
 
       // 4. Only mark ACTIVE after everything succeeded
@@ -125,35 +119,46 @@ export class TenantService {
     }
   }
 
- private async provisionDatabase(
-  dbName: string,
-  dbUser: string,
-  dbPassword: string,
-) {
-  const masterConn = this.masterDataSource;
-console.log("provisioning db:",dbName,dbUser,dbPassword)
-  await masterConn.query(`CREATE DATABASE "${dbName}"`);
-  await masterConn.query(`CREATE USER "${dbUser}" WITH PASSWORD '${dbPassword}'`);
-  await masterConn.query(`GRANT ALL PRIVILEGES ON DATABASE "${dbName}" TO "${dbUser}"`);
+  private async provisionDatabase(
+    dbName: string,
+    dbUser: string,
+    dbPassword: string,
+  ) {
+    const masterConn = this.masterDataSource;
+    await masterConn.query(`CREATE DATABASE "${dbName}"`);
+    await masterConn.query(
+      `CREATE USER "${dbUser}" WITH PASSWORD '${dbPassword}'`,
+    );
+    await masterConn.query(
+      `GRANT ALL PRIVILEGES ON DATABASE "${dbName}" TO "${dbUser}"`,
+    );
 
-  // Connect to tenant DB as superuser to grant schema permissions
-  const tenantAdminConn = new DataSource({
-    type: 'postgres',
-    host: this.configService.get<string>('tenant.db.host'),
-    port: this.configService.get<number>('tenant.db.port') ?? 5432,
-    username:'postgres',
-    password: 'admin',
-    database: dbName,
-  });
+    // Connect to tenant DB as superuser to grant schema permissions
+    const tenantAdminConn = new DataSource({
+      type: 'postgres',
+      host: this.configService.get<string>('DB_HOST'),
+      port: this.configService.get<number>('DB_PORT') ?? 5432,
+      username: this.configService.get<string>('DB_USER'),
+      password: this.configService.get<string>('DB_PASSWORD'),
+      database: dbName,
+    });
 
-  await tenantAdminConn.initialize();
-  await tenantAdminConn.query(`GRANT ALL ON SCHEMA public TO "${dbUser}"`);
-  await tenantAdminConn.query(`GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "${dbUser}"`);
-  await tenantAdminConn.query(`GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "${dbUser}"`);
-  await tenantAdminConn.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO "${dbUser}"`);
-  await tenantAdminConn.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO "${dbUser}"`);
-  await tenantAdminConn.destroy();
-}
+    await tenantAdminConn.initialize();
+    await tenantAdminConn.query(`GRANT ALL ON SCHEMA public TO "${dbUser}"`);
+    await tenantAdminConn.query(
+      `GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "${dbUser}"`,
+    );
+    await tenantAdminConn.query(
+      `GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "${dbUser}"`,
+    );
+    await tenantAdminConn.query(
+      `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO "${dbUser}"`,
+    );
+    await tenantAdminConn.query(
+      `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO "${dbUser}"`,
+    );
+    await tenantAdminConn.destroy();
+  }
 
   private async deprovisionDatabase(dbName: string, dbUser: string) {
     const masterConn = this.masterDataSource;
