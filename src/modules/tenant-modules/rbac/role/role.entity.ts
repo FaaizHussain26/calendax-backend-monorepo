@@ -1,6 +1,17 @@
-import { UserEntity } from "../../user/user.entity";
-import { PermissionEntity } from "../permission/permission.entity";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+// src/modules/tenant-modules/rbac/role/role.entity.ts
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { PermissionEntity } from '../permission/permission.entity';
+import { UserEntity } from '../../user/user.entity';
 
 @Entity('roles')
 export class RoleEntity {
@@ -10,8 +21,11 @@ export class RoleEntity {
   @Column({ type: 'varchar', length: 50, unique: true })
   name: string;
 
+  @Column({ type: 'varchar', length: 160, nullable: true })
+  description: string;
+
   @Column({ type: 'boolean', default: false })
-  isDefault: boolean;              // auto-assign to new users if true
+  isDefault: boolean;              // ✅ auto assigned to new users if true
 
   @ManyToMany(() => PermissionEntity, (p) => p.roles)
   @JoinTable({
@@ -30,6 +44,6 @@ export class RoleEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @DeleteDateColumn()              // ✅ replaces active:boolean
-  deletedAt: Date;
+  @DeleteDateColumn()
+  deletedAt: Date | null;
 }

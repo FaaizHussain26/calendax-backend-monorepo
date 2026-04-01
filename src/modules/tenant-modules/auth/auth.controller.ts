@@ -22,8 +22,10 @@ import { PermissionsGuard } from '../../../common/guards/permission.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { TenantUserRoles } from '../../../enums/tenant.enum';
 import { Roles } from '../../../common/decorators/roles.decorator';
+import { TenantGuard } from '../../../common/guards/tenant.guard';
 
 @Controller('auth')
+@UseGuards(TenantGuard)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

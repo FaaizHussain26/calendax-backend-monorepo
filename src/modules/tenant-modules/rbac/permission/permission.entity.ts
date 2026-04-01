@@ -1,6 +1,17 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { PermissionGroupEntity } from "../permission-group/permission-group.entity";
-import { RoleEntity } from "../role/role.entity";
+// src/modules/tenant-modules/rbac/permission/permission.entity.ts
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToMany,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { PermissionGroupEntity } from '../permission-group/permission-group.entity';
+import { RoleEntity } from '../role/role.entity';
 
 @Entity('permissions')
 export class PermissionEntity {
@@ -8,10 +19,10 @@ export class PermissionEntity {
   id: string;
 
   @Column({ type: 'varchar', length: 60, unique: true })
-  key: string;                     // was 'slug' — renamed to 'key' for clarity
-                                   // e.g. "appointments.create"
+  key: string;                     // 'appointments.create'
+
   @Column({ type: 'varchar', length: 60 })
-  name: string;                    // e.g. "Create Appointments"
+  name: string;                    // 'Create Appointments'
 
   @Column({ type: 'varchar', length: 160, nullable: true })
   description: string;
@@ -34,6 +45,6 @@ export class PermissionEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @DeleteDateColumn()             
-  deletedAt: Date;
+  @DeleteDateColumn()
+  deletedAt: Date | null;
 }

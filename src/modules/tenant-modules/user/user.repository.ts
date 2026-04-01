@@ -1,12 +1,13 @@
 // src/modules/tenant-modules/users/users.repository.ts
 import { Inject, Injectable, Scope } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import { UserEntity } from './user.entity';
+import { TenantUserRoles } from '../../../enums/tenant.enum';
 
 @Injectable({ scope: Scope.REQUEST })        // 👈 request scoped
 export class UsersRepository {
   constructor(
-    @Inject('UserEntityRepository')          // 👈 matches provide key
+    @Inject('UserEntityRepository')        
     private readonly repo: Repository<UserEntity>,
   ) {}
 
@@ -21,6 +22,68 @@ export class UsersRepository {
   async findById(id: string) {
     return this.repo.findOne({ where: { id } });
   }
+   async findAllWithDetails(query: {
+    userType?: TenantUserRoles;
+    isActive?: boolean;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const { userType, isActive, search, page = 1, limit = 10 } = query;
+    const baseWhere:FindOptionsWhere<UserEntity>  = {
+      ...(userType && { userType }),
+      ...(isActive !== undefined && { isActive }),
+    };
+
+    const [data, total] = await this.repo.findAndCount({
+      where: search
+        ? [
+            { ...baseWhere, firstName: ILike(`%${search}%`) },
+            { ...baseWhere, lastName: ILike(`%${search}%`) },
+            { ...baseWhere, email: ILike(`%${search}%`) },
+          ]
+        : baseWhere,
+      relations: {
+        role: { permissions: true },
+        permissions: true,
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+
+    return { data, total, page, limit };
+  }
+async findDetailsById(id: string): Promise<UserEntity | null> {
+  return this.repo.findOne({
+    where: { id },
+    relations: {
+      role: { permissions: true },
+      permissions: true,
+    },
+     select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      middleName: true,
+      email: true,
+      phoneNumber: true,
+      isActive: true,
+      userType: true,
+      roleId: true,
+      emailVerifiedAt: true,
+      lastLoginAt: true,
+      createdAt: true,
+      updatedAt: true,
+      deletedAt:true
+    },
+  });
+}
+async findByIds(ids: string[]): Promise<UserEntity[]> {
+    return this.repo.find({
+      where: { id: In(ids) },
+    });
+  }
 
   async create(payload: Partial<UserEntity>) {
     return this.repo.save(this.repo.create(payload));
@@ -32,5 +95,12 @@ export class UsersRepository {
 
   async delete(id: string) {
     return this.repo.delete(id);
+  }
+   async softDelete(id: string): Promise<void> {
+    await this.repo.softDelete(id);
+  }
+
+  async restore(id: string): Promise<void> {
+    await this.repo.restore(id);
   }
 }

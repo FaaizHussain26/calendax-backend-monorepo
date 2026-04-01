@@ -5,6 +5,7 @@ import { ErrorResponseFilter } from './middlewares/error.middleware';
 import { ResponseInterceptor } from './middlewares/response.middleware';
 import helmet from 'helmet';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { RootSeeder } from './seeders/root.seeder';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -52,6 +53,10 @@ async function bootstrap() {
 
   // GLOBAL API PREFIX
   app.setGlobalPrefix('api');
+
+    // ✅ run seeders on startup
+  const seeder = app.get(RootSeeder);
+  await seeder.seed();
   const PORT = process.env.PORT ?? 3000;
   await app.listen(PORT, () =>
     console.log(`Server listening on port: ${PORT}`),

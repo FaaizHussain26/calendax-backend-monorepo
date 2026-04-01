@@ -1,8 +1,7 @@
 // src/modules/tenant-modules/auth/otp/otp.service.ts
 import { BadRequestException, Inject, Injectable, Scope } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { Repository, LessThan } from 'typeorm';
-import { OtpEntity } from './otp.entity';
+
 
 import { randomUUID } from 'crypto';
 import { OtpPurpose } from '../../../../enums/system.enum';

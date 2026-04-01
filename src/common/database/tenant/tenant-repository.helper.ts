@@ -3,7 +3,7 @@ import { DataSource, ObjectType } from 'typeorm';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 import { Scope } from '@nestjs/common';
-import { TenantConnectionManager } from './tenant-connection.module';
+import { TenantConnectionManager } from './tenant-connection.manager';
 import { TenantEntity } from '../../../modules/tenant/tenant.entity';
 
 export function provideTenantRepository<T>(entity: ObjectType<T>) {
@@ -12,10 +12,19 @@ export function provideTenantRepository<T>(entity: ObjectType<T>) {
     scope: Scope.REQUEST, // new instance per request
     inject: [TenantConnectionManager, REQUEST],
     useFactory: async (
-      manager: TenantConnectionManager,
-      req: Request & { tenantId: string; tenant: TenantEntity },
+      req: Request & {
+        tenantId: string;
+        tenant: TenantEntity;
+        tenantConnection: any;
+      },
     ) => {
-      const connection = await manager.getConnection(req.tenant);
+      const connection: DataSource = req.tenantConnection;
+      if (!connection) {
+        throw new Error(
+          `Tenant context missing for ${entity.name}Repository. ` +
+            `Ensure TenantGuard is applied to this route.`,
+        );
+      }
       return connection.getRepository(entity);
     },
   };

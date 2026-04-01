@@ -11,9 +11,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { RoleEntity } from '../rbac/role/role.entity';
 import { TenantUserRoles } from '../../../enums/tenant.enum';
 import { PermissionEntity } from '../rbac/permission/permission.entity';
+import { RoleEntity } from '../rbac/role/role.entity';
 
 @Entity('users')
 export class UserEntity {

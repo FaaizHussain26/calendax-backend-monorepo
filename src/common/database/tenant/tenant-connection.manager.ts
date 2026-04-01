@@ -24,12 +24,12 @@ export class TenantConnectionManager implements OnModuleDestroy {
     });
   }
 
-  async getConnection(credentials: TenantEntity): Promise<DataSource> {
- const cached = this.cache.get(credentials.id);
+  async getConnection(tenant: TenantEntity): Promise<DataSource> {
+        if (!tenant) throw new NotFoundException('Tenant context is missing');
+
+ const cached = this.cache.get(tenant.id);
   if (cached) return cached; 
 
-    const tenant = await this.tenantRepo.getByTenantId(credentials.id);
-    if (!tenant) throw new NotFoundException('Tenant not found');
 
     const dataSource = new DataSource({
       type: 'postgres',
@@ -46,11 +46,16 @@ export class TenantConnectionManager implements OnModuleDestroy {
       __dirname + '/../../modules/tenant-modules/migrations/**/*{.ts,.js}', // ← add this
     ],
     migrationsRun: false,
-      poolSize: 5, // keep pool small per tenant
+     extra: {
+        max: 5,
+        min: 1,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+      },
     });
 
     await dataSource.initialize();
-    this.cache.set(credentials.id, dataSource);
+    this.cache.set(tenant.id, dataSource);
     return dataSource;
   }
 

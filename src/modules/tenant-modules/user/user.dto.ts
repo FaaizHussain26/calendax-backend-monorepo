@@ -38,6 +38,10 @@ export class CreateUserDto {
   @IsOptional()
   roleId?: string;
 
+  @IsUUID('4', { each: true })
+  @IsOptional()
+  permissionIds?: string[];
+
   @IsBoolean()
   @IsOptional()
   sendWelcomeEmail?: boolean;
@@ -71,6 +75,10 @@ export class UpdateUserDto {
   @IsOptional()
   roleId?: string;
 
+  @IsUUID('4', { each: true })
+  @IsOptional()
+  permissionIds?: string[];
+
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
@@ -79,7 +87,7 @@ export class UpdateUserDto {
 export class UserQueryDto {
   @IsEnum(TenantUserRoles)
   @IsOptional()
-  userType?: TenantUserRoles;
+ userType?: TenantUserRoles;
 
   @IsBoolean()
   @IsOptional()
@@ -87,7 +95,7 @@ export class UserQueryDto {
 
   @IsString()
   @IsOptional()
-  search?: string;               // search by name or email
+  search?: string;
 
   @IsOptional()
   page?: number;

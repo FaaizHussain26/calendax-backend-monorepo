@@ -1,5 +1,4 @@
 import { Module } from "@nestjs/common";
-import { AdminSeeder } from "./admin.seeder";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AdminService } from "./admin.service";
 import { AdminController } from "./admin.controller";
@@ -18,7 +17,7 @@ const controllers = [AdminController];
         JwtCommonModule,
     ],
     controllers,
-    providers: [...services, ...repositories, AdminSeeder],
+    providers: [...services, ...repositories],
     exports: [],
 })
 

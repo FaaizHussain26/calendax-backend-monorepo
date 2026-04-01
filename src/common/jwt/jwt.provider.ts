@@ -16,6 +16,7 @@ import { AdminRoles } from '../../enums/admin.enum';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { HelperFunctions } from '../utils/functions';
+import { SignOptions } from 'jsonwebtoken';
 
 export interface JwtPayload {
   sub: string;
@@ -71,7 +72,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     if (user.role === AdminRoles.ADMIN) {
       const cachedPerms = await redis.get(`admin_perm:${user.id}`);
-      permissions = cachedPerms ? JSON.parse(cachedPerms) : [];
+      if (cachedPerms) {
+        const parsed = JSON.parse(cachedPerms);
+        // ✅ handle both cases — array of strings OR array of objects
+        permissions = parsed.map((p: any) =>
+          typeof p === 'string' ? p : p.key,
+        );
+      }
     }
 
     return {
@@ -114,51 +121,64 @@ export class JwtHelper {
 
   async issueToken(user: any, permissions?: any[]) {
     const redis = this.redisService.getClient();
-
     const jti = randomUUID();
+    const refreshJti = randomUUID();
 
-    const payload: JwtPayload = {
-      sub: user.id?.toString(),
-      role: user.role,
-      jti,
-      tenantId: user.tenantId ?? null,
-    };
-
-    const expiresIn = this.configService.get<number>('jwt.expiresIn') || `1d`;
+    const expiresIn = this.configService.get<string>('jwt.expiresIn') || '1d';
+    const refreshExpiresIn =
+      this.configService.get<string>('jwt.refreshExpiresIn') || '7d';
     const redisExpiresIn = HelperFunctions.parseExpiryToSeconds(expiresIn);
+    const refreshRedisExpiresIn =
+      HelperFunctions.parseExpiryToSeconds(refreshExpiresIn);
     const secret =
       this.configService.get<string>('jwt.secret') || 'default_secret';
+    const refreshSecret = this.configService.get<string>('jwt.refreshSecret');
+
+    const sessionData = {
+      id: user.id,
+      role: user.role,
+      isActive: user.isActive,
+      tenantId: user.tenantId ?? null,
+      userType: user.userType ?? null,
+      roleId: user.roleId ?? null,
+    };
 
     // Store session
     await redis.set(
       `session:${jti}`,
-      JSON.stringify({
-        id: user.id,
-        role: user.role,
-        isActive: user.isActive,
-        tenantId: user.tenantId ?? null,
-        userType: user.userType ?? null,
-        roleId: user.roleId ?? null,
-      }),
+      JSON.stringify(sessionData),
       'EX',
       redisExpiresIn,
     );
-
+    await redis.set(
+      `refresh:${refreshJti}`,
+      JSON.stringify({
+        ...sessionData,
+        accessJti: jti, // link to access token
+      }),
+      'EX',
+      refreshRedisExpiresIn,
+    );
     // Store permissions
     if (permissions && permissions.length > 0) {
       await redis.set(
-        `admin_perm:${user.id}`,
+        `perm:${user.id}`,
         JSON.stringify(permissions),
         'EX',
         redisExpiresIn,
       );
     }
 
-    return {
-      accessToken: this.jwtService.sign(payload, {
-        secret,
-        expiresIn: this.configService.get<number>('jwt.expiresIn'),
-      }),
-    };
+    const accessToken = this.jwtService.sign(
+      { sub: user.id, role: user.role, jti },
+      { secret, expiresIn } as SignOptions,
+    );
+
+    const refreshToken = this.jwtService.sign(
+      { sub: user.id, jti: refreshJti }, // ✅ refresh has its own jti
+      { secret: refreshSecret, expiresIn: refreshExpiresIn } as SignOptions,
+    );
+
+    return { accessToken, refreshToken };
   }
 }

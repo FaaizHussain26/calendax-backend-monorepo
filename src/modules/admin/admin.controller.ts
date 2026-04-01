@@ -1,8 +1,10 @@
+// src/modules/admin/admin.controller.ts
 import {
   Body,
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -12,48 +14,50 @@ import {
 import { AdminService } from './admin.service';
 import { AdminLoginDto, CreateAdminDto, UpdateAdminDto } from './admin.dto';
 import { JwtAuthGuard } from '../../common/jwt/jwt.provider';
-import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
-import { PermissionsGuard } from '../../common/guards/permission.guard';
-import { AllRoles } from '../../enums/system.enum';
+import { AdminRoles } from '../../enums/admin.enum';
 
+@Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(AllRoles.SUPER_ADMIN)
-@Controller('/admin')
+@Roles(AdminRoles.SUPER_ADMIN)             // ✅ all routes require SUPER_ADMIN by default
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
-  @Public()
-  @Post('/login')
+
+  @Post('login')
+  @Public()                                // ✅ skip JWT + roles check
+  @HttpCode(200)
   async logIn(@Body() dto: AdminLoginDto) {
-    return await this.adminService.logIn(dto.email, dto.password);
+    return this.adminService.logIn(dto.email, dto.password);
   }
-  @Get('/')
+
+  @Get()
   async getAll() {
-    return await this.adminService.getAllAdmins();
+    return this.adminService.getAllAdmins();
   }
 
-  @Get('/:id')
+  @Get(':id')
   async getById(@Param('id', ParseUUIDPipe) id: string) {
-    return await this.adminService.getAdminById(id);
+    return this.adminService.getAdminById(id);
   }
 
-  @Post('/')
-  async createAdmin(@Body() payload: CreateAdminDto) {
-    return await this.adminService.createAdmin(payload);
+  @Post()
+  @HttpCode(201)
+  async create(@Body() dto: CreateAdminDto) {
+    return this.adminService.createAdmin(dto);
   }
 
-  @Patch('/:id')
-  async updateAdmin(
+  @Patch(':id')
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() payload: UpdateAdminDto,
+    @Body() dto: UpdateAdminDto,
   ) {
-    return await this.adminService.updateAdmin(id, payload);
+    return this.adminService.updateAdmin(id, dto);
   }
 
-  @Delete('/:id')
-  async deleteAdmin(@Param('id', ParseUUIDPipe) id: string) {
-    await this.adminService.deleteAdmin(id);
-    return { message: 'Admin deleted successfully' };
+  @Delete(':id')
+  async delete(@Param('id', ParseUUIDPipe) id: string) {
+    return this.adminService.deleteAdmin(id);
   }
 }

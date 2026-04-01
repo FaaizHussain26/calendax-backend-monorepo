@@ -1,67 +1,90 @@
-import { Exclude, Expose } from "class-transformer";
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from "class-validator";
-import { AdminRoles } from "../../enums/admin.enum";
+// src/modules/admin/admin.dto.ts
+import { Exclude, Expose } from 'class-transformer';
+import {
+  IsBoolean,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
+import { AdminRoles } from '../../enums/admin.enum';
 
 export class AdminLoginDto {
-    @IsEmail()
-    @IsNotEmpty()
-    email: string;
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
 
-    @IsNotEmpty()
-    @IsString()
-    password: string;
+  @IsString()
+  @IsNotEmpty()
+  password: string;
 }
 
 export class CreateAdminDto {
-    @IsNotEmpty()
-    @IsString()
-    name: string;
+  @IsString()
+  @IsNotEmpty()
+  name: string;
 
-    @IsEmail()
-    @IsNotEmpty()
-    email: string;
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
 
-    @IsString()
-    @IsNotEmpty()
-    password: string;
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  password: string;
 
-    @IsBoolean()
-    isActive?: boolean;
+  @IsEnum(AdminRoles)
+  @IsOptional()
+  role?: AdminRoles;                       // ✅ defaults to ADMIN if not provided
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 }
 
 export class UpdateAdminDto {
-    @IsOptional()
-    @IsString()
-    name?: string;
+  @IsString()
+  @IsOptional()
+  name?: string;
 
-    @IsOptional()
-    @IsEmail()
-    email?: string;
+  @IsEmail()
+  @IsOptional()
+  email?: string;
 
-    @IsOptional()
-    @IsString()
-    password?: string;
+  @IsEnum(AdminRoles)
+  @IsOptional()
+  role?: AdminRoles;
 
-    @IsOptional()
-    @IsBoolean()
-    isActive?: boolean;
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
+  // ✅ password removed — use dedicated change-password endpoint
 }
 
 export class AdminResponseDto {
-    @Expose()
-    id: string;
-    @Expose()
-    name: string;
-    @Expose()
-    email:string;
-    @Exclude()
-    password: string;
-    @Expose()
-    role: AdminRoles;
-    @Expose()
-    isActive: boolean;
-    @Expose()
-    createdAt: Date;
-    @Expose()
-    updatedAt: Date;
+  @Expose()
+  id: string;
+
+  @Expose()
+  name: string;
+
+  @Expose()
+  email: string;
+
+  @Exclude()
+  password: string;
+
+  @Expose()
+  role: AdminRoles;
+
+  @Expose()
+  isActive: boolean;
+
+  @Expose()
+  createdAt: Date;
+
+  @Expose()
+  updatedAt: Date;
 }

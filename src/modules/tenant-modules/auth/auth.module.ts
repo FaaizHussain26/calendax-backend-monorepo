@@ -4,9 +4,11 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UserModule } from '../user/user.module';
 import { RbacModule } from '../rbac/rbac.module';
+import { TenantModule } from '../../tenant/tenant.module';
+import { OtpModule } from './otp/otp.module';
 
 @Module({
-  imports: [JwtAuthGuard, UserModule,RbacModule],
+  imports: [TenantModule, UserModule,RbacModule,OtpModule],
   controllers: [AuthController],
   providers: [AuthService],
   exports: [AuthService],

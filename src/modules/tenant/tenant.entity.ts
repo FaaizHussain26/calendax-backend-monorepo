@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { AdminEntity } from '../admin/entities/admin.entity';
 import { TenantStatus } from '../../enums/tenant.enum';
+import { EncryptionTransformer } from '../../common/encryption/encryption.tranformer';
 @Entity('tenants')
 export class TenantEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -44,21 +45,20 @@ export class TenantEntity {
   updatedBy: AdminEntity;
 
   // -------- Tenant DB credentials (for connection manager) --------
-  // ✅ Store encrypted in production using a column transformer
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255,transformer:EncryptionTransformer })
   dbName: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255,transformer:EncryptionTransformer })
   dbHost: string;
 
-  @Column({ type: 'int', default: 5432 })
+  @Column({ type: 'int', default: 5432,transformer:EncryptionTransformer })
   dbPort: number;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255,transformer:EncryptionTransformer })
   dbUser: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255,transformer:EncryptionTransformer })
   dbPassword: string;
 
   // ----------------------------------------------------------------

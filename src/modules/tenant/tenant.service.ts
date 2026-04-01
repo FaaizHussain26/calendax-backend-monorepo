@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { TenantRepository } from './tenant.repository';
 
@@ -13,13 +14,14 @@ import {
 } from './tenant.dto';
 import { plainToInstance } from 'class-transformer';
 import { entityNotFound } from '../../common/exceptions/notFound.exception';
-import { TenantConnectionManager } from '../../common/database/tenant/tenant-connection.module';
+import { TenantConnectionManager } from '../../common/database/tenant/tenant-connection.manager';
 import { ConfigService } from '@nestjs/config';
 import { HelperFunctions } from '../../common/utils/functions';
 import { TenantStatus } from '../../enums/tenant.enum';
 import { TenantEntity } from './tenant.entity';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { AdminPermissionGroupRepository } from '../permission-group/permission-group.repository';
 
 @Injectable()
 export class TenantService {
@@ -29,6 +31,7 @@ export class TenantService {
     private readonly tenantRepository: TenantRepository,
     private connectionManager: TenantConnectionManager,
     private readonly configService: ConfigService,
+    private readonly adminPermissionGroupRepository: AdminPermissionGroupRepository,
   ) {}
 
   async getAllTenants() {
@@ -58,6 +61,14 @@ export class TenantService {
     const existing = await this.tenantRepository.findBySlug(slug);
     if (existing)
       throw new ConflictException('Tenant with this name already exists');
+    
+    const dashboardGroup =
+      await this.adminPermissionGroupRepository.findBySlug('dashboard');
+    if (!dashboardGroup) {
+      throw new NotFoundException(
+        'Dashboard permission group not found. Run seeders first.',
+      );
+    }
     try {
       // 1. Provision the database first
       await this.provisionDatabase(dbName, slug, dbPassword);

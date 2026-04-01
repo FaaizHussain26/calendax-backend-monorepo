@@ -9,6 +9,10 @@ import configuration from './config/configuration';
 import { TenantModule } from './modules/tenant/tenant.module';
 import { DecryptPayloadMiddleware } from './middlewares/decrypt-payload.middleware';
 import { JwtCommonModule } from './common/jwt/jwt.module';
+import { SeederModule } from './common/database/master/seeder.module';
+import { TenantModulesModule } from './modules/tenant-modules/tenant-modules.module';
+import { AdminPermissionGroupModule } from './modules/permission-group/permission-group.module';
+import { AdminPermissionModule } from './modules/permission/permission.module';
 
 @Module({
   imports: [
@@ -34,7 +38,11 @@ import { JwtCommonModule } from './common/jwt/jwt.module';
     JwtCommonModule,
     AdminModule,
     PageModule,
+    AdminPermissionGroupModule,
+    AdminPermissionModule,
     TenantModule,
+    TenantModulesModule,
+    SeederModule
   ],
   controllers: [AppController],
   providers: [AppService],

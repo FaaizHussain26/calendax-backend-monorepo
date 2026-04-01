@@ -23,17 +23,21 @@ import { OtpService } from './otp/otp.service';
 import { PermissionEntity } from '../rbac/permission/permission.entity';
 import { JwtHelper } from '../../../common/jwt/jwt.provider';
 import { RedisService } from '../../../common/redis/redis.service';
+import { JwtService } from '@nestjs/jwt';
+import { PermissionRepository } from '../rbac/permission/permission.repository';
+import { RoleRepository } from '../rbac/role/role.repository';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly rolesRepository: RolesRepository,
-    private readonly permissionsRepository: PermissionsRepository,
+    private readonly rolesRepository: RoleRepository,
+    private readonly permissionsRepository: PermissionRepository,
     private readonly otpService: OtpService,
     private readonly jwtHelper: JwtHelper,
     private readonly redisService: RedisService,
     private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async login(dto: LoginDto) {
@@ -74,7 +78,7 @@ export class AuthService {
     const existing = await this.usersRepository.findByEmail(dto.email);
     if (existing) throw new ConflictException('Email already in use');
     if (dto.roleId) {
-      const role = await this.rolesRepository.findRoleById(dto.roleId);
+      const role = await this.rolesRepository.findById(dto.roleId);
       if (!role) throw new NotFoundException('Role not found');
     }
     // validate direct permissions
@@ -132,34 +136,40 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
+    const redis = this.redisService.getClient();
+    const refreshSession = await redis.get(`refresh:${decoded.jti}`);
+
+    if (!refreshSession) {
+      throw new UnauthorizedException('Session expired. Please login again');
+    }
+    const session = JSON.parse(refreshSession);
 
     const user = await this.usersRepository.findById(decoded.sub);
     if (!user) throw new UnauthorizedException('User not found');
     if (!user.isActive) throw new UnauthorizedException('Account is inactive');
 
-    const redis = this.redisService.getClient();
-    const session = await redis.get(`session:${decoded.jti}`);
-    const tenantId = session ? JSON.parse(session).tenantId : null;
+    await redis.del(`refresh:${decoded.jti}`);
+  if (session.accessJti) {
+    await redis.del(`session:${session.accessJti}`);  // invalidate old access token
+  }
+ const rolePermissions = user.role?.permissions?.map((p) => p.key) ?? [];
+  const directPermissions = user.permissions?.map((p) => p.key) ?? [];
+  const allPermissions = [
+    ...new Set([...rolePermissions, ...directPermissions]),
+  ];
 
-    if (!tenantId) throw new UnauthorizedException('Session expired');
+  return this.jwtHelper.issueToken(
+    {
+      id: user.id,
+      role: user.role?.name ?? 'staff',
+      isActive: user.isActive,
+      tenantId: session.tenantId,            // ✅ carried from refresh session
+      userType: user.userType,
+      roleId: user.roleId,
+    },
+    allPermissions,
+  );
 
-    const rolePermissions = user.role?.permissions?.map((p) => p.key) ?? [];
-    const directPermissions = user.permissions?.map((p) => p.key) ?? [];
-    const allPermissions = [
-      ...new Set([...rolePermissions, ...directPermissions]),
-    ];
-
-    return this.jwtHelper.issueToken(
-      {
-        id: user.id,
-        role: user.role?.name ?? 'staff',
-        isActive: user.isActive,
-        tenantId, // ✅ carry over tenantId from old session
-        userType: user.userType,
-        roleId: user.roleId,
-      },
-      allPermissions,
-    );
   }
 
   async forgotPassword(email: string) {
@@ -204,9 +214,7 @@ export class AuthService {
       throw new BadRequestException('Passwords do not match');
     }
 
-    const user = await this.usersRepository.findById(userId, {
-      selectPassword: true,
-    });
+    const user = await this.usersRepository.findById(userId);
     if (!user) throw new NotFoundException('User not found');
 
     const isMatch = await bcrypt.compare(dto.currentPassword, user.password);

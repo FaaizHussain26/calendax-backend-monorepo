@@ -1,3 +1,4 @@
+// src/modules/tenant-modules/rbac/permission-group/permission-group.repository.ts
 import { Inject, Injectable, Scope } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { PermissionGroupEntity } from './permission-group.entity';
@@ -9,6 +10,7 @@ export class PermissionGroupRepository {
     private readonly repo: Repository<PermissionGroupEntity>,
   ) {}
 
+  // ─── Create ───────────────────────────────────────────────────────────────
 
   async create(
     payload: Partial<PermissionGroupEntity>,
@@ -16,6 +18,7 @@ export class PermissionGroupRepository {
     return this.repo.save(this.repo.create(payload));
   }
 
+  // ─── Find ─────────────────────────────────────────────────────────────────
 
   async findAll(): Promise<PermissionGroupEntity[]> {
     return this.repo.find({
@@ -32,11 +35,14 @@ export class PermissionGroupRepository {
   }
 
   async findByName(name: string): Promise<PermissionGroupEntity | null> {
-    return this.repo.findOne({
-      where: { name },
-    });
+    return this.repo.findOne({ where: { name } });
   }
 
+  async findBySlug(slug: string): Promise<PermissionGroupEntity | null> {
+    return this.repo.findOne({ where: { slug } });
+  }
+
+  // ─── Update ───────────────────────────────────────────────────────────────
 
   async update(
     id: string,
@@ -45,6 +51,7 @@ export class PermissionGroupRepository {
     await this.repo.update(id, payload);
   }
 
+  // ─── Delete ───────────────────────────────────────────────────────────────
 
   async softDelete(id: string): Promise<void> {
     await this.repo.softDelete(id);
