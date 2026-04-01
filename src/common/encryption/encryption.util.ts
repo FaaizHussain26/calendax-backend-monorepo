@@ -7,7 +7,7 @@ export class EncryptionUtil {
   private static getKey() {
     return crypto
       .createHash('sha256')
-      .update(process.env.DB_ENCRYPTION_KEY!)
+      .update(process.env.DB_ENCRYPTION_KEY||'dev_encryption_key')
       .digest();
   }
 

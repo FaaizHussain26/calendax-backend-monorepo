@@ -5,6 +5,11 @@ import { DataSource } from 'typeorm';
 import { TenantRepository } from '../../../modules/tenant/tenant.repository';
 import { ConfigService } from '@nestjs/config';
 import { TenantEntity } from '../../../modules/tenant/tenant.entity';
+import { PermissionGroupEntity } from '../../../modules/tenant-modules/rbac/permission-group/permission-group.entity';
+import { PermissionEntity } from '../../../modules/tenant-modules/rbac/permission/permission.entity';
+import { RoleEntity } from '../../../modules/tenant-modules/rbac/role/role.entity';
+import { UserEntity } from '../../../modules/tenant-modules/user/user.entity';
+import { OtpEntity } from '../../../modules/tenant-modules/auth/otp/otp.entity';
 
 @Injectable()
 export class TenantConnectionManager implements OnModuleDestroy {
@@ -39,9 +44,11 @@ export class TenantConnectionManager implements OnModuleDestroy {
       password: tenant.dbPassword,
       database: tenant.dbName,
       synchronize: this.configService.get('environment')!=="production",
-      entities: [
-        __dirname + '/../../modules/tenant-modules/**/*.entity{.ts,.js}',
-      ],
+      // entities: [
+      //   __dirname + '/../../modules/tenant-modules/**/*.entity{.ts,.js}',
+      // ],
+      entities: [PermissionGroupEntity, PermissionEntity, RoleEntity, UserEntity, OtpEntity],
+
         migrations: [
       __dirname + '/../../modules/tenant-modules/migrations/**/*{.ts,.js}', // ← add this
     ],

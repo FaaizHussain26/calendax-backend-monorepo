@@ -22,15 +22,16 @@ export class TenantRepository {
       where: { id: id },
     });
   }
- async findBySlug(slug: string) {
+  async findBySlug(slug: string) {
     return await this.tenantRepository.findOne({
       where: { slug: slug },
     });
   }
-  async createTenant(payload: Partial<TenantEntity>) {
-    const createdEntity = this.tenantRepository.create(payload);
-    return await this.tenantRepository.save(createdEntity);
-  }
+async createTenant(payload: Partial<TenantEntity>): Promise<TenantEntity> {
+  return this.tenantRepository.save(
+    this.tenantRepository.create(payload),       // ✅ TypeORM handles junction table automatically
+  );
+}
 
   async updateTenant(id: string, payload: Partial<TenantEntity>) {
     const updatedEntity = this.tenantRepository.update(id, payload);

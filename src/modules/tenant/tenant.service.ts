@@ -17,12 +17,17 @@ import { entityNotFound } from '../../common/exceptions/notFound.exception';
 import { TenantConnectionManager } from '../../common/database/tenant/tenant-connection.manager';
 import { ConfigService } from '@nestjs/config';
 import { HelperFunctions } from '../../common/utils/functions';
-import { TenantStatus } from '../../enums/tenant.enum';
+import { TenantStatus, TenantUserRoles } from '../../enums/tenant.enum';
 import { TenantEntity } from './tenant.entity';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { AdminPermissionGroupRepository } from '../permission-group/permission-group.repository';
-
+import { AdminPermissionGroupEntity } from '../permission-group/permission-group.entity';
+import { PermissionGroupEntity } from '../tenant-modules/rbac/permission-group/permission-group.entity';
+import { PermissionEntity } from '../tenant-modules/rbac/permission/permission.entity';
+import { RoleEntity } from '../tenant-modules/rbac/role/role.entity';
+import { UserEntity } from '../tenant-modules/user/user.entity';
+import * as bcrypt from 'bcrypt';
 @Injectable()
 export class TenantService {
   constructor(
@@ -61,19 +66,31 @@ export class TenantService {
     const existing = await this.tenantRepository.findBySlug(slug);
     if (existing)
       throw new ConflictException('Tenant with this name already exists');
-    
+
     const dashboardGroup =
-      await this.adminPermissionGroupRepository.findBySlug('dashboard');
+      await this.adminPermissionGroupRepository.findDetailedByCondition({slug:'dashboard'});
     if (!dashboardGroup) {
       throw new NotFoundException(
         'Dashboard permission group not found. Run seeders first.',
       );
     }
-    try {
-      // 1. Provision the database first
-      await this.provisionDatabase(dbName, slug, dbPassword);
+    let requestedGroups: AdminPermissionGroupEntity[] = [];
+    if (dto.permissionGroupIds?.length) {
+      requestedGroups = await this.adminPermissionGroupRepository.findByIds(
+        dto.permissionGroupIds,
+      );
+      if (requestedGroups.length !== dto.permissionGroupIds.length) {
+        throw new NotFoundException('One or more permission groups not found');
+      }
+    }
 
-      // 2. Save tenant record with PROVISIONING status
+    // ✅ merge dashboard + requested groups, deduplicate
+    const allGroups = [
+      dashboardGroup,
+      ...requestedGroups.filter((g) => g.slug !== 'dashboard'),
+    ];
+    try {
+      await this.provisionDatabase(dbName, slug, dbPassword);
       tenant = await this.tenantRepository.createTenant({
         ...dto,
         slug,
@@ -83,17 +100,14 @@ export class TenantService {
         dbPassword,
         dbName,
         status: TenantStatus.PROVISIONING,
+        permissionGroups: allGroups,
       });
-
-      // 3. Run migrations on tenant DB
       const connection = await this.connectionManager.getConnection(tenant);
       await connection.runMigrations();
-
-      // 4. Only mark ACTIVE after everything succeeded
+      await this.seedTenantDatabase(connection, dto, allGroups);
       await this.tenantRepository.updateTenant(tenant.id, {
         status: TenantStatus.ACTIVE,
       });
-
       return tenant;
     } catch (error) {
       // 5. Rollback everything if anything fails
@@ -102,6 +116,110 @@ export class TenantService {
         'Tenant provisioning failed. Changes have been rolled back.',
       );
     }
+  }
+  private async seedTenantDatabase(
+    connection: DataSource,
+    dto: CreateTenantDto,
+    permissionGroups: AdminPermissionGroupEntity[],
+  ) {
+    const permGroupRepo = connection.getRepository(PermissionGroupEntity);
+    const permRepo = connection.getRepository(PermissionEntity);
+    const roleRepo = connection.getRepository(RoleEntity);
+    const userRepo = connection.getRepository(UserEntity);
+
+    // 1. seed permission groups + permissions into tenant DB
+    const seededPermissions: PermissionEntity[] = [];
+
+    for (const group of permissionGroups) {
+      // upsert group
+      let tenantGroup = await permGroupRepo.findOne({
+        where: { slug: group.slug },
+      });
+
+      if (!tenantGroup) {
+        tenantGroup = await permGroupRepo.save(
+          permGroupRepo.create({
+            name: group.name,
+            slug: group.slug,
+            href: group.href,
+            description: group.description,
+          }),
+        );
+        console.log('tenant group created:', group.name);
+      }
+      const groupPerms = group.permissions ?? [];
+      console.log('group perms are', group);
+      // upsert permissions
+      for (const permission of groupPerms) {
+        let tenantPerm = await permRepo.findOne({
+          where: { key: permission.key },
+        });
+
+        if (!tenantPerm) {
+          tenantPerm = await permRepo.save(
+            permRepo.create({
+              key: permission.key,
+              name: permission.name,
+              description: permission.description,
+              groupId: tenantGroup.id,
+            }),
+          );
+        }
+
+        seededPermissions.push(tenantPerm);
+      }
+    }
+
+    // 2. create Admin role with ALL seeded permissions
+    const adminRole = await roleRepo.save(
+      roleRepo.create({
+        name: 'Admin',
+        isDefault: false,
+        permissions: seededPermissions,
+      }),
+    );
+
+    // 3. create Staff role with read-only permissions
+    const readPermissions = seededPermissions.filter((p) =>
+      p.key.endsWith('.read'),
+    );
+    await roleRepo.save(
+      roleRepo.create({
+        name: 'Staff',
+        isDefault: true, // ✅ auto assigned to new users
+        permissions: readPermissions,
+      }),
+    );
+
+    // 4. create tenant admin user
+    const rawPassword =
+      dto.adminPassword ?? HelperFunctions.generateSecurePassword(12);
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
+    await userRepo.save(
+      userRepo.create({
+        firstName: dto.adminFirstName ?? 'Tenant',
+        lastName: dto.adminLastName ?? 'Admin',
+        email: dto.adminEmail,
+        password: hashedPassword,
+        userType: TenantUserRoles.TENANT_ADMIN,
+        roleId: adminRole.id,
+        isActive: true,
+      }),
+    );
+
+    // 5. send welcome email with credentials
+    // await this.emailService.sendWelcome({
+    //   toEmail: dto.adminEmail,
+    //   subject: 'Your tenant account has been created',
+    //   data: {
+    //     name: `${dto.adminFirstName ?? 'Tenant'} ${dto.adminLastName ?? 'Admin'}`,
+    //     email: dto.adminEmail,
+    //     tempPassword: rawPassword,
+    //   },
+    // });
+
+    console.log(`✅ Tenant DB seeded for: ${dto.adminEmail}`);
   }
   private async handleProvisioningFailure(
     tenant: TenantEntity | null,

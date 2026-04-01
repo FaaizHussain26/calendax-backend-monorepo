@@ -4,6 +4,8 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -11,6 +13,7 @@ import {
 import { AdminEntity } from '../admin/entities/admin.entity';
 import { TenantStatus } from '../../enums/tenant.enum';
 import { EncryptionTransformer } from '../../common/encryption/encryption.tranformer';
+import { AdminPermissionGroupEntity } from '../permission-group/permission-group.entity';
 @Entity('tenants')
 export class TenantEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -29,6 +32,17 @@ export class TenantEntity {
   })
   status: TenantStatus;
 
+  @ManyToMany(() => AdminPermissionGroupEntity)
+  @JoinTable({
+    name: 'tenant_permission_groups',
+    joinColumn: { name: 'tenantId', referencedColumnName: 'id' },
+    inverseJoinColumn: {
+      name: 'permissionGroupId',
+      referencedColumnName: 'id',
+    },
+  })
+  permissionGroups: AdminPermissionGroupEntity[];
+
   // ✅ Separate the FK column from the relation
   @Column({ type: 'uuid', nullable: true })
   createdById: string;
@@ -46,19 +60,19 @@ export class TenantEntity {
 
   // -------- Tenant DB credentials (for connection manager) --------
 
-  @Column({ type: 'varchar', length: 255,transformer:EncryptionTransformer })
+  @Column({ type: 'varchar', length: 255, transformer: EncryptionTransformer })
   dbName: string;
 
-  @Column({ type: 'varchar', length: 255,transformer:EncryptionTransformer })
+  @Column({ type: 'varchar', length: 255, transformer: EncryptionTransformer })
   dbHost: string;
 
-  @Column({ type: 'int', default: 5432,transformer:EncryptionTransformer })
+  @Column({ type: 'int', default: 5432,  })
   dbPort: number;
 
-  @Column({ type: 'varchar', length: 255,transformer:EncryptionTransformer })
+  @Column({ type: 'varchar', length: 255, transformer: EncryptionTransformer })
   dbUser: string;
 
-  @Column({ type: 'varchar', length: 255,transformer:EncryptionTransformer })
+  @Column({ type: 'varchar', length: 255, transformer: EncryptionTransformer })
   dbPassword: string;
 
   // ----------------------------------------------------------------
@@ -66,6 +80,6 @@ export class TenantEntity {
   @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn() 
+  @UpdateDateColumn()
   updatedAt: Date;
 }

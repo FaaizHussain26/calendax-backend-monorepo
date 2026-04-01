@@ -1,5 +1,5 @@
 import { Inject, Injectable, Scope } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, In, Repository } from 'typeorm';
 import { AdminPermissionGroupEntity } from './permission-group.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -31,7 +31,11 @@ export class AdminPermissionGroupRepository {
       relations: { permissions: true },
     });
   }
-
+ async findByIds(ids: string[]): Promise<AdminPermissionGroupEntity[]> {
+    return this.repo.find({
+      where: { id: In(ids) },
+    });
+  }
   async findByName(name: string): Promise<AdminPermissionGroupEntity | null> {
     return this.repo.findOne({
       where: { name },
@@ -40,7 +44,15 @@ export class AdminPermissionGroupRepository {
   async findBySlug(slug: string): Promise<AdminPermissionGroupEntity | null> {
     return this.repo.findOne({ where: { slug } });
   }
-
+async findDetailedByCondition(
+  condition: FindOptionsWhere<AdminPermissionGroupEntity>,
+): Promise<AdminPermissionGroupEntity | null> {
+  return this.repo.findOne({
+    where: condition,
+    relations: { permissions: true },
+    order: { createdAt: 'DESC' },
+  });
+}
   async update(
     id: string,
     payload: Partial<AdminPermissionGroupEntity>,
