@@ -17,8 +17,8 @@ import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { PermissionsGuard } from '../../../common/guards/permission.guard';
 import { UsersService } from './user.service';
 
-@Controller('users')
 @UseGuards(JwtAuthGuard, TenantGuard, PermissionsGuard)
+@Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -32,8 +32,7 @@ export class UsersController {
     return this.usersService.findById(id);
   }
 
-  @Post()
-  @HttpCode(201)
+  @Post('create')
   create(@Body() dto: CreateUserDto) {
     return this.usersService.create(dto);
   }

@@ -6,7 +6,7 @@ import { PermissionGroupEntity } from './permission-group.entity';
 @Injectable({ scope: Scope.REQUEST })
 export class PermissionGroupRepository {
   constructor(
-    @Inject('PermissionGroupEntityRepository')
+    @Inject(`${PermissionGroupEntity.name}Repository`)
     private readonly repo: Repository<PermissionGroupEntity>,
   ) {}
 

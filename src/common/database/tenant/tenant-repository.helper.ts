@@ -1,31 +1,31 @@
-// src/common/helpers/tenant-repository.helper.ts
-import { DataSource, ObjectType } from 'typeorm';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
-import { Scope } from '@nestjs/common';
-import { TenantConnectionManager } from './tenant-connection.manager';
-import { TenantEntity } from '../../../modules/tenant/tenant.entity';
+import { Scope } from "@nestjs/common";
+import { REQUEST } from "@nestjs/core";
+import { ObjectType } from "typeorm";
 
 export function provideTenantRepository<T>(entity: ObjectType<T>) {
   return {
     provide: `${entity.name}Repository`,
-    scope: Scope.REQUEST, // new instance per request
-    inject: [TenantConnectionManager, REQUEST],
-    useFactory: async (
-      req: Request & {
-        tenantId: string;
-        tenant: TenantEntity;
-        tenantConnection: any;
-      },
-    ) => {
-      const connection: DataSource = req.tenantConnection;
-      if (!connection) {
+    scope: Scope.REQUEST,
+    inject: [REQUEST],
+   useFactory: (req: any) => {
+      const sqlConnection = req.tenantConnection?.sql;
+      // console.log("tenant conn:",req.tenantConnection)
+      if (!sqlConnection) {
+        // This will tell you if the Guard failed to attach the DB
         throw new Error(
-          `Tenant context missing for ${entity.name}Repository. ` +
-            `Ensure TenantGuard is applied to this route.`,
+          `Tenant SQL connection not found for ${entity.name}. Check if TenantGuard is applied.`
         );
       }
-      return connection.getRepository(entity);
+      
+      return sqlConnection.getRepository(entity);
     },
   };
 }
+
+// 2. Helper for the Tenant's MongoDB (Single Global Token)
+export const TENANT_MONGO_DB = {
+  provide: 'TENANT_MONGO_DB',
+  scope: Scope.REQUEST,
+  inject: [REQUEST],
+  useFactory: (req: any) => req.tenantConnection?.mongo,
+};

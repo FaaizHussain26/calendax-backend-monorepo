@@ -3,11 +3,24 @@ import { Inject, Injectable, Scope } from '@nestjs/common';
 import { FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { TenantUserRoles } from '../../../enums/tenant.enum';
-
-@Injectable({ scope: Scope.REQUEST })        // 👈 request scoped
+const userFields={id: true,
+      firstName: true,
+      lastName: true,
+      middleName: true,
+      email: true,
+      phoneNumber: true,
+      isActive: true,
+      userType: true,
+      roleId: true,
+      emailVerifiedAt: true,
+      lastLoginAt: true,
+      createdAt: true,
+      updatedAt: true,
+      deletedAt:true}
+@Injectable({ scope: Scope.REQUEST })     
 export class UsersRepository {
   constructor(
-    @Inject('UserEntityRepository')        
+    @Inject(`${UserEntity.name}Repository`)
     private readonly repo: Repository<UserEntity>,
   ) {}
 
@@ -16,11 +29,12 @@ export class UsersRepository {
   }
 
   async findByEmail(email: string) {
-    return this.repo.findOne({ where: { email } });
+    return this.repo.findOne({ where: { email },
+    select:{...userFields,password:true} });
   }
 
   async findById(id: string) {
-    return this.repo.findOne({ where: { id } });
+    return this.repo.findOne({ where: { id }, });
   }
    async findAllWithDetails(query: {
     userType?: TenantUserRoles;
@@ -61,22 +75,7 @@ async findDetailsById(id: string): Promise<UserEntity | null> {
       role: { permissions: true },
       permissions: true,
     },
-     select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      middleName: true,
-      email: true,
-      phoneNumber: true,
-      isActive: true,
-      userType: true,
-      roleId: true,
-      emailVerifiedAt: true,
-      lastLoginAt: true,
-      createdAt: true,
-      updatedAt: true,
-      deletedAt:true
-    },
+     select: userFields,
   });
 }
 async findByIds(ids: string[]): Promise<UserEntity[]> {

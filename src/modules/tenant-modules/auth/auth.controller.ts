@@ -24,8 +24,8 @@ import { TenantUserRoles } from '../../../enums/tenant.enum';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 
-@Controller('auth')
 @UseGuards(TenantGuard)
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

@@ -18,6 +18,7 @@ export class TenantRepository {
   }
 
   async getByTenantId(id: string) {
+    console.log("searching tenant:",id)
     return await this.tenantRepository.findOne({
       where: { id: id },
     });

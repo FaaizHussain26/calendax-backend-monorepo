@@ -2,6 +2,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -45,6 +46,7 @@ export class AuthService {
     if (!user) throw new NotFoundException('User not found');
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) throw new UnauthorizedException('Invalid credentials');
+    if (!user.isActive) throw new ForbiddenException('Account is inactive');
     await this.otpService.generateAndSend(user.email, OtpPurpose.VERIFICATION);
     return {
       requiresOtp: true,

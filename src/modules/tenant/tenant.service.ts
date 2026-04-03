@@ -28,6 +28,7 @@ import { PermissionEntity } from '../tenant-modules/rbac/permission/permission.e
 import { RoleEntity } from '../tenant-modules/rbac/role/role.entity';
 import { UserEntity } from '../tenant-modules/user/user.entity';
 import * as bcrypt from 'bcrypt';
+import { MongoAdminService } from '../../common/database/master/mongo-admin.service';
 @Injectable()
 export class TenantService {
   constructor(
@@ -37,6 +38,7 @@ export class TenantService {
     private connectionManager: TenantConnectionManager,
     private readonly configService: ConfigService,
     private readonly adminPermissionGroupRepository: AdminPermissionGroupRepository,
+    private readonly mongoAdmin:MongoAdminService
   ) {}
 
   async getAllTenants() {
@@ -91,6 +93,7 @@ export class TenantService {
     ];
     try {
       await this.provisionDatabase(dbName, slug, dbPassword);
+      const mongoUri = await this.provisionMongoDatabase(dbName);
       tenant = await this.tenantRepository.createTenant({
         ...dto,
         slug,
@@ -99,12 +102,13 @@ export class TenantService {
         dbUser: slug,
         dbPassword,
         dbName,
+        mongoUri,
         status: TenantStatus.PROVISIONING,
         permissionGroups: allGroups,
       });
       const connection = await this.connectionManager.getConnection(tenant);
-      await connection.runMigrations();
-      await this.seedTenantDatabase(connection, dto, allGroups);
+      await connection.sql.runMigrations();
+      await this.seedTenantDatabase(connection.sql, dto, allGroups);
       await this.tenantRepository.updateTenant(tenant.id, {
         status: TenantStatus.ACTIVE,
       });
@@ -193,7 +197,7 @@ export class TenantService {
 
     // 4. create tenant admin user
     const rawPassword =
-      dto.adminPassword ?? HelperFunctions.generateSecurePassword(12);
+      dto.adminPassword ?? this.configService.get<string>('defaultPassword');
     const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
     await userRepo.save(
@@ -230,24 +234,29 @@ export class TenantService {
     console.error('Provisioning failed, rolling back...', error);
 
     try {
-      // Mark tenant as failed if record was created
       if (tenant?.id) {
         await this.tenantRepository.updateTenant(tenant.id, {
           status: TenantStatus.FAILED,
         });
-
-        // Close any open connection for this tenant
         await this.connectionManager.closeConnection(tenant.id);
       }
 
-      // Drop the DB and user if they were created
       await this.deprovisionDatabase(dbName, dbUser);
+    await this.deprovisionMongoDatabase(dbName);
     } catch (rollbackError) {
       // Log rollback failure but don't throw — original error takes priority
       console.error('Rollback also failed:', rollbackError);
     }
   }
-
+private async deprovisionMongoDatabase(dbName: string) {
+  try {
+    // Simply drop the database using the master client
+    await this.mongoAdmin.clientInstance.db(dbName).dropDatabase();
+    console.log(`Successfully dropped Mongo DB: ${dbName}`);
+  } catch (e) {
+    console.warn(`Mongo cleanup warning: ${e.message}`);
+  }
+}
   private async provisionDatabase(
     dbName: string,
     dbUser: string,
@@ -288,7 +297,29 @@ export class TenantService {
     );
     await tenantAdminConn.destroy();
   }
+private async provisionMongoDatabase(dbName: string) {
+  try {
+    // 1. Get the "Admin" client instance (the one using your master string)
+    const client = this.mongoAdmin.clientInstance;
+    
+    // 2. Access the new tenant-specific database
+    const tenantDb = client.db(dbName);
+    
+    // 3. Force the database into existence by creating a collection
+    await tenantDb.createCollection('_init'); 
 
+    // 4. Construct the tenant-specific URI using your master credentials
+    // We just swap the database name at the end of the string
+    const user = this.configService.get<string>('db.mongodb.user');
+    const pass = this.configService.get<string>('db.mongodb.password');
+    const host = this.configService.get<string>('db.mongodb.host'); // cluster0.5o5gbw1.mongodb.net
+
+    // Note: No authSource=dbName here because we are using the Master User
+    return `mongodb+srv://${user}:${pass}@${host}/${dbName}?retryWrites=true&w=majority`;
+  } catch (error) {
+    throw new Error(`Mongo Provisioning Failed: ${error.message}`);
+  }
+}
   private async deprovisionDatabase(dbName: string, dbUser: string) {
     const masterConn = this.masterDataSource;
 
@@ -322,8 +353,13 @@ export class TenantService {
     try {
       const tenant = await this.tenantRepository.getByTenantId(id);
       entityNotFound(tenant, 'Tenant');
+      await this.connectionManager.closeConnection(id);
+      if(tenant?.dbName&&tenant?.dbUser){
+        await this.deprovisionMongoDatabase(tenant.dbName)
+        await this.deprovisionDatabase(tenant.dbName,tenant.dbUser)
+      }
       await this.tenantRepository.delete(id);
-      return { message: 'Tenant deleted successfully' };
+return { message: 'Tenant and associated databases deleted successfully' };
     } catch (error: any) {
       throw new BadRequestException(error.message);
     }

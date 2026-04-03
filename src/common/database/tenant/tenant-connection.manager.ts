@@ -1,7 +1,7 @@
 // database/tenant/tenant-connection.manager.ts
 import { Injectable, NotFoundException, OnModuleDestroy } from '@nestjs/common';
 import { LRUCache } from 'lru-cache';
-import { DataSource } from 'typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
 import { TenantRepository } from '../../../modules/tenant/tenant.repository';
 import { ConfigService } from '@nestjs/config';
 import { TenantEntity } from '../../../modules/tenant/tenant.entity';
@@ -10,30 +10,34 @@ import { PermissionEntity } from '../../../modules/tenant-modules/rbac/permissio
 import { RoleEntity } from '../../../modules/tenant-modules/rbac/role/role.entity';
 import { UserEntity } from '../../../modules/tenant-modules/user/user.entity';
 import { OtpEntity } from '../../../modules/tenant-modules/auth/otp/otp.entity';
-
+import { Db, MongoClient } from 'mongodb';
+export type TenantConnection = {
+  sql: DataSource;
+  mongo: Db;
+  mongoClient: MongoClient;
+};
 @Injectable()
 export class TenantConnectionManager implements OnModuleDestroy {
-  private cache: LRUCache<string, DataSource>;
+  private cache: LRUCache<string, TenantConnection>;
 
-  constructor(private tenantRepo: TenantRepository,private configService: ConfigService) {
-    this.cache = new LRUCache<string, DataSource>({
-      max:  this.configService.get<number>('tenant.maxCacheSize') ?? 100,
+  constructor(private configService: ConfigService) {
+    this.cache = new LRUCache<string, TenantConnection>({
+      max: this.configService.get<number>('tenant.maxCacheSize') ?? 100,
 
       // Called automatically when an entry is evicted
-      disposeAfter: async (connection: DataSource, tenantId: string) => {
-        if (connection.isInitialized) {
-          await connection.destroy();
-          console.log(`Connection closed for tenant: ${tenantId}`);
-        }
+      disposeAfter: async (value: TenantConnection, tenantId: string) => {
+        if (value.sql.isInitialized) await value.sql.destroy();
+        await value.mongoClient.close();
+        console.log(`Connections closed for tenant: ${tenantId}`);
       },
     });
   }
 
-  async getConnection(tenant: TenantEntity): Promise<DataSource> {
-        if (!tenant) throw new NotFoundException('Tenant context is missing');
+  async getConnection(tenant: TenantEntity): Promise<TenantConnection> {
+    if (!tenant) throw new NotFoundException('Tenant context is missing');
 
- const cached = this.cache.get(tenant.id);
-  if (cached) return cached; 
+    const cached = this.cache.get(tenant.id);
+    if (cached) return cached;
 
 
     const dataSource = new DataSource({
@@ -43,33 +47,82 @@ export class TenantConnectionManager implements OnModuleDestroy {
       username: tenant.dbUser,
       password: tenant.dbPassword,
       database: tenant.dbName,
-      synchronize: this.configService.get('environment')!=="production",
-      // entities: [
-      //   __dirname + '/../../modules/tenant-modules/**/*.entity{.ts,.js}',
-      // ],
+      synchronize: this.configService.get('environment') !== "production",
       entities: [PermissionGroupEntity, PermissionEntity, RoleEntity, UserEntity, OtpEntity],
 
-        migrations: [
-      __dirname + '/../../modules/tenant-modules/migrations/**/*{.ts,.js}', // ← add this
-    ],
-    migrationsRun: false,
-     extra: {
+      migrations: [
+        __dirname + '/../../modules/tenant-modules/migrations/**/*{.ts,.js}', // ← add this
+      ],
+      migrationsRun: false,
+      extra: {
         max: 5,
         min: 1,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 2000,
       },
     });
+    if (!tenant.mongoUri) {
+      throw new Error(`MongoDB URI missing for tenant: ${tenant.slug}`);
+    }
+    const mongoClient = new MongoClient(tenant.mongoUri);
+    await Promise.all([
+      dataSource.initialize(),
+      mongoClient.connect()
+    ]);
+    const connectionContext: TenantConnection = {
+      sql: dataSource,
+      mongo: mongoClient.db(), // Returns the DB from the URI
+      mongoClient: mongoClient
+    };
 
-    await dataSource.initialize();
-    this.cache.set(tenant.id, dataSource);
-    return dataSource;
+    this.cache.set(tenant.id, connectionContext);
+    return connectionContext;
   }
+  async getContext(tenant: TenantEntity): Promise<TenantConnection> {
+    const cached = this.cache.get(tenant.id);
+    if (cached) return cached;
 
+    // Initialize both in parallel for speed
+    const sqlAttr:DataSourceOptions = {
+      type: 'postgres',
+      host: tenant.dbHost,
+      port: tenant.dbPort,
+      username: tenant.dbUser,
+      password: tenant.dbPassword,
+      database: tenant.dbName,
+      synchronize: this.configService.get('environment') !== "production",
+      entities: [PermissionGroupEntity, PermissionEntity, RoleEntity, UserEntity, OtpEntity],
+
+      // migrations: [
+      //   __dirname + '/../../modules/tenant-modules/migrations/**/*{.ts,.js}', // ← add this
+      // ],
+      migrationsRun: false,
+      extra: {
+        max: 5,
+        min: 1,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+      },
+    };
+    const dataSource = new DataSource(sqlAttr);
+    const mongoClient = new MongoClient(tenant.mongoUri!);
+
+    await Promise.all([dataSource.initialize(), mongoClient.connect()]);
+
+    const context: TenantConnection = {
+      sql: dataSource,
+      mongo: mongoClient.db(),
+      mongoClient: mongoClient,
+    };
+
+    this.cache.set(tenant.id, context);
+    return context;
+  }
   async closeConnection(tenantId: string) {
     const conn = this.cache.get(tenantId);
-    if (conn?.isInitialized) {
-      await conn.destroy();
+    if (conn) {
+      if (conn.sql.isInitialized) await conn.sql.destroy();
+      await conn.mongoClient.close();
       this.cache.delete(tenantId);
     }
   }
@@ -77,10 +130,8 @@ export class TenantConnectionManager implements OnModuleDestroy {
   // Clean up all connections on app shutdown
   async onModuleDestroy() {
     for (const [tenantId, conn] of this.cache.entries()) {
-      if (conn.isInitialized) {
-        await conn.destroy();
-        console.log(`Shutdown: closed connection for tenant ${tenantId}`);
-      }
+      if (conn.sql.isInitialized) await conn.sql.destroy();
+      await conn.mongoClient.close();
     }
     this.cache.clear();
   }

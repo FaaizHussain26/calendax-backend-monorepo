@@ -20,8 +20,6 @@ export class UsersService {
     private readonly permissionRepository: PermissionRepository,
   ) {}
 
-  // ─── Find ─────────────────────────────────────────────────────────────────
-
   async findAll(query: UserQueryDto) {
     return this.usersRepository.findAllWithDetails(query);
   }
@@ -31,8 +29,6 @@ export class UsersService {
     if (!user) throw new NotFoundException('User not found');
     return user;
   }
-
-  // ─── Create ───────────────────────────────────────────────────────────────
 
   async create(dto: CreateUserDto) {
     const existing = await this.usersRepository.findByEmail(dto.email);
@@ -76,11 +72,10 @@ export class UsersService {
       email: user.email,
       userType: user.userType,
       roleId: user.roleId,
-      tempPassword: rawPassword,           // ✅ return so caller can send welcome email
+      tempPassword: rawPassword,           
     };
   }
 
-  // ─── Update ───────────────────────────────────────────────────────────────
 
   async update(id: string, dto: UpdateUserDto) {
     const user = await this.usersRepository.findById(id);
@@ -111,7 +106,6 @@ export class UsersService {
     });
   }
 
-  // ─── Delete ───────────────────────────────────────────────────────────────
 
   async delete(id: string) {
     const user = await this.usersRepository.findById(id);
@@ -127,7 +121,6 @@ export class UsersService {
     return { message: 'User restored successfully' };
   }
 
-  // ─── Toggle Active ────────────────────────────────────────────────────────
 
   async toggleActive(id: string) {
     const user = await this.usersRepository.findById(id);

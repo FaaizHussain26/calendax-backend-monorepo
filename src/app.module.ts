@@ -13,6 +13,11 @@ import { SeederModule } from './common/database/master/seeder.module';
 import { TenantModulesModule } from './modules/tenant-modules/tenant-modules.module';
 import { AdminPermissionGroupModule } from './modules/permission-group/permission-group.module';
 import { AdminPermissionModule } from './modules/permission/permission.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { AuditInterceptor } from './interceptors/audit.interceptor';
+import { AuditModule } from './common/database/audit-logs/audit.module';
+import { MongoAdminModule } from './common/database/master/mongo-admin.module';
+import { TenantContextMiddleware } from './middlewares/tenant-context.middleware';
 
 @Module({
   imports: [
@@ -35,6 +40,8 @@ import { AdminPermissionModule } from './modules/permission/permission.module';
         synchronize: true,
       }),
     }),
+    AuditModule,
+    MongoAdminModule,
     JwtCommonModule,
     AdminModule,
     PageModule,
@@ -45,12 +52,19 @@ import { AdminPermissionModule } from './modules/permission/permission.module';
     SeederModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,{
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor
+      ,
+    },],
 })
 export class AppModule {
    configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(DecryptPayloadMiddleware)
-      .forRoutes('patients'); // only patient routes
+      .forRoutes('patients');
+      consumer
+      .apply(TenantContextMiddleware)
+      .forRoutes('auth', 'users', 'rbac', 'patients');
   }
 }

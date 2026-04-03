@@ -16,11 +16,11 @@ import { PermissionModule } from '../rbac/permission/permission.module';
   providers: [
     UsersService,
     UsersRepository,
-    provideTenantRepository(UserEntity),   // ✅ dynamic tenant connection
+    provideTenantRepository(UserEntity),   
   ],
   exports: [
     UsersService,
-    UsersRepository,                       // ✅ exported for AuthService
+    UsersRepository,                       
   ],
 })
 export class UserModule {}

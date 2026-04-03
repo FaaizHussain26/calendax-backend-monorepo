@@ -7,13 +7,12 @@ import { randomUUID } from 'crypto';
 import { OtpPurpose } from '../../../../enums/system.enum';
 import { OtpRepository } from './otp.repository';
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class OtpService {
   private readonly OTP_EXPIRY_MINUTES = 5;
   private readonly MAX_ATTEMPTS = 5;
 
   constructor(
-    @Inject('OtpEntityRepository')
     private readonly otpRepo: OtpRepository,
     // private readonly emailService: EmailService,
   ) {}

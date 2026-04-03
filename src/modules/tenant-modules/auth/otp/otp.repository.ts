@@ -7,7 +7,7 @@ import { OtpPurpose } from '../../../../enums/system.enum';
 @Injectable({ scope: Scope.REQUEST })
 export class OtpRepository {
   constructor(
-    @Inject('OtpEntityRepository')
+    @Inject(`${OtpEntity.name}Repository`)
     private readonly repo: Repository<OtpEntity>,
   ) {}
 

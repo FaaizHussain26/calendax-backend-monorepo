@@ -71,9 +71,12 @@ export class TenantEntity {
 
   @Column({ type: 'varchar', length: 255, transformer: EncryptionTransformer })
   dbUser: string;
-
+  
   @Column({ type: 'varchar', length: 255, transformer: EncryptionTransformer })
   dbPassword: string;
+  
+  @Column({ type: 'varchar', length: 255, transformer: EncryptionTransformer })
+  mongoUri: string;
 
   // ----------------------------------------------------------------
 

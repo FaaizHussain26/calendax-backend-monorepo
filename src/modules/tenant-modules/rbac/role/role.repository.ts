@@ -6,7 +6,7 @@ import { RoleEntity } from './role.entity';
 @Injectable({ scope: Scope.REQUEST })
 export class RoleRepository {
   constructor(
-    @Inject('RoleEntityRepository')
+    @Inject(`${RoleEntity.name}Repository`)
     private readonly repo: Repository<RoleEntity>,
   ) {}
 
