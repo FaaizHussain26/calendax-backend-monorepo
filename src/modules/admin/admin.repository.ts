@@ -6,6 +6,7 @@ import { plainToInstance } from 'class-transformer';
 import { AdminEntity } from './entities/admin.entity';
 import { AdminPermissions } from './entities/admin-permissions.entity';
 import { AdminResponseDto } from './admin.dto';
+import { PageRepository } from '../page/page.repository';
 
 @Injectable()
 export class AdminRepository {
@@ -14,6 +15,7 @@ export class AdminRepository {
     private readonly adminRepo: Repository<AdminEntity>,
     @InjectRepository(AdminPermissions, 'master')
     private readonly permissionRepo: Repository<AdminPermissions>,
+    private readonly pageRepository:PageRepository
   ) {}
 
   // ─── Admin ────────────────────────────────────────────────────────────────
@@ -42,7 +44,7 @@ export class AdminRepository {
         id: true,
         name: true,
         email: true,
-        password: true,                    // ✅ explicitly include password
+        password: true, // ✅ explicitly include password
         role: true,
         isActive: true,
       },
@@ -56,9 +58,9 @@ export class AdminRepository {
   async update(
     id: string,
     payload: Partial<AdminEntity>,
-  ): Promise<AdminEntity|null> {
+  ): Promise<AdminEntity | null> {
     await this.adminRepo.update(id, payload);
-    return this.findById(id);              // ✅ return updated entity
+    return this.findById(id); // ✅ return updated entity
   }
 
   async softDelete(id: string): Promise<void> {
@@ -69,14 +71,14 @@ export class AdminRepository {
 
   async findPermissions(adminId: string): Promise<AdminPermissions[]> {
     return this.permissionRepo.find({
-      where: { adminId },                  // ✅ filter by adminId
-      relations: { page: true },           // ✅ load page relation
+      where: { adminId },
+      relations: { page: true },
     });
   }
 
   async upsertPermission(
     payload: Partial<AdminPermissions>,
-  ): Promise<AdminPermissions|null> {
+  ): Promise<AdminPermissions | null> {
     const existing = await this.permissionRepo.findOne({
       where: { adminId: payload.adminId, pageId: payload.pageId },
     });
@@ -88,4 +90,27 @@ export class AdminRepository {
 
     return this.permissionRepo.save(this.permissionRepo.create(payload));
   }
+
+  async removePermission(adminId: string, pageId: string): Promise<void> {
+    await this.permissionRepo.delete({ adminId, pageId });
+  }
+  async findAllPagesWithAdminPermissions( userId:string) {
+      const data = await this.pageRepository.find();
+      const adminPermissions = await this.permissionRepo.find({
+        where: { adminId: userId},
+      });
+      const pagesWithPermissions = data?.map((page) => {
+        const permission = adminPermissions.find((p) => p.pageId === page.id);
+        return {
+          ...page,
+          permissions: {
+            read: permission?.read ?? false,
+            write: permission?.write ?? false,
+            update: permission?.update ?? false,
+            delete: permission?.delete ?? false,
+          },
+        };
+      });
+      return pagesWithPermissions;
+    }
 }

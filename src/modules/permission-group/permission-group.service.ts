@@ -11,6 +11,7 @@ import {
 } from '../../common/dto/permission.dto';
 import { HelperFunctions } from '../../common/utils/functions';
 import { AdminPermissionRepository } from '../permission/permission.repository';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
 // src/modules/admin/permission-group/permission-group.service.ts
 @Injectable()
@@ -58,9 +59,9 @@ export class AdminPermissionGroupService {
     });
   }
 
-  async findAll() {
-    return this.permissionGroupRepo.findAll();
-  }
+async findAll(query: PaginationDto) {
+  return this.permissionGroupRepo.findAll(query);
+}
 
   async findById(id: string) {
     const group = await this.permissionGroupRepo.findById(id);

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
-import { TenantResponseDto } from './tenant.dto';
+import { findTenantDto, TenantResponseDto } from './tenant.dto';
 import { TenantEntity } from './tenant.entity';
 
 @Injectable()
@@ -12,13 +12,23 @@ export class TenantRepository {
     private readonly tenantRepository: Repository<TenantEntity>,
   ) {}
 
-  async getAllTenants() {
-    const tenants = await this.tenantRepository.find();
-    return plainToInstance(TenantResponseDto, tenants);
-  }
+async getAllTenants(query: findTenantDto) {
+  const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC' ,status} = query;
+
+  const [data, total] = await this.tenantRepository.findAndCount({
+   where: {
+  ...(search ? [{ name: ILike(`%${search}%`) }, { slug: ILike(`%${search}%`) }] : {}),
+  ...(status && { status }),
+},
+    order: { [sortBy]: sortOrder },
+    skip: (page - 1) * limit,
+    take: limit,
+  });
+
+  return { data, total, page, limit };
+}
 
   async getByTenantId(id: string) {
-    console.log("searching tenant:",id)
     return await this.tenantRepository.findOne({
       where: { id: id },
     });
@@ -30,7 +40,7 @@ export class TenantRepository {
   }
 async createTenant(payload: Partial<TenantEntity>): Promise<TenantEntity> {
   return this.tenantRepository.save(
-    this.tenantRepository.create(payload),       // ✅ TypeORM handles junction table automatically
+    this.tenantRepository.create(payload),       
   );
 }
 

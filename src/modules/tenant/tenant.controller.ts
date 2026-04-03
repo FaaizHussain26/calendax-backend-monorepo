@@ -7,10 +7,11 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { TenantService } from './tenant.service';
-import { CreateTenantDto, UpdateTenantDto } from './tenant.dto';
+import { CreateTenantDto, findTenantDto, UpdateTenantDto } from './tenant.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { AllRoles, PermissionNames } from '../../enums/system.enum';
 import { JwtAuthGuard } from '../../common/jwt/jwt.provider';
@@ -23,22 +24,22 @@ import { AdminPage } from '../../enums/admin.enum';
 @Controller('/tenant')
 export class TenantController {
   constructor(private readonly tenantService: TenantService) {}
-  @Permission(AdminPage.PAGE, PermissionNames.READ)
+  @Permission(AdminPage.TENANT, PermissionNames.READ)
   @Get('/')
-  async getAllTenants() {
-    return await this.tenantService.getAllTenants();
+  async getAllTenants(@Query() query:findTenantDto) {
+    return await this.tenantService.getAllTenants(query);
   }
-  @Permission(AdminPage.PAGE, PermissionNames.READ)
+  @Permission(AdminPage.TENANT, PermissionNames.READ)
   @Get('/:id')
   async gettenantsById(@Param('id', ParseUUIDPipe) id: string) {
     return await this.tenantService.getTenantById(id);
   }
-  @Permission(AdminPage.PAGE, PermissionNames.WRITE)
+  @Permission(AdminPage.TENANT, PermissionNames.WRITE)
   @Post('/')
   async createTenant(@Body() payload: CreateTenantDto) {
     return await this.tenantService.createTenant(payload);
   }
-  @Permission(AdminPage.PAGE, PermissionNames.UPDATE)
+  @Permission(AdminPage.TENANT, PermissionNames.UPDATE)
   @Patch('/:id')
   async updateTenant(
     @Param('id', ParseUUIDPipe) id: string,
@@ -46,7 +47,7 @@ export class TenantController {
   ) {
     return await this.tenantService.update(id, payload);
   }
-  @Permission(AdminPage.PAGE, PermissionNames.DELETE)
+  @Permission(AdminPage.TENANT, PermissionNames.DELETE)
   @Delete('/:id')
   async deleteTenant(@Param('id', ParseUUIDPipe) id: string) {
     return await this.tenantService.deleteTenant(id);

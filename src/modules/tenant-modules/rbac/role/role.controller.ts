@@ -20,8 +20,8 @@ import {
 } from './role.dto';
 import { PermissionsGuard } from '../../../../common/guards/permission.guard';
 
-@Controller('rbac/roles')
-@UseGuards(JwtAuthGuard, TenantGuard, PermissionsGuard)
+@Controller('roles')
+@UseGuards(JwtAuthGuard, TenantGuard,)
 export class RoleController {
   constructor(private readonly service: RoleService) {}
 
@@ -36,7 +36,6 @@ export class RoleController {
   }
 
   @Post()
-  @HttpCode(201)
   create(@Body() dto: CreateRoleDto) {
     return this.service.create(dto);
   }

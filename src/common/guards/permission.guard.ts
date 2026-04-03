@@ -5,8 +5,9 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import {  Roles } from '../../enums/admin.enum';
+import { Roles } from '../../enums/admin.enum';
 import { PERMISSION_KEY } from '../decorators/permission.decorator';
+import { AllRoles } from '../../enums/system.enum';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -28,17 +29,47 @@ export class PermissionsGuard implements CanActivate {
     if (user.role === Roles.SUPER_ADMIN) {
       return true;
     }
+    if (user.role === AllRoles.TENANT_ADMIN && req.tenantId) {
+      return true;
+    }
+    const permissions: string[] = user.permissions || [];
 
-    const permissions = user.permissions || [];
-
-    const perm = permissions.find((p) => p.resource === required.resource);
-
-    if (!perm || !perm[required.action]) {
-      throw new ForbiddenException(
-        `No ${required.action} access to ${required.resource}`,
+    if (required) {
+      // explicit permission check (admin module)
+      const perm = permissions.find(
+        (p) => p === `${required.resource}.${required.action}`,
       );
+      if (!perm) {
+        throw new ForbiddenException(
+          `No ${required.action} access to ${required.resource}`,
+        );
+      }
+      return true;
+    }
+    const resource = this.extractResource(req.path); // e.g 'patients' from '/api/patients'
+    const action = this.extractAction(req.method); // e.g 'read' from 'GET'
+
+    const hasPermission = permissions.includes(`${resource}.${action}`);
+    if (!hasPermission) {
+      throw new ForbiddenException(`No ${action} access to ${resource}`);
     }
 
     return true;
+  }
+  private extractResource(path: string): string {
+    // '/api/patients/123' → 'patients'
+    const parts = path.replace(/^\/api\//, '').split('/');
+    return parts[0];
+  }
+
+  private extractAction(method: string): string {
+    const map: Record<string, string> = {
+      GET: 'read',
+      POST: 'write',
+      PATCH: 'update',
+      PUT: 'update',
+      DELETE: 'delete',
+    };
+    return map[method] ?? 'read';
   }
 }

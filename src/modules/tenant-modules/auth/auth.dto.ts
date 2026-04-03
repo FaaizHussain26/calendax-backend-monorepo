@@ -23,7 +23,7 @@ export class AdminCreateUserDto {
   @Length(2, 75)
   firstName: string;
 
-    @IsOptional()
+  @IsOptional()
   @IsString()
   @Length(2, 75)
   middleName?: string;
@@ -44,7 +44,7 @@ export class AdminCreateUserDto {
 
   @IsUUID('4', { each: true })
   @IsOptional()
-  permissionIds?: string[]; 
+  permissionIds?: string[];
 
   @IsBoolean()
   @IsOptional()
@@ -66,9 +66,9 @@ export class SelfRegisterDto {
   @Length(2, 75)
   lastName: string;
 
-    @IsEnum(TenantUserRoles)
+  @IsEnum(TenantUserRoles)
   userType: TenantUserRoles;
-    
+
   @IsEmail()
   email: string;
 
@@ -98,12 +98,11 @@ export class ForgotPasswordDto {
 }
 
 export class ResetPasswordDto {
+ 
   @IsUUID()
-  userId: string;
-
+  verificationId: string;
   @IsString()
-  @Length(6, 6)
-  code: string;
+
   @IsString()
   @MinLength(8)
   @Matches(

@@ -62,9 +62,9 @@ export class AppModule {
    configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(DecryptPayloadMiddleware)
-      .forRoutes('patients');
+      .forRoutes('patients','tenant');
       consumer
       .apply(TenantContextMiddleware)
-      .forRoutes('auth', 'users', 'rbac', 'patients');
+      .forRoutes('auth', 'users', 'permission-groups','permissions','roles', 'patients');
   }
 }

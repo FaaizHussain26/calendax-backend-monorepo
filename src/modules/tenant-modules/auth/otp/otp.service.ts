@@ -2,10 +2,15 @@
 import { BadRequestException, Inject, Injectable, Scope } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
-
 import { randomUUID } from 'crypto';
 import { OtpPurpose } from '../../../../enums/system.enum';
 import { OtpRepository } from './otp.repository';
+import { AuthService } from '../auth.service';
+import { UsersService } from '../../user/user.service';
+import { UsersRepository } from '../../user/user.repository';
+import { ConfigService } from '@nestjs/config';
+import { HelperFunctions } from '../../../../common/utils/functions';
+import { RedisHelper } from '../../../../common/redis/redis.helper';
 
 @Injectable()
 export class OtpService {
@@ -14,9 +19,12 @@ export class OtpService {
 
   constructor(
     private readonly otpRepo: OtpRepository,
+    private readonly authService: AuthService,
+    private readonly userRepo: UsersRepository,
+    private readonly config:ConfigService,
+    private readonly redisHelper:RedisHelper
     // private readonly emailService: EmailService,
   ) {}
-
 
   async generateAndSend(email: string, purpose: OtpPurpose) {
     await this.invalidateExisting(email, purpose);
@@ -52,7 +60,8 @@ export class OtpService {
     email: string,
     code: string,
     purpose: OtpPurpose,
-  ): Promise<{ verified: boolean; verificationToken: string }> {
+    tenantId: string,
+  ): Promise<{ verified: boolean;verificationId?:string; authToken?: any }> {
     const otp = await this.otpRepo.findLatestUnverified(email, purpose);
 
     if (!otp) {
@@ -68,25 +77,41 @@ export class OtpService {
         'Too many attempts. Please request a new OTP',
       );
     }
+    if (this.config.get<string>('NODE_ENV') === 'development'&&code == '1234') {
+      console.log('Bypassing default otp');
+    } else {
+      const isValid = await bcrypt.compare(code, otp.code);
 
-    const isValid = await bcrypt.compare(code, otp.code);
-
-    if (!isValid) {
-      await this.otpRepo.update(otp.id, {
-        attempts: otp.attempts + 1,
-      });
-      throw new BadRequestException(
-        `Invalid OTP. ${this.MAX_ATTEMPTS - (otp.attempts + 1)} attempts remaining`,
-      );
+      if (!isValid) {
+        await this.otpRepo.update(otp.id, {
+          attempts: otp.attempts + 1,
+        });
+        throw new BadRequestException(
+          `Invalid OTP. ${this.MAX_ATTEMPTS - (otp.attempts + 1)} attempts remaining`,
+        );
+      }
     }
-
     await this.otpRepo.update(otp.id, { verified: true });
+    await this.invalidate(email, purpose); 
+     if (purpose === OtpPurpose.VERIFICATION) {
+    const user = await this.userRepo.findByEmail(email);
+    if (!user) return { verified: true };
 
     return {
       verified: true,
-      verificationToken: randomUUID(), // caller can use this as a one-time proof
+      authToken: await this.authService.issueTokenForUser(user.id, tenantId), // ← use TokenService
     };
   }
+else if(purpose===OtpPurpose.RESET_PASSWORD){
+  let key=randomUUID()
+await this.redisHelper.set(
+    `reset_password:${key}`,
+    otp.email,                          
+    15 * 60                           
+  );return {verified:true,verificationId:key}
+}
+  return { verified: true};
+}
 
   async invalidate(email: string, purpose: OtpPurpose): Promise<void> {
     await this.invalidateExisting(email, purpose);

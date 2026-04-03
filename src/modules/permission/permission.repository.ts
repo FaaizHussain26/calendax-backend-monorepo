@@ -1,8 +1,9 @@
 // src/modules/admin/permission/permission.repository.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { AdminPermissionEntity } from './permission.entity';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Injectable()
 export class AdminPermissionRepository {
@@ -21,12 +22,28 @@ export class AdminPermissionRepository {
 
   // ─── Find ─────────────────────────────────────────────────────────────────
 
-  async findAll(): Promise<AdminPermissionEntity[]> {
-    return this.repo.find({
-      relations: { group: true },
-      order: { createdAt: 'DESC' },
-    });
-  }
+
+async findAll(query: PaginationDto): Promise<{
+  data: AdminPermissionEntity[];
+  total: number;
+  page: number;
+  limit: number;
+}> {
+  const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
+
+  const [data, total] = await this.repo.findAndCount({
+    relations: { group: true },
+    where: search ? [
+      { name: ILike(`%${search}%`) },    
+      { description: ILike(`%${search}%`) }, 
+    ] : {},
+    order: { [sortBy]: sortOrder },
+    skip: (page - 1) * limit,
+    take: limit,
+  });
+
+  return { data, total, page, limit };
+}
 
   async findById(id: string): Promise<AdminPermissionEntity | null> {
     return this.repo.findOne({

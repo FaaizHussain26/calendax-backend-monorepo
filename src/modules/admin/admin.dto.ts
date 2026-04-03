@@ -7,6 +7,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   MinLength,
 } from 'class-validator';
 import { AdminRoles } from '../../enums/admin.enum';
@@ -87,4 +88,30 @@ export class AdminResponseDto {
 
   @Expose()
   updatedAt: Date;
+}
+
+export class AssignPagePermissionDto {
+  @IsUUID()
+  pageId: string;
+
+  @IsBoolean()
+  @IsOptional()
+  read?: boolean = false;
+
+  @IsBoolean()
+  @IsOptional()
+  write?: boolean = false;
+
+  @IsBoolean()
+  @IsOptional()
+  update?: boolean = false;
+
+  @IsBoolean()
+  @IsOptional()
+  delete?: boolean = false;
+}
+
+export class RemovePagePermissionDto {
+  @IsUUID()
+  pageId: string;
 }

@@ -1,6 +1,7 @@
 import {
   IsArray,
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -8,6 +9,8 @@ import {
   Length,
   MinLength,
 } from 'class-validator';
+import { PaginationDto } from '../../common/dto/pagination.dto';
+import { TenantStatus } from '../../enums/tenant.enum';
 
 export class TenantResponseDto {
   id!: string;
@@ -44,8 +47,18 @@ export class CreateTenantDto {
   permissionGroupIds?: string[];
 }
 
+export class findTenantDto extends PaginationDto{
+@IsOptional()
+ @IsEnum(TenantStatus)
+  status?: TenantStatus;
+}
 export class UpdateTenantDto {
   @IsString()
   @IsOptional()
   name?: string;
+
+    @IsArray()
+  @IsUUID('4', { each: true })
+  @IsOptional()
+  permissionGroupIds?: string[];
 }

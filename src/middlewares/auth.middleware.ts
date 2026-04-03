@@ -29,7 +29,7 @@ export class AuthMiddleware implements CanActivate {
       ) as jwt.JwtPayload;
  
       // 🚫 Reject if blacklisted
-      if (!decoded?._id || isBlacklisted(decoded?._id)) {
+      if (!decoded?.id || isBlacklisted(decoded?.id)) {
         //
         throw new UnauthorizedException('Token has been blacklisted');
       }

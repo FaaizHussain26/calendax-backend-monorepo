@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/jwt/jwt.provider';
@@ -21,17 +22,18 @@ import {
   UpdatePermissionGroupDto,
 } from '../../common/dto/permission.dto';
 import { AdminPermissionGroupService } from './permission-group.service';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
-@Controller('admin/permission-groups')
+@Controller('admin-permission-groups')
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(AdminRoles.SUPER_ADMIN, AdminRoles.ADMIN)
 export class AdminPermissionGroupController {
   constructor(private readonly service: AdminPermissionGroupService) {}
 
-  @Get()
-  async findAll() {
-    return this.service.findAll();
-  }
+@Get()
+async findAll(@Query() query: PaginationDto) {
+  return this.service.findAll(query);
+}
 
   @Get(':id')
   async findById(@Param('id') id: string) {

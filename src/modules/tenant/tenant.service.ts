@@ -9,6 +9,7 @@ import { TenantRepository } from './tenant.repository';
 
 import {
   CreateTenantDto,
+  findTenantDto,
   TenantResponseDto,
   UpdateTenantDto,
 } from './tenant.dto';
@@ -38,25 +39,17 @@ export class TenantService {
     private connectionManager: TenantConnectionManager,
     private readonly configService: ConfigService,
     private readonly adminPermissionGroupRepository: AdminPermissionGroupRepository,
-    private readonly mongoAdmin:MongoAdminService
+    private readonly mongoAdmin: MongoAdminService,
   ) {}
 
-  async getAllTenants() {
-    try {
-      return await this.tenantRepository.getAllTenants();
-    } catch (error: any) {
-      throw new BadRequestException(error.message);
-    }
+  async getAllTenants(query: findTenantDto) {
+    return await this.tenantRepository.getAllTenants(query);
   }
 
   async getTenantById(id: string) {
-    try {
-      const tenant = await this.tenantRepository.getByTenantId(id);
-      entityNotFound(tenant, 'Tenant');
-      return tenant;
-    } catch (error: any) {
-      throw new BadRequestException(error.message);
-    }
+    const tenant = await this.tenantRepository.getByTenantId(id);
+    entityNotFound(tenant, 'Tenant');
+    return tenant;
   }
 
   async createTenant(dto: CreateTenantDto) {
@@ -70,7 +63,9 @@ export class TenantService {
       throw new ConflictException('Tenant with this name already exists');
 
     const dashboardGroup =
-      await this.adminPermissionGroupRepository.findDetailedByCondition({slug:'dashboard'});
+      await this.adminPermissionGroupRepository.findDetailedByCondition({
+        slug: 'dashboard',
+      });
     if (!dashboardGroup) {
       throw new NotFoundException(
         'Dashboard permission group not found. Run seeders first.',
@@ -78,9 +73,10 @@ export class TenantService {
     }
     let requestedGroups: AdminPermissionGroupEntity[] = [];
     if (dto.permissionGroupIds?.length) {
-      requestedGroups = await this.adminPermissionGroupRepository.findByIds(
-        dto.permissionGroupIds,
-      );
+      requestedGroups =
+        await this.adminPermissionGroupRepository.findDetailedByIds(
+          dto.permissionGroupIds,
+        );
       if (requestedGroups.length !== dto.permissionGroupIds.length) {
         throw new NotFoundException('One or more permission groups not found');
       }
@@ -91,6 +87,7 @@ export class TenantService {
       dashboardGroup,
       ...requestedGroups.filter((g) => g.slug !== 'dashboard'),
     ];
+    console.log('all groups:::', allGroups);
     try {
       await this.provisionDatabase(dbName, slug, dbPassword);
       const mongoUri = await this.provisionMongoDatabase(dbName);
@@ -242,21 +239,21 @@ export class TenantService {
       }
 
       await this.deprovisionDatabase(dbName, dbUser);
-    await this.deprovisionMongoDatabase(dbName);
+      await this.deprovisionMongoDatabase(dbName);
     } catch (rollbackError) {
       // Log rollback failure but don't throw — original error takes priority
       console.error('Rollback also failed:', rollbackError);
     }
   }
-private async deprovisionMongoDatabase(dbName: string) {
-  try {
-    // Simply drop the database using the master client
-    await this.mongoAdmin.clientInstance.db(dbName).dropDatabase();
-    console.log(`Successfully dropped Mongo DB: ${dbName}`);
-  } catch (e) {
-    console.warn(`Mongo cleanup warning: ${e.message}`);
+  private async deprovisionMongoDatabase(dbName: string) {
+    try {
+      // Simply drop the database using the master client
+      await this.mongoAdmin.clientInstance.db(dbName).dropDatabase();
+      console.log(`Successfully dropped Mongo DB: ${dbName}`);
+    } catch (e) {
+      console.warn(`Mongo cleanup warning: ${e.message}`);
+    }
   }
-}
   private async provisionDatabase(
     dbName: string,
     dbUser: string,
@@ -297,29 +294,29 @@ private async deprovisionMongoDatabase(dbName: string) {
     );
     await tenantAdminConn.destroy();
   }
-private async provisionMongoDatabase(dbName: string) {
-  try {
-    // 1. Get the "Admin" client instance (the one using your master string)
-    const client = this.mongoAdmin.clientInstance;
-    
-    // 2. Access the new tenant-specific database
-    const tenantDb = client.db(dbName);
-    
-    // 3. Force the database into existence by creating a collection
-    await tenantDb.createCollection('_init'); 
+  private async provisionMongoDatabase(dbName: string) {
+    try {
+      // 1. Get the "Admin" client instance (the one using your master string)
+      const client = this.mongoAdmin.clientInstance;
 
-    // 4. Construct the tenant-specific URI using your master credentials
-    // We just swap the database name at the end of the string
-    const user = this.configService.get<string>('db.mongodb.user');
-    const pass = this.configService.get<string>('db.mongodb.password');
-    const host = this.configService.get<string>('db.mongodb.host'); // cluster0.5o5gbw1.mongodb.net
+      // 2. Access the new tenant-specific database
+      const tenantDb = client.db(dbName);
 
-    // Note: No authSource=dbName here because we are using the Master User
-    return `mongodb+srv://${user}:${pass}@${host}/${dbName}?retryWrites=true&w=majority`;
-  } catch (error) {
-    throw new Error(`Mongo Provisioning Failed: ${error.message}`);
+      // 3. Force the database into existence by creating a collection
+      await tenantDb.createCollection('_init');
+
+      // 4. Construct the tenant-specific URI using your master credentials
+      // We just swap the database name at the end of the string
+      const user = this.configService.get<string>('db.mongodb.user');
+      const pass = this.configService.get<string>('db.mongodb.password');
+      const host = this.configService.get<string>('db.mongodb.host'); // cluster0.5o5gbw1.mongodb.net
+
+      // Note: No authSource=dbName here because we are using the Master User
+      return `mongodb+srv://${user}:${pass}@${host}/${dbName}?retryWrites=true&w=majority`;
+    } catch (error) {
+      throw new Error(`Mongo Provisioning Failed: ${error.message}`);
+    }
   }
-}
   private async deprovisionDatabase(dbName: string, dbUser: string) {
     const masterConn = this.masterDataSource;
 
@@ -336,32 +333,38 @@ private async provisionMongoDatabase(dbName: string) {
   }
 
   async update(id: string, payload: UpdateTenantDto) {
-    try {
-      const tenant = await this.tenantRepository.getByTenantId(id);
-      entityNotFound(tenant, 'Tenant');
-      await this.tenantRepository.updateTenant(id, payload);
-      const updatedEntity = await this.tenantRepository.getByTenantId(id);
-      return plainToInstance(TenantResponseDto, updatedEntity, {
-        excludeExtraneousValues: true,
-      });
-    } catch (error: any) {
-      throw new BadRequestException(error.message);
+    const tenant = await this.tenantRepository.getByTenantId(id);
+    if(!tenant) throw new entityNotFound(tenant, 'Tenant');
+    
+    await this.tenantRepository.updateTenant(id, payload);
+    const updatedEntity = await this.tenantRepository.getByTenantId(id);
+    let requestedGroups;
+    if (payload?.permissionGroupIds) {
+      requestedGroups =
+        await this.adminPermissionGroupRepository.findDetailedByIds(
+          payload.permissionGroupIds,
+        );
+      if (requestedGroups.length !== payload.permissionGroupIds.length) {
+        throw new NotFoundException('One or more permission groups not found');
+      }
+       const connection = await this.connectionManager.getConnection(tenant);
+      await connection.sql.runMigrations();
+      // await this.seedTenantDatabase(connection.sql, {adminEmail:tenant}, requestedGroups);
     }
+    return plainToInstance(TenantResponseDto, updatedEntity, {
+      excludeExtraneousValues: true,
+    });
   }
 
   async deleteTenant(id: string) {
-    try {
-      const tenant = await this.tenantRepository.getByTenantId(id);
-      entityNotFound(tenant, 'Tenant');
-      await this.connectionManager.closeConnection(id);
-      if(tenant?.dbName&&tenant?.dbUser){
-        await this.deprovisionMongoDatabase(tenant.dbName)
-        await this.deprovisionDatabase(tenant.dbName,tenant.dbUser)
-      }
-      await this.tenantRepository.delete(id);
-return { message: 'Tenant and associated databases deleted successfully' };
-    } catch (error: any) {
-      throw new BadRequestException(error.message);
+    const tenant = await this.tenantRepository.getByTenantId(id);
+    entityNotFound(tenant, 'Tenant');
+    await this.connectionManager.closeConnection(id);
+    if (tenant?.dbName && tenant?.dbUser) {
+      await this.deprovisionMongoDatabase(tenant.dbName);
+      await this.deprovisionDatabase(tenant.dbName, tenant.dbUser);
     }
+    await this.tenantRepository.delete(id);
+    return { message: 'Tenant and associated databases deleted successfully' };
   }
 }

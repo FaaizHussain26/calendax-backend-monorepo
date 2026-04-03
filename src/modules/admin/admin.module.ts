@@ -6,6 +6,7 @@ import { AdminRepository } from "./admin.repository";
 import { AdminEntity } from "./entities/admin.entity";
 import { AdminPermissions } from "./entities/admin-permissions.entity";
 import { JwtCommonModule } from "../../common/jwt/jwt.module";
+import { PageModule } from "../page/page.module";
 
 const services = [AdminService];
 const repositories = [AdminRepository];
@@ -14,7 +15,7 @@ const controllers = [AdminController];
 @Module({
     imports: [
         TypeOrmModule.forFeature([AdminEntity, AdminPermissions],'master'),
-        JwtCommonModule,
+        JwtCommonModule,PageModule
     ],
     controllers,
     providers: [...services, ...repositories],

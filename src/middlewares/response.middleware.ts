@@ -26,17 +26,17 @@ export class ResponseInterceptor implements NestInterceptor {
           response &&
           typeof response === 'object' &&
           'data' in response &&
-          'totalCount' in response &&
+          'total' in response &&
           'page' in response &&
           'limit' in response
         ) {
-          const { totalCount, page, limit } = response;
+          const { total, page, limit } = response;
  
           metadata = {
-            totalCount,
+            total,
             page,
             limit,
-            totalPages: Math.ceil(totalCount / limit),
+            totalPages: Math.ceil(total / limit),
           };
  
           data = response?.data; // extract actual data

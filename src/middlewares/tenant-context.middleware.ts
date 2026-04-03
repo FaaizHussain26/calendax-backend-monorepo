@@ -18,7 +18,6 @@ export class TenantContextMiddleware implements NestMiddleware {
     if (tenantId) {
       try {
         const tenant = await this.tenantRepository.getByTenantId(tenantId);
-        
         if (tenant && tenant.status === TenantStatus.ACTIVE) {
           req.tenant = tenant;
           req.tenantId = tenant.id;

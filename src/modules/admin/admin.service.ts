@@ -1,5 +1,6 @@
 // src/modules/admin/admin.service.ts
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -11,7 +12,9 @@ import { AdminRoles } from '../../enums/admin.enum';
 import { AdminRepository } from './admin.repository';
 import {
   AdminResponseDto,
+  AssignPagePermissionDto,
   CreateAdminDto,
+  RemovePagePermissionDto,
   UpdateAdminDto,
 } from './admin.dto';
 import { JwtHelper } from '../../common/jwt/jwt.provider';
@@ -82,7 +85,7 @@ export class AdminService {
       name: dto.name,
       email: dto.email,
       password: hashed,
-      role: dto.role ?? AdminRoles.ADMIN,  // ✅ default to ADMIN
+      role: dto.role ?? AdminRoles.ADMIN, // ✅ default to ADMIN
       isActive: dto.isActive ?? true,
     });
 
@@ -108,4 +111,50 @@ export class AdminService {
     await this.adminRepository.softDelete(id);
     return { message: 'Admin deleted successfully' };
   }
+
+  async assignPagePermission(adminId: string, dto: AssignPagePermissionDto) {
+    const admin = await this.adminRepository.findById(adminId);
+    if (!admin) throw new NotFoundException('Admin not found');
+    if (admin.role === AdminRoles.SUPER_ADMIN) {
+      throw new ConflictException('Super admin already has all permissions');
+    }
+
+    const permission = await this.adminRepository.upsertPermission({
+      adminId,
+      pageId: dto.pageId,
+      read: dto.read,
+      write: dto.write,
+      update: dto.update,
+      delete: dto.delete,
+    });
+
+    return permission;
+  }
+
+  async removePagePermission(adminId: string, dto: RemovePagePermissionDto) {
+    const admin = await this.adminRepository.findById(adminId);
+    if (!admin) throw new NotFoundException('Admin not found');
+
+    const existing = await this.adminRepository.findPermissions(adminId);
+    const hasPermission = existing.find((p) => p.pageId === dto.pageId);
+    if (!hasPermission) throw new NotFoundException('Permission not found');
+
+    await this.adminRepository.removePermission(adminId, dto.pageId);
+    return { message: 'Permission removed successfully' };
+  }
+
+  async getAdminPermissions(adminId: string) {
+    console.log("controller hit")
+
+    const admin = await this.adminRepository.findById(adminId);
+    if (!admin) throw new NotFoundException('Admin not found');
+    return this.adminRepository.findPermissions(adminId);
+  }
+  async findAllPagesWithAdminPermissions(user) {
+      try {
+        return await this.adminRepository.findAllPagesWithAdminPermissions(user.id);
+      } catch (error: any) {
+        throw new BadRequestException(error.message);
+      }
+    }
 }

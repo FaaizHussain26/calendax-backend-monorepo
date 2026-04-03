@@ -5,6 +5,7 @@ import { PageService } from "./page.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { PageEntity } from "./page.entity";
 import { AdminEntity } from "../admin/entities/admin.entity";
+import { AdminPermissions } from "../admin/entities/admin-permissions.entity";
 
 const controllers = [PageController];
 const repostories = [PageRepository];
@@ -12,10 +13,11 @@ const services = [PageService];
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([PageEntity],'master')
+        TypeOrmModule.forFeature([PageEntity],'master'),
     ],
     controllers,
-    providers: [...services, ...repostories]
+    providers: [...services, ...repostories],
+    exports:[PageRepository]
 })
 
 export class PageModule{}

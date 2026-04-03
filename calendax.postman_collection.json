@@ -1,0 +1,1310 @@
+{
+  "info": {
+    "name": "Calendax API",
+    "_postman_id": "calendax-api-collection",
+    "description": "Complete API collection for Calendax multi-tenant server",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT token for admin (set after admin login)"
+    },
+    {
+      "key": "tenantToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT token for tenant user (set after tenant login)"
+    },
+    {
+      "key": "tenantId",
+      "value": "",
+      "type": "string",
+      "description": "Tenant slug/ID used in x-tenant-id header"
+    },
+    {
+      "key": "adminId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pageId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tenantRecordId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "permissionGroupId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "permissionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "roleId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            },
+            "description": "Basic health check endpoint"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Auth",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('adminToken', res.data.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"superadmin@calendax.com\",\n  \"password\": \"Admin@1234\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "login"]
+            },
+            "description": "Login as super admin. Saves accessToken to {{adminToken}} variable."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Admins",
+      "item": [
+        {
+          "name": "Get All Admins",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin"]
+            }
+          }
+        },
+        {
+          "name": "Get Admin By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/{{adminId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "{{adminId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@calendax.com\",\n  \"password\": \"Admin@1234\",\n  \"role\": \"admin\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin"]
+            }
+          }
+        },
+        {
+          "name": "Update Admin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Admin\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/{{adminId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "{{adminId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Admin",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/{{adminId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "{{adminId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Pages",
+      "item": [
+        {
+          "name": "Get All Pages",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/page",
+              "host": ["{{baseUrl}}"],
+              "path": ["page"]
+            }
+          }
+        },
+        {
+          "name": "Get Page By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/page/{{pageId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["page", "{{pageId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Page",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dashboard\",\n  \"slug\": \"dashboard\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/page",
+              "host": ["{{baseUrl}}"],
+              "path": ["page"]
+            }
+          }
+        },
+        {
+          "name": "Update Page",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Dashboard\",\n  \"slug\": \"updated-dashboard\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/page/{{pageId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["page", "{{pageId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Page",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/page/{{pageId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["page", "{{pageId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Permission Groups",
+      "item": [
+        {
+          "name": "Get All Permission Groups",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin-permission-groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "permission-groups"]
+            }
+          }
+        },
+        {
+          "name": "Get Permission Group By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin-permission-groups/{{permissionGroupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "permission-groups", "{{permissionGroupId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Permission Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"User Management\",\n  \"href\": \"/users\",\n  \"description\": \"Permissions for managing users\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin-permission-groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "permission-groups"]
+            }
+          }
+        },
+        {
+          "name": "Update Permission Group",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated User Management\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin-permission-groups/{{permissionGroupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "permission-groups", "{{permissionGroupId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Permission Group",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin-permission-groups/{{permissionGroupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "permission-groups", "{{permissionGroupId}}"]
+            }
+          }
+        },
+        {
+          "name": "Restore Permission Group",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin-permission-groups/{{permissionGroupId}}/restore",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "permission-groups", "{{permissionGroupId}}", "restore"]
+            }
+          }
+        },
+        {
+          "name": "Add Custom Permission to Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"export_data\",\n  \"name\": \"Export Data\",\n  \"description\": \"Allows exporting data\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin-permission-groups/{{permissionGroupId}}/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "permission-groups", "{{permissionGroupId}}", "permissions"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Permissions",
+      "item": [
+        {
+          "name": "Get All Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin-permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "Get Permission By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin-permissions/{{permissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "permissions", "{{permissionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Permissions By Group",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin-permissions/group/{{permissionGroupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "permissions", "group", "{{permissionGroupId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Permission In Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"view_reports\",\n  \"name\": \"View Reports\",\n  \"description\": \"Allows viewing reports\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin-permissions/group/{{permissionGroupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "permissions", "group", "{{permissionGroupId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Permission",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Permission Name\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin-permissions/{{permissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "permissions", "{{permissionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Permission",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin-permissions/{{permissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "permissions", "{{permissionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Restore Permission",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin-permissions/{{permissionId}}/restore",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "permissions", "{{permissionId}}", "restore"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Tenants",
+      "item": [
+        {
+          "name": "Get All Tenants",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenant",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenant"]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenant/{{tenantRecordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenant", "{{tenantRecordId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corp\",\n  \"adminEmail\": \"admin@acme.com\",\n  \"adminFirstName\": \"John\",\n  \"adminLastName\": \"Doe\",\n  \"adminPassword\": \"Admin@1234\",\n  \"permissionGroupIds\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tenant",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenant"]
+            },
+            "description": "Creates a new tenant and provisions its database. The tenant slug becomes the x-tenant-id for subsequent requests."
+          }
+        },
+        {
+          "name": "Update Tenant",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corporation\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tenant/{{tenantRecordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenant", "{{tenantRecordId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Tenant",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenant/{{tenantRecordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenant", "{{tenantRecordId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenant - Auth",
+      "description": "All tenant routes require the x-tenant-id header set to the tenant slug.",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('tenantToken', res.data.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@acme.com\",\n  \"password\": \"Admin@1234\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Tenant user login. Saves accessToken to {{tenantToken}}."
+          }
+        },
+        {
+          "name": "Register (Self)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"email\": \"jane@acme.com\",\n  \"userType\": \"tenant_user\",\n  \"password\": \"User@1234\",\n  \"confirmPassword\": \"User@1234\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"<refresh_token_here>\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@acme.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"<user-uuid>\",\n  \"code\": \"123456\",\n  \"newPassword\": \"NewPass@1234\",\n  \"confirmPassword\": \"NewPass@1234\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Admin@1234\",\n  \"newPassword\": \"NewAdmin@1234\",\n  \"confirmPassword\": \"NewAdmin@1234\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "change-password"]
+            }
+          }
+        },
+        {
+          "name": "Admin Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Bob\",\n  \"lastName\": \"Jones\",\n  \"email\": \"bob@acme.com\",\n  \"userType\": \"tenant_user\",\n  \"roleId\": null,\n  \"permissionIds\": [],\n  \"sendWelcomeEmail\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/users/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "users", "create"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenant - OTP",
+      "item": [
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@acme.com\",\n  \"purpose\": \"email_verification\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/otp/send",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "otp", "send"]
+            },
+            "description": "OtpPurpose enum values: email_verification, password_reset, etc."
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@acme.com\",\n  \"code\": \"1234\",\n  \"purpose\": \"email_verification\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/otp/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "otp", "verify"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenant - RBAC - Permission Groups",
+      "item": [
+        {
+          "name": "Get All Permission Groups",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/permission-groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "permission-groups"]
+            }
+          }
+        },
+        {
+          "name": "Get Permission Group By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/permission-groups/{{permissionGroupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "permission-groups", "{{permissionGroupId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Permission Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Billing\",\n  \"href\": \"/billing\",\n  \"description\": \"Billing related permissions\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rbac/permission-groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "permission-groups"]
+            }
+          }
+        },
+        {
+          "name": "Update Permission Group",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Billing\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rbac/permission-groups/{{permissionGroupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "permission-groups", "{{permissionGroupId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Permission Group",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/permission-groups/{{permissionGroupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "permission-groups", "{{permissionGroupId}}"]
+            }
+          }
+        },
+        {
+          "name": "Restore Permission Group",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/permission-groups/{{permissionGroupId}}/restore",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "permission-groups", "{{permissionGroupId}}", "restore"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenant - RBAC - Permissions",
+      "item": [
+        {
+          "name": "Get All Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "Get Permission By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/permissions/{{permissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "permissions", "{{permissionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Permissions By Group",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/permissions/group/{{permissionGroupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "permissions", "group", "{{permissionGroupId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Permission In Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"manage_invoices\",\n  \"name\": \"Manage Invoices\",\n  \"description\": \"Create and manage invoices\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rbac/permissions/group/{{permissionGroupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "permissions", "group", "{{permissionGroupId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Permission",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Permission\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rbac/permissions/{{permissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "permissions", "{{permissionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Permission",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/permissions/{{permissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "permissions", "{{permissionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Restore Permission",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/permissions/{{permissionId}}/restore",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "permissions", "{{permissionId}}", "restore"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenant - RBAC - Roles",
+      "item": [
+        {
+          "name": "Get All Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Get Role By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "roles", "{{roleId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Manager\",\n  \"description\": \"Team manager role\",\n  \"isDefault\": false,\n  \"permissionIds\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Senior Manager\",\n  \"description\": \"Updated role description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "roles", "{{roleId}}"]
+            }
+          }
+        },
+        {
+          "name": "Assign Permissions to Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionIds\": [\"<permission-uuid-1>\", \"<permission-uuid-2>\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles/{{roleId}}/permissions/assign",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "roles", "{{roleId}}", "permissions", "assign"]
+            }
+          }
+        },
+        {
+          "name": "Revoke Permissions from Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionIds\": [\"<permission-uuid-1>\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles/{{roleId}}/permissions/revoke",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "roles", "{{roleId}}", "permissions", "revoke"]
+            }
+          }
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "roles", "{{roleId}}"]
+            }
+          }
+        },
+        {
+          "name": "Restore Role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles/{{roleId}}/restore",
+              "host": ["{{baseUrl}}"],
+              "path": ["rbac", "roles", "{{roleId}}", "restore"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenant - Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "userType", "value": "", "disabled": true },
+                { "key": "isActive", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Alice\",\n  \"lastName\": \"Walker\",\n  \"email\": \"alice@acme.com\",\n  \"phoneNumber\": \"+1234567890\",\n  \"userType\": \"tenant_user\",\n  \"roleId\": null,\n  \"permissionIds\": [],\n  \"sendWelcomeEmail\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "create"]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Alice\",\n  \"lastName\": \"Johnson\",\n  \"phoneNumber\": \"+0987654321\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Restore User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/restore",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}", "restore"]
+            }
+          }
+        },
+        {
+          "name": "Toggle User Active",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "x-tenant-id", "value": "{{tenantId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/toggle-active",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}", "toggle-active"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 // auth/otp/otp.controller.ts
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
 import { SendOtpDto, VerifyOtpDto } from './otp.dto';
 import { OtpService } from './otp.service';
 import { TenantGuard } from '../../../../common/guards/tenant.guard';
@@ -15,7 +15,7 @@ export class OtpController {
   }
 
   @Post('verify')
-  verifyOtp(@Body() dto: VerifyOtpDto) {
-    return this.otpService.verify(dto.email, dto.code, dto.purpose);
+  verifyOtp(@Body() dto: VerifyOtpDto,@Request() req:any) {
+    return this.otpService.verify(dto.email, dto.code, dto.purpose,req.tenantId);
   }
 }

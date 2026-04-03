@@ -17,8 +17,8 @@ import { PermissionsGuard } from '../../../../common/guards/permission.guard';
 import { CreatePermissionGroupDto, UpdatePermissionGroupDto } from '../../../../common/dto/permission.dto';
 
 
-@Controller('rbac/permission-groups')
-@UseGuards(JwtAuthGuard, TenantGuard, PermissionsGuard)
+@Controller('permission-groups')
+@UseGuards(JwtAuthGuard, TenantGuard,PermissionsGuard)
 export class PermissionGroupController {
   constructor(private readonly service: PermissionGroupService) {}
 

@@ -7,6 +7,8 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { PageService } from './page.service';
@@ -14,10 +16,12 @@ import { CreatePageDto, UpdatePageDto } from './page.dto';
 import { JwtAuthGuard } from '../../common/jwt/jwt.provider';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { PermissionsGuard } from '../../common/guards/permission.guard';
-import { AdminPage} from '../../enums/admin.enum';
+import { AdminPage } from '../../enums/admin.enum';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Permission } from '../../common/decorators/permission.decorator';
 import { AllRoles, PermissionNames } from '../../enums/system.enum';
+import { PaginationDto } from '../../common/dto/pagination.dto';
+import type { RequestWithUser } from '../../common/interface/request-with-user';
 
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(AllRoles.SUPER_ADMIN, AllRoles.ADMIN)
@@ -26,9 +30,10 @@ export class PageController {
   constructor(private readonly pageService: PageService) {}
   @Get('/')
   @Permission(AdminPage.PAGE, PermissionNames.READ)
-  async getAllPages() {
-    return await this.pageService.getAllPages();
+  async getAllPages(@Query() query: PaginationDto) {
+    return await this.pageService.findAllPages(query);
   }
+
   @Get('/:id')
   @Permission(AdminPage.PAGE, PermissionNames.READ)
   async getpagesById(@Param('id', ParseUUIDPipe) id: string) {

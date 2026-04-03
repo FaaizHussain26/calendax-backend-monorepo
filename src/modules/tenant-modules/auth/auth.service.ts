@@ -27,6 +27,7 @@ import { RedisService } from '../../../common/redis/redis.service';
 import { JwtService } from '@nestjs/jwt';
 import { PermissionRepository } from '../rbac/permission/permission.repository';
 import { RoleRepository } from '../rbac/role/role.repository';
+import { RedisHelper } from '../../../common/redis/redis.helper';
 
 @Injectable()
 export class AuthService {
@@ -34,24 +35,52 @@ export class AuthService {
     private readonly usersRepository: UsersRepository,
     private readonly rolesRepository: RoleRepository,
     private readonly permissionsRepository: PermissionRepository,
-    private readonly otpService: OtpService,
+    // private readonly otpService: OtpService,
     private readonly jwtHelper: JwtHelper,
     private readonly redisService: RedisService,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
+    private readonly redisHelper: RedisHelper,
   ) {}
+  // auth.service.ts
+  async issueTokenForUser(user: UserEntity | string, tenantId: string) {
+    let data;
+    if (typeof user === 'string') {
+      data = await this.usersRepository.findDetailsById(user);
+      if (!data) throw new UnauthorizedException('User not found');
+      if (!data.isActive)
+        throw new UnauthorizedException('Account is inactive');
+    } else {
+      data = user;
+    }
+    const rolePermissions = data.role?.permissions?.map((p) => p.key) ?? [];
+    const directPermissions = data.permissions?.map((p) => p.key) ?? [];
+    const allPermissions = [
+      ...new Set([...rolePermissions, ...directPermissions]),
+    ];
 
+    return this.jwtHelper.issueToken(
+      {
+        id: data.id,
+        role: data.role?.name ?? 'staff',
+        isActive: data.isActive,
+        tenantId,
+        userType: data.userType,
+        roleId: data.roleId,
+      },
+      allPermissions,
+    );
+  }
   async login(dto: LoginDto) {
     const user = await this.usersRepository.findByEmail(dto.email);
     if (!user) throw new NotFoundException('User not found');
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) throw new UnauthorizedException('Invalid credentials');
     if (!user.isActive) throw new ForbiddenException('Account is inactive');
-    await this.otpService.generateAndSend(user.email, OtpPurpose.VERIFICATION);
+    // await this.otpService.generateAndSend(user.email, OtpPurpose.VERIFICATION);
     return {
-      requiresOtp: true,
-      email: user?.email,
-      message: 'OTP sent to your email',
+      data: { requiresOtp: true, email: user?.email },
+      message: 'Login Successful',
     };
   }
   async selfRegister(dto: SelfRegisterDto) {
@@ -110,11 +139,11 @@ export class AuthService {
     });
 
     if (dto.sendWelcomeEmail) {
-      await this.otpService.sendWelcomeEmail(
-        user.email,
-        `${user.firstName} ${user.lastName}`,
-        rawPassword,
-      );
+      // await this.otpService.sendWelcomeEmail(
+      //   user.email,
+      //   `${user.firstName} ${user.lastName}`,
+      //   rawPassword,
+      // );
     }
 
     return {
@@ -138,40 +167,22 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
-    const redis = this.redisService.getClient();
-    const refreshSession = await redis.get(`refresh:${decoded.jti}`);
+    const refreshSession = await this.redisHelper.get(`refresh:${decoded.jti}`);
 
     if (!refreshSession) {
       throw new UnauthorizedException('Session expired. Please login again');
     }
-    const session = JSON.parse(refreshSession);
+    const session = JSON.parse(refreshSession?.toString());
 
-    const user = await this.usersRepository.findById(decoded.sub);
+    const user = await this.usersRepository.findDetailsById(decoded.sub);
     if (!user) throw new UnauthorizedException('User not found');
     if (!user.isActive) throw new UnauthorizedException('Account is inactive');
 
-    await redis.del(`refresh:${decoded.jti}`);
-  if (session.accessJti) {
-    await redis.del(`session:${session.accessJti}`);  // invalidate old access token
-  }
- const rolePermissions = user.role?.permissions?.map((p) => p.key) ?? [];
-  const directPermissions = user.permissions?.map((p) => p.key) ?? [];
-  const allPermissions = [
-    ...new Set([...rolePermissions, ...directPermissions]),
-  ];
-
-  return this.jwtHelper.issueToken(
-    {
-      id: user.id,
-      role: user.role?.name ?? 'staff',
-      isActive: user.isActive,
-      tenantId: session.tenantId,            // ✅ carried from refresh session
-      userType: user.userType,
-      roleId: user.roleId,
-    },
-    allPermissions,
-  );
-
+    await this.redisHelper.delete(`refresh:${decoded.jti}`);
+    if (session.accessJti) {
+      await this.redisHelper.delete(`session:${session.accessJti}`);
+    }
+    return this.issueTokenForUser(user.id, session.tenantId);
   }
 
   async forgotPassword(email: string) {
@@ -181,10 +192,10 @@ export class AuthService {
       return { message: 'If this email exists, an OTP has been sent' };
     }
 
-    await this.otpService.generateAndSend(
-      user.email,
-      OtpPurpose.RESET_PASSWORD,
-    );
+    // await this.otpService.generateAndSend(
+    //   user.email,
+    //   OtpPurpose.RESET_PASSWORD,
+    // );
 
     return {
       userId: user.id,
@@ -192,24 +203,23 @@ export class AuthService {
     };
   }
 
-  async resetPassword(dto: ResetPasswordDto) {
-    if (dto.newPassword !== dto.confirmPassword) {
-      throw new BadRequestException('Passwords do not match');
-    }
-
-    await this.otpService.verify(
-      dto.userId,
-      dto.code,
-      OtpPurpose.RESET_PASSWORD,
-    );
-
-    const hashed = await bcrypt.hash(dto.newPassword, 10);
-    await this.usersRepository.update(dto.userId, { password: hashed });
-
-    await this.otpService.invalidate(dto.userId, OtpPurpose.RESET_PASSWORD);
-
-    return { message: 'Password reset successfully' };
+ async resetPassword(dto: ResetPasswordDto) {
+  if (dto.newPassword !== dto.confirmPassword) {
+    throw new BadRequestException('Passwords do not match');
   }
+
+  const email = await this.redisHelper.get<string>(
+    `reset_password:${dto.verificationId}`,
+  );
+  if (!email) throw new UnauthorizedException('Invalid or expired reset token');
+
+  const hashed = await bcrypt.hash(dto.newPassword, 10);
+  await this.usersRepository.findOneAndUpdate({ email }, { password: hashed }); 
+
+  await this.redisHelper.delete(`reset_password:${dto.verificationId}`); 
+
+  return { message: 'Password reset successfully' };
+}
 
   async changePassword(userId: string, dto: ChangePasswordDto) {
     if (dto.newPassword !== dto.confirmPassword) {

@@ -12,18 +12,17 @@ export class CreatePageDto {
     @IsString()
     @IsNotEmpty()
     name: string;
-
-    @IsNotEmpty()
-    @IsNotEmpty()
-    slug: string;
+   @IsString()
+    @IsOptional()
+    href?: string;
 }
 
 export class UpdatePageDto {
     @IsString()
     @IsOptional()
     name?: string;
-
-    @IsNotEmpty()
+    @IsString()
     @IsOptional()
-    slug?: string;
+    href?: string;
+
 }

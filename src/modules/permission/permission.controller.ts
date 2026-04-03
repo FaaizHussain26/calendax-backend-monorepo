@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AdminPermissionService } from './permission.service';
@@ -19,16 +20,17 @@ import {
   CreatePermissionDto,
   UpdatePermissionDto,
 } from '../../common/dto/permission.dto';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
-@Controller('admin/permissions')
+@Controller('admin-permissions')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(AdminRoles.SUPER_ADMIN, AdminRoles.ADMIN)
 export class AdminPermissionController {
   constructor(private readonly service: AdminPermissionService) {}
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+async findAll(@Query() query: PaginationDto) {
+    return this.service.findAll(query);
   }
 
   @Get(':id')

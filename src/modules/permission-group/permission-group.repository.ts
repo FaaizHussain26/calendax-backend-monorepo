@@ -1,7 +1,8 @@
 import { Inject, Injectable, Scope } from '@nestjs/common';
-import { FindOptionsWhere, In, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import { AdminPermissionGroupEntity } from './permission-group.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Injectable()
 export class AdminPermissionGroupRepository {
@@ -18,12 +19,22 @@ export class AdminPermissionGroupRepository {
   }
 
 
-  async findAll(): Promise<AdminPermissionGroupEntity[]> {
-    return this.repo.find({
-      relations: { permissions: true },
-      order: { createdAt: 'DESC' },
-    });
-  }
+async findAll(query: PaginationDto): Promise<{ data: AdminPermissionGroupEntity[]; total: number; page: number; limit: number }> {
+  const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
+
+  const [data, total] = await this.repo.findAndCount({
+    relations: { permissions: true },
+    where: search ? [
+      { name: ILike(`%${search}%`) },
+      { description: ILike(`%${search}%`) },
+    ] : {},
+    order: { [sortBy]: sortOrder },
+    skip: (page - 1) * limit,
+    take: limit,
+  });
+
+  return { data, total, page, limit };
+}
 
   async findById(id: string): Promise<AdminPermissionGroupEntity | null> {
     return this.repo.findOne({
@@ -34,6 +45,14 @@ export class AdminPermissionGroupRepository {
  async findByIds(ids: string[]): Promise<AdminPermissionGroupEntity[]> {
     return this.repo.find({
       where: { id: In(ids) },
+      
+    });
+  }
+ async findDetailedByIds(ids: string[]): Promise<AdminPermissionGroupEntity[]> {
+    return this.repo.find({
+      where: { id: In(ids) },
+          relations: { permissions: true },
+
     });
   }
   async findByName(name: string): Promise<AdminPermissionGroupEntity | null> {
