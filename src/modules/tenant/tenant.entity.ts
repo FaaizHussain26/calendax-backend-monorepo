@@ -66,15 +66,15 @@ export class TenantEntity {
   @Column({ type: 'varchar', length: 255, transformer: EncryptionTransformer })
   dbHost: string;
 
-  @Column({ type: 'int', default: 5432,  })
+  @Column({ type: 'int', default: 5432 })
   dbPort: number;
 
   @Column({ type: 'varchar', length: 255, transformer: EncryptionTransformer })
   dbUser: string;
-  
+
   @Column({ type: 'varchar', length: 255, transformer: EncryptionTransformer })
   dbPassword: string;
-  
+
   @Column({ type: 'varchar', length: 255, transformer: EncryptionTransformer })
   mongoUri: string;
 

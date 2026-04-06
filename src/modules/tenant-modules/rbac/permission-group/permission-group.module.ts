@@ -10,16 +10,14 @@ import { PermissionRepository } from '../permission/permission.repository';
 import { TenantModule } from '../../../tenant/tenant.module';
 
 @Module({
-   imports: [
-    TenantModule,                           
-  ],
+  imports: [TenantModule],
   controllers: [PermissionGroupController],
   providers: [
     PermissionGroupService,
     PermissionGroupRepository,
-    PermissionRepository,                          // ✅ needed for CRUD auto seed
+    PermissionRepository, // ✅ needed for CRUD auto seed
     provideTenantRepository(PermissionGroupEntity),
-    provideTenantRepository(PermissionEntity),     // ✅ needed for CRUD auto seed
+    provideTenantRepository(PermissionEntity), // ✅ needed for CRUD auto seed
   ],
   exports: [PermissionGroupService, PermissionGroupRepository],
 })

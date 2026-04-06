@@ -38,10 +38,7 @@ export class OtpRepository {
     });
   }
 
-  async findLatestUnverified(
-    email: string,
-    purpose: OtpPurpose,
-  ): Promise<OtpEntity | null> {
+  async findLatestUnverified(email: string, purpose: OtpPurpose): Promise<OtpEntity | null> {
     return this.repo.findOne({
       where: {
         email,
@@ -54,17 +51,11 @@ export class OtpRepository {
 
   // ─── Update ───────────────────────────────────────────────────────────────
 
-  async update(
-    id: string,
-    payload: Partial<OtpEntity>,
-  ): Promise<void> {
+  async update(id: string, payload: Partial<OtpEntity>): Promise<void> {
     await this.repo.update(id, payload);
   }
 
-  async incrementAttempts(
-    id: string,
-    currentAttempts: number,
-  ): Promise<void> {
+  async incrementAttempts(id: string, currentAttempts: number): Promise<void> {
     await this.repo.update(id, {
       attempts: currentAttempts + 1,
     });
@@ -74,14 +65,8 @@ export class OtpRepository {
     await this.repo.update(id, { verified: true });
   }
 
-  async invalidateExisting(
-    email: string,
-    purpose: OtpPurpose,
-  ): Promise<void> {
-    await this.repo.update(
-      { email, purpose, verified: false },
-      { expiresAt: new Date() },
-    );
+  async invalidateExisting(email: string, purpose: OtpPurpose): Promise<void> {
+    await this.repo.update({ email, purpose, verified: false }, { expiresAt: new Date() });
   }
 
   // ─── Delete ───────────────────────────────────────────────────────────────

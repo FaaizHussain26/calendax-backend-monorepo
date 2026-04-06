@@ -1,25 +1,11 @@
 // src/modules/admin/permission/permission.controller.ts
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AdminPermissionService } from './permission.service';
 import { JwtAuthGuard } from '../../common/jwt/jwt.provider';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { AdminRoles } from '../../enums/admin.enum';
-import {
-  CreatePermissionDto,
-  UpdatePermissionDto,
-} from '../../common/dto/permission.dto';
+import { CreatePermissionDto, UpdatePermissionDto } from '../../common/dto/permission.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Controller('admin-permissions')
@@ -29,7 +15,7 @@ export class AdminPermissionController {
   constructor(private readonly service: AdminPermissionService) {}
 
   @Get()
-async findAll(@Query() query: PaginationDto) {
+  async findAll(@Query() query: PaginationDto) {
     return this.service.findAll(query);
   }
 
@@ -45,18 +31,12 @@ async findAll(@Query() query: PaginationDto) {
 
   @Post('group/:groupId')
   @HttpCode(201)
-  create(
-    @Param('groupId') groupId: string,
-    @Body() dto: CreatePermissionDto,
-  ) {
+  create(@Param('groupId') groupId: string, @Body() dto: CreatePermissionDto) {
     return this.service.create(groupId, dto);
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() dto: UpdatePermissionDto,
-  ) {
+  update(@Param('id') id: string, @Body() dto: UpdatePermissionDto) {
     return this.service.update(id, dto);
   }
 

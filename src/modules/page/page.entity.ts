@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 import { AdminEntity } from '../admin/entities/admin.entity';
 
-@Entity('pages')                          
+@Entity('pages')
 export class PageEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -20,10 +20,10 @@ export class PageEntity {
   name: string;
 
   @Column({ type: 'varchar', length: 255, unique: true })
-  slug: string;                           
+  slug: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  href: string;                           
+  href: string;
 
   @Column({ type: 'uuid', nullable: true })
   createdById: string;
@@ -42,9 +42,9 @@ export class PageEntity {
   @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn()                      
+  @UpdateDateColumn()
   updatedAt: Date;
 
-  @DeleteDateColumn()                      
+  @DeleteDateColumn()
   deletedAt: Date | null;
 }

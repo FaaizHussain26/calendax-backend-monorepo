@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { AdminPermissionGroupRepository } from './permission-group.repository';
 import {
   CreatePermissionDto,
@@ -23,8 +19,7 @@ export class AdminPermissionGroupService {
 
   async create(dto: CreatePermissionGroupDto) {
     const existing = await this.permissionGroupRepo.findByName(dto.name);
-    if (existing)
-      throw new ConflictException('Permission group already exists');
+    if (existing) throw new ConflictException('Permission group already exists');
     const slug = HelperFunctions.generateSlug(dto.name);
     const group = await this.permissionGroupRepo.create({
       name: dto.name,
@@ -59,9 +54,9 @@ export class AdminPermissionGroupService {
     });
   }
 
-async findAll(query: PaginationDto) {
-  return this.permissionGroupRepo.findAll(query);
-}
+  async findAll(query: PaginationDto) {
+    return this.permissionGroupRepo.findAll(query);
+  }
 
   async findById(id: string) {
     const group = await this.permissionGroupRepo.findById(id);
@@ -72,18 +67,17 @@ async findAll(query: PaginationDto) {
   async update(id: string, dto: UpdatePermissionGroupDto) {
     const group = await this.permissionGroupRepo.findById(id);
     if (!group) throw new NotFoundException('Permission group not found');
-      if (dto.name && dto.name !== group.name) {
-      const slug =HelperFunctions.generateSlug(group.name)
+    if (dto.name && dto.name !== group.name) {
+      const slug = HelperFunctions.generateSlug(group.name);
       const existing = await this.permissionGroupRepo.findBySlug(slug);
       if (existing) {
         throw new ConflictException('Permission group name already in use');
       }
       await this.permissionGroupRepo.update(id, {
         ...dto,
-        slug,                                
+        slug,
       });
-    }
- else   await this.permissionGroupRepo.update(id, dto);
+    } else await this.permissionGroupRepo.update(id, dto);
     return this.permissionGroupRepo.findById(id);
   }
 
@@ -93,7 +87,7 @@ async findAll(query: PaginationDto) {
     await this.permissionGroupRepo.softDelete(id);
     return { message: 'Permission group deleted successfully' };
   }
-    async restore(id: string) {
+  async restore(id: string) {
     const group = await this.permissionGroupRepo.findById(id);
     if (!group) throw new NotFoundException('Permission group not found');
     await this.permissionGroupRepo.restore(id);

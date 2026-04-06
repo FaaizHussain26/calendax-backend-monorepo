@@ -16,7 +16,6 @@ export class AdminPermissions {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-
   @Column({ type: 'uuid' })
   adminId: string;
 
@@ -26,18 +25,17 @@ export class AdminPermissions {
   @JoinColumn({ name: 'adminId' })
   admin: AdminEntity;
 
-
   @Column({ type: 'uuid' })
-  pageId: string; 
+  pageId: string;
 
   @ManyToOne(() => PageEntity, {
     onDelete: 'CASCADE',
-    eager: true, 
+    eager: true,
   })
   @JoinColumn({ name: 'pageId' })
   page: PageEntity;
 
- @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false })
   read: boolean;
 
   @Column({ type: 'boolean', default: false })
@@ -48,7 +46,7 @@ export class AdminPermissions {
 
   @Column({ type: 'boolean', default: false })
   delete: boolean;
-@CreateDateColumn()
+  @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()

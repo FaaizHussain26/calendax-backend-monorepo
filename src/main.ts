@@ -22,12 +22,12 @@ async function bootstrap() {
   );
 
   app.set('trust proxy', 1);
- app.use((req, res, next) => {
-  if (process.env.NODE_ENV === 'production' && !req.secure) {
-    return res.redirect(`https://${req.headers.host}${req.url}`);
-  }
-  next();
-});
+  app.use((req, res, next) => {
+    if (process.env.NODE_ENV === 'production' && !req.secure) {
+      return res.redirect(`https://${req.headers.host}${req.url}`);
+    }
+    next();
+  });
   // Enable CORS
   app.enableCors({
     origin: '*',
@@ -54,12 +54,10 @@ async function bootstrap() {
   // GLOBAL API PREFIX
   app.setGlobalPrefix('api');
 
-    // ✅ run seeders on startup
+  // ✅ run seeders on startup
   const seeder = app.get(RootSeeder);
   await seeder.seed();
   const PORT = process.env.PORT ?? 3000;
-  await app.listen(PORT, () =>
-    console.log(`Server listening on port: ${PORT}`),
-  );
+  await app.listen(PORT, () => console.log(`Server listening on port: ${PORT}`));
 }
 bootstrap();

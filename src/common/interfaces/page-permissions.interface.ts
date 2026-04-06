@@ -1,4 +1,4 @@
-import { PageEntity } from "../../modules/page/page.entity";
+import { PageEntity } from '../../modules/page/page.entity';
 
 export interface PagePermissions {
   read: boolean;
@@ -7,6 +7,6 @@ export interface PagePermissions {
   delete: boolean;
 }
 
-export interface PageWithPermissions extends PageEntity{
+export interface PageWithPermissions extends PageEntity {
   permissions: PagePermissions;
 }

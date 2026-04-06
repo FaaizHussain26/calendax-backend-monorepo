@@ -18,19 +18,20 @@ export class PermissionRepository {
   }
 
   // ─── Find ─────────────────────────────────────────────────────────────────
-async findAll(query: PaginationDto): Promise<{ data: PermissionEntity[]; total: number; page: number; limit: number }> {
-  const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC', all = false } = query;
+  async findAll(
+    query: PaginationDto,
+  ): Promise<{ data: PermissionEntity[]; total: number; page: number; limit: number }> {
+    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC', all = false } = query;
 
-  const [data, total] = await this.repo.findAndCount({
-    relations: { group: true },
-    where: search ? { name: ILike(`%${search}%`) } : {},
-    order: { [sortBy]: sortOrder },
-    ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
-  });
+    const [data, total] = await this.repo.findAndCount({
+      relations: { group: true },
+      where: search ? { name: ILike(`%${search}%`) } : {},
+      order: { [sortBy]: sortOrder },
+      ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
+    });
 
-  return { data, total, page, limit };
-}
- 
+    return { data, total, page, limit };
+  }
 
   async findById(id: string): Promise<PermissionEntity | null> {
     return this.repo.findOne({
@@ -58,10 +59,7 @@ async findAll(query: PaginationDto): Promise<{ data: PermissionEntity[]; total: 
 
   // ─── Update ───────────────────────────────────────────────────────────────
 
-   async update(
-    id: string,
-    payload: Partial<PermissionEntity>,
-  ): Promise<void> {
+  async update(id: string, payload: Partial<PermissionEntity>): Promise<void> {
     await this.repo.update(id, payload);
   }
 

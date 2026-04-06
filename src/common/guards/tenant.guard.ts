@@ -1,11 +1,5 @@
 // // common/guards/tenant.guard.ts
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 
 // src/common/guards/tenant.guard.ts
 @Injectable()

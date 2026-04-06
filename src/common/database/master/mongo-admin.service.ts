@@ -11,8 +11,7 @@ export class MongoAdminService implements OnModuleInit, OnModuleDestroy {
     // Attempt to get the full URI first
     const uri = this.config.get<string>('db.mongodb.uri');
 
-      this.client = new MongoClient(uri!);
-    
+    this.client = new MongoClient(uri!);
   }
 
   async onModuleInit() {
@@ -29,7 +28,7 @@ export class MongoAdminService implements OnModuleInit, OnModuleDestroy {
   }
 
   get clientInstance(): MongoClient {
-    return this.client; 
+    return this.client;
   }
 
   get adminDb() {

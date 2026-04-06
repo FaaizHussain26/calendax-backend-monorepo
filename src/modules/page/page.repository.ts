@@ -14,29 +14,20 @@ export class PageRepository {
     @InjectRepository(PageEntity, 'master')
     private readonly pageRepository: Repository<PageEntity>,
   ) {}
-async find(){
-    return await this.pageRepository.find()
-}
+  async find() {
+    return await this.pageRepository.find();
+  }
   async findAllPages(query: PaginationDto) {
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      sortBy = 'createdAt',
-      sortOrder = 'DESC',all = false
-    } = query;
+    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC', all = false } = query;
 
     const [data, total] = await this.pageRepository.findAndCount({
-      where: search
-        ? [{ name: ILike(`%${search}%`) }, { slug: ILike(`%${search}%`) }]
-        : {},
+      where: search ? [{ name: ILike(`%${search}%`) }, { slug: ILike(`%${search}%`) }] : {},
       order: { [sortBy]: sortOrder },
       ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
     });
 
     return { data, total, page, limit };
   }
-  
 
   async findByPageId(id: string) {
     return await this.pageRepository.findOne({

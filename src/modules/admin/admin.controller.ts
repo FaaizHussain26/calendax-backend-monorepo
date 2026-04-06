@@ -34,7 +34,7 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Post('login')
-  @Public() 
+  @Public()
   async logIn(@Body() dto: AdminLoginDto) {
     return this.adminService.logIn(dto.email, dto.password);
   }
@@ -59,10 +59,7 @@ export class AdminController {
 
   @Roles(AdminRoles.SUPER_ADMIN)
   @Patch(':id')
-  async update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateAdminDto,
-  ) {
+  async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateAdminDto) {
     return this.adminService.updateAdmin(id, dto);
   }
 
@@ -80,19 +77,13 @@ export class AdminController {
 
   @Roles(AdminRoles.SUPER_ADMIN)
   @Post('/:id/permissions')
-  async assignPermission(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: AssignPagePermissionDto,
-  ) {
+  async assignPermission(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AssignPagePermissionDto) {
     return this.adminService.assignPagePermission(id, dto);
   }
 
   @Roles(AdminRoles.SUPER_ADMIN)
   @Delete('/:id/permissions')
-  async removePermission(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: RemovePagePermissionDto,
-  ) {
+  async removePermission(@Param('id', ParseUUIDPipe) id: string, @Body() dto: RemovePagePermissionDto) {
     return this.adminService.removePagePermission(id, dto);
   }
 

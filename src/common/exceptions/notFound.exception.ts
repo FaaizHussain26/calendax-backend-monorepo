@@ -6,8 +6,6 @@ export const entityNotFound = (
 ): void => {
   const isEmptyArray = Array.isArray(param) && param.length === 0;
   if (!param || isEmptyArray) {
-    throw new NotFoundException(
-      id ? `${entity} with ID ${id} not found` : `${entity} not found`,
-    );
+    throw new NotFoundException(id ? `${entity} with ID ${id} not found` : `${entity} not found`);
   }
 };

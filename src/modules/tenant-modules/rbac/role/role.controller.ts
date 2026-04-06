@@ -1,27 +1,13 @@
 // src/modules/tenant-modules/rbac/role/role.controller.ts
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  Param,
-  Patch,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { RoleService } from './role.service';
 import { JwtAuthGuard } from '../../../../common/jwt/jwt.provider';
 import { TenantGuard } from '../../../../common/guards/tenant.guard';
-import {
-  AssignPermissionsDto,
-  CreateRoleDto,
-  UpdateRoleDto,
-} from './role.dto';
+import { AssignPermissionsDto, CreateRoleDto, UpdateRoleDto } from './role.dto';
 import { PermissionsGuard } from '../../../../common/guards/permission.guard';
 
 @Controller('roles')
-@UseGuards(JwtAuthGuard, TenantGuard,)
+@UseGuards(JwtAuthGuard, TenantGuard)
 export class RoleController {
   constructor(private readonly service: RoleService) {}
 
@@ -41,28 +27,19 @@ export class RoleController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() dto: UpdateRoleDto,
-  ) {
+  update(@Param('id') id: string, @Body() dto: UpdateRoleDto) {
     return this.service.update(id, dto);
   }
 
   @Post(':id/permissions/assign')
   @HttpCode(200)
-  assignPermissions(
-    @Param('id') id: string,
-    @Body() dto: AssignPermissionsDto,
-  ) {
+  assignPermissions(@Param('id') id: string, @Body() dto: AssignPermissionsDto) {
     return this.service.assignPermissions(id, dto);
   }
 
   @Post(':id/permissions/revoke')
   @HttpCode(200)
-  revokePermissions(
-    @Param('id') id: string,
-    @Body() dto: AssignPermissionsDto,
-  ) {
+  revokePermissions(@Param('id') id: string, @Body() dto: AssignPermissionsDto) {
     return this.service.revokePermissions(id, dto);
   }
 

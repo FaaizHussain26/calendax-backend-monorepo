@@ -14,12 +14,7 @@ export class TokenBlacklistService {
 
     const key = `${this.PREFIX}${jti}`;
 
-    await this.redisService.getClient().set(
-      key,
-      '1',
-      'EX',
-      ttl,
-    );
+    await this.redisService.getClient().set(key, '1', 'EX', ttl);
   }
 
   async isBlacklisted(jti: string): Promise<boolean> {

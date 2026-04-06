@@ -61,7 +61,7 @@ export class OtpService {
     code: string,
     purpose: OtpPurpose,
     tenantId: string,
-  ): Promise<{ verified: boolean;user?:any; verificationId?: string; authToken?: any }> {
+  ): Promise<{ verified: boolean; user?: any; verificationId?: string; authToken?: any }> {
     const otp = await this.otpRepo.findLatestUnverified(email, purpose);
 
     if (!otp) {
@@ -73,14 +73,9 @@ export class OtpService {
     }
 
     if (otp.attempts >= this.MAX_ATTEMPTS) {
-      throw new BadRequestException(
-        'Too many attempts. Please request a new OTP',
-      );
+      throw new BadRequestException('Too many attempts. Please request a new OTP');
     }
-    if (
-      this.config.get<string>('NODE_ENV') === 'development' &&
-      code == '1234'
-    ) {
+    if (this.config.get<string>('NODE_ENV') === 'development' && code == '1234') {
       console.log('Bypassing default otp');
     } else {
       const isValid = await bcrypt.compare(code, otp.code);
@@ -89,9 +84,7 @@ export class OtpService {
         await this.otpRepo.update(otp.id, {
           attempts: otp.attempts + 1,
         });
-        throw new BadRequestException(
-          `Invalid OTP. ${this.MAX_ATTEMPTS - (otp.attempts + 1)} attempts remaining`,
-        );
+        throw new BadRequestException(`Invalid OTP. ${this.MAX_ATTEMPTS - (otp.attempts + 1)} attempts remaining`);
       }
     }
     await this.otpRepo.update(otp.id, { verified: true });
@@ -102,7 +95,7 @@ export class OtpService {
 
       return {
         verified: true,
-        user:user,
+        user: user,
         authToken: await this.authService.issueTokenForUser(user.id, tenantId), // ← use TokenService
       };
     } else if (purpose === OtpPurpose.RESET_PASSWORD) {
@@ -117,18 +110,11 @@ export class OtpService {
     await this.invalidateExisting(email, purpose);
   }
 
-  private async invalidateExisting(
-    email: string,
-    purpose: OtpPurpose,
-  ): Promise<void> {
+  private async invalidateExisting(email: string, purpose: OtpPurpose): Promise<void> {
     await this.otpRepo.invalidateExisting(email, purpose);
   }
 
-  async sendWelcomeEmail(
-    email: string,
-    name: string,
-    tempPassword: string,
-  ): Promise<void> {
+  async sendWelcomeEmail(email: string, name: string, tempPassword: string): Promise<void> {
     // await this.emailService.sendWelcome({
     //   toEmail: email,
     //   subject: 'Welcome! Your account has been created',

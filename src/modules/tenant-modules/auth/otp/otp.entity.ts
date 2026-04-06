@@ -1,32 +1,24 @@
 // src/modules/tenant-modules/auth/otp/otp.entity.ts
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { OtpPurpose } from '../../../../enums/system.enum';
-
 
 @Entity('otps')
 export class OtpEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index()                                  
+  @Index()
   @Column({ type: 'varchar', length: 191 })
-  email: string;                        
+  email: string;
 
   @Column({ type: 'varchar', length: 255 })
-  code: string;                               
+  code: string;
 
   @Column({ type: 'timestamp' })
   expiresAt: Date;
 
   @Column({ type: 'int', default: 0 })
-  attempts: number;                          
+  attempts: number;
 
   @Column({ type: 'boolean', default: false })
   verified: boolean;

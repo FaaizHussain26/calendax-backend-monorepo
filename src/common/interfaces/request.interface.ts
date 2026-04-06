@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { DataSource, } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { TenantEntity } from '../../modules/tenant/tenant.entity';
 import { Db } from 'mongodb';
 interface TenantConnection {
@@ -9,8 +9,8 @@ interface TenantConnection {
 
 export interface TenantRequest extends Request {
   tenantConnection?: TenantConnection;
-  tenant:TenantEntity,
-  tenantId:string
+  tenant: TenantEntity;
+  tenantId: string;
 }
 
 export interface RequestWithUser extends Request {
@@ -25,7 +25,7 @@ export interface RequestWithUser extends Request {
 export interface TokenUser {
   id: string;
   role: string;
-  isActive? : boolean;
+  isActive?: boolean;
   tenantId?: string;
   userType?: string;
   roleId?: string;
@@ -52,6 +52,3 @@ export interface HttpErrorResponse {
   message?: string;
   error?: string;
 }
-
-
-

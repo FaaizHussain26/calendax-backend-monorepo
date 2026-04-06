@@ -7,12 +7,7 @@ import {
 } from '@nestjs/common';
 import { TenantRepository } from './tenant.repository';
 
-import {
-  CreateTenantDto,
-  findTenantDto,
-  TenantResponseDto,
-  UpdateTenantDto,
-} from './tenant.dto';
+import { CreateTenantDto, findTenantDto, TenantResponseDto, UpdateTenantDto } from './tenant.dto';
 import { plainToInstance } from 'class-transformer';
 import { entityNotFound } from '../../common/exceptions/notFound.exception';
 import { TenantConnectionManager } from '../../common/database/tenant/tenant-connection.manager';
@@ -59,34 +54,24 @@ export class TenantService {
     let tenant: TenantEntity | null = null;
 
     const existing = await this.tenantRepository.findBySlug(slug);
-    if (existing)
-      throw new ConflictException('Tenant with this name already exists');
+    if (existing) throw new ConflictException('Tenant with this name already exists');
 
-    const dashboardGroup =
-      await this.adminPermissionGroupRepository.findDetailedByCondition({
-        slug: 'dashboard',
-      });
+    const dashboardGroup = await this.adminPermissionGroupRepository.findDetailedByCondition({
+      slug: 'dashboard',
+    });
     if (!dashboardGroup) {
-      throw new NotFoundException(
-        'Dashboard permission group not found. Run seeders first.',
-      );
+      throw new NotFoundException('Dashboard permission group not found. Run seeders first.');
     }
     let requestedGroups: AdminPermissionGroupEntity[] = [];
     if (dto.permissionGroupIds?.length) {
-      requestedGroups =
-        await this.adminPermissionGroupRepository.findDetailedByIds(
-          dto.permissionGroupIds,
-        );
+      requestedGroups = await this.adminPermissionGroupRepository.findDetailedByIds(dto.permissionGroupIds);
       if (requestedGroups.length !== dto.permissionGroupIds.length) {
         throw new NotFoundException('One or more permission groups not found');
       }
     }
 
     // ✅ merge dashboard + requested groups, deduplicate
-    const allGroups = [
-      dashboardGroup,
-      ...requestedGroups.filter((g) => g.slug !== 'dashboard'),
-    ];
+    const allGroups = [dashboardGroup, ...requestedGroups.filter((g) => g.slug !== 'dashboard')];
     console.log('all groups:::', allGroups);
     try {
       await this.provisionDatabase(dbName, slug, dbPassword);
@@ -113,9 +98,7 @@ export class TenantService {
     } catch (error) {
       // 5. Rollback everything if anything fails
       await this.handleProvisioningFailure(tenant, dbName, slug, error);
-      throw new InternalServerErrorException(
-        'Tenant provisioning failed. Changes have been rolled back.',
-      );
+      throw new InternalServerErrorException('Tenant provisioning failed. Changes have been rolled back.');
     }
   }
   private async seedTenantDatabase(
@@ -181,9 +164,7 @@ export class TenantService {
     );
 
     // 3. create Staff role with read-only permissions
-    const readPermissions = seededPermissions.filter((p) =>
-      p.key.endsWith('.read'),
-    );
+    const readPermissions = seededPermissions.filter((p) => p.key.endsWith('.read'));
     await roleRepo.save(
       roleRepo.create({
         name: 'Staff',
@@ -193,8 +174,7 @@ export class TenantService {
     );
 
     // 4. create tenant admin user
-    const rawPassword =
-      dto.adminPassword ?? this.configService.get<string>('defaultPassword');
+    const rawPassword = dto.adminPassword ?? this.configService.get<string>('defaultPassword');
     const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
     await userRepo.save(
@@ -222,12 +202,7 @@ export class TenantService {
 
     console.log(`✅ Tenant DB seeded for: ${dto.adminEmail}`);
   }
-  private async handleProvisioningFailure(
-    tenant: TenantEntity | null,
-    dbName: string,
-    dbUser: string,
-    error: unknown,
-  ) {
+  private async handleProvisioningFailure(tenant: TenantEntity | null, dbName: string, dbUser: string, error: unknown) {
     console.error('Provisioning failed, rolling back...', error);
 
     try {
@@ -254,19 +229,11 @@ export class TenantService {
       console.warn(`Mongo cleanup warning: ${e.message}`);
     }
   }
-  private async provisionDatabase(
-    dbName: string,
-    dbUser: string,
-    dbPassword: string,
-  ) {
+  private async provisionDatabase(dbName: string, dbUser: string, dbPassword: string) {
     const masterConn = this.masterDataSource;
     await masterConn.query(`CREATE DATABASE "${dbName}"`);
-    await masterConn.query(
-      `CREATE USER "${dbUser}" WITH PASSWORD '${dbPassword}'`,
-    );
-    await masterConn.query(
-      `GRANT ALL PRIVILEGES ON DATABASE "${dbName}" TO "${dbUser}"`,
-    );
+    await masterConn.query(`CREATE USER "${dbUser}" WITH PASSWORD '${dbPassword}'`);
+    await masterConn.query(`GRANT ALL PRIVILEGES ON DATABASE "${dbName}" TO "${dbUser}"`);
 
     // Connect to tenant DB as superuser to grant schema permissions
     const tenantAdminConn = new DataSource({
@@ -280,18 +247,10 @@ export class TenantService {
 
     await tenantAdminConn.initialize();
     await tenantAdminConn.query(`GRANT ALL ON SCHEMA public TO "${dbUser}"`);
-    await tenantAdminConn.query(
-      `GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "${dbUser}"`,
-    );
-    await tenantAdminConn.query(
-      `GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "${dbUser}"`,
-    );
-    await tenantAdminConn.query(
-      `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO "${dbUser}"`,
-    );
-    await tenantAdminConn.query(
-      `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO "${dbUser}"`,
-    );
+    await tenantAdminConn.query(`GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "${dbUser}"`);
+    await tenantAdminConn.query(`GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "${dbUser}"`);
+    await tenantAdminConn.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO "${dbUser}"`);
+    await tenantAdminConn.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO "${dbUser}"`);
     await tenantAdminConn.destroy();
   }
   private async provisionMongoDatabase(dbName: string) {
@@ -334,28 +293,105 @@ export class TenantService {
 
   async update(id: string, payload: UpdateTenantDto) {
     const tenant = await this.tenantRepository.getByTenantId(id);
-    if(!tenant) throw new entityNotFound(tenant, 'Tenant');
-    
-    await this.tenantRepository.updateTenant(id, payload);
+    if (!tenant) throw new entityNotFound(tenant, 'Tenant');
+    const { permissionGroupIds, ...tenantPayload } = payload;
+    await this.tenantRepository.updateTenant(id, tenantPayload);
     const updatedEntity = await this.tenantRepository.getByTenantId(id);
     let requestedGroups;
-    if (payload?.permissionGroupIds) {
-      requestedGroups =
-        await this.adminPermissionGroupRepository.findDetailedByIds(
-          payload.permissionGroupIds,
-        );
-      if (requestedGroups.length !== payload.permissionGroupIds.length) {
+    if (permissionGroupIds) {
+      requestedGroups = await this.adminPermissionGroupRepository.findDetailedByIds(permissionGroupIds);
+      if (requestedGroups.length !== permissionGroupIds.length) {
         throw new NotFoundException('One or more permission groups not found');
       }
-       const connection = await this.connectionManager.getConnection(tenant);
-      await connection.sql.runMigrations();
-      // await this.seedTenantDatabase(connection.sql, {adminEmail:tenant}, requestedGroups);
+      const connection = await this.connectionManager.getConnection(tenant);
+      await this.syncTenantPermissions(connection.sql, requestedGroups);
     }
-    return plainToInstance(TenantResponseDto, updatedEntity, {
-      excludeExtraneousValues: true,
-    });
+    return updatedEntity;
   }
+  private async syncTenantPermissions(connection: DataSource, permissionGroups: AdminPermissionGroupEntity[]) {
+    const permGroupRepo = connection.getRepository(PermissionGroupEntity);
+    const permRepo = connection.getRepository(PermissionEntity);
+    const roleRepo = connection.getRepository(RoleEntity);
 
+    const seededPermissions: PermissionEntity[] = [];
+
+    // 1. Upsert incoming groups and permissions
+    for (const group of permissionGroups) {
+      let tenantGroup = await permGroupRepo.findOne({ where: { slug: group.slug } });
+
+      if (!tenantGroup) {
+        tenantGroup = await permGroupRepo.save(
+          permGroupRepo.create({
+            name: group.name,
+            slug: group.slug,
+            href: group.href,
+            description: group.description,
+          }),
+        );
+      }
+
+      for (const permission of group.permissions ?? []) {
+        let tenantPerm = await permRepo.findOne({ where: { key: permission.key } });
+
+        if (!tenantPerm) {
+          tenantPerm = await permRepo.save(
+            permRepo.create({
+              key: permission.key,
+              name: permission.name,
+              description: permission.description,
+              groupId: tenantGroup.id,
+            }),
+          );
+        }
+
+        seededPermissions.push(tenantPerm);
+      }
+    }
+
+    // 2. Remove permissions that are no longer in any assigned group
+    const incomingKeys = seededPermissions.map((p) => p.key);
+    const allTenantPerms = await permRepo.find();
+    const toRemove = allTenantPerms.filter((p) => !incomingKeys.includes(p.key));
+
+    if (toRemove.length) {
+      await permRepo.remove(toRemove);
+    }
+
+    // 3. Remove permission groups that are no longer assigned
+    const incomingSlugs = permissionGroups.map((g) => g.slug);
+    const allTenantGroups = await permGroupRepo.find();
+    const groupsToRemove = allTenantGroups.filter(
+      (g) => g.slug !== 'dashboard' && !incomingSlugs.includes(g.slug), // 👈 never remove dashboard
+    );
+
+    if (groupsToRemove.length) {
+      await permGroupRepo.remove(groupsToRemove);
+    }
+
+    // 4. Update Admin role permissions to reflect the new set
+    const adminRole = await roleRepo.findOne({
+      where: { name: 'Admin' },
+      relations: { permissions: true },
+    });
+
+    if (adminRole) {
+      adminRole.permissions = seededPermissions;
+      await roleRepo.save(adminRole);
+    }
+
+    // 5. Update Staff role to only have read permissions from new set
+    const staffRole = await roleRepo.findOne({
+      where: { name: 'Staff' },
+      relations: { permissions: true },
+    });
+
+    if (staffRole) {
+      staffRole.permissions = seededPermissions.filter((p) => p.key.endsWith('.read'));
+      await roleRepo.save(staffRole);
+    }
+
+    console.log(`✅ Tenant permissions synced`);
+  }
   async deleteTenant(id: string) {
     const tenant = await this.tenantRepository.getByTenantId(id);
     entityNotFound(tenant, 'Tenant');

@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { PageRepository } from './page.repository';
 
 import { CreatePageDto, PageResponseDto, UpdatePageDto } from './page.dto';
@@ -28,8 +24,7 @@ export class PageService {
   async createPage(dto: CreatePageDto) {
     const slug = HelperFunctions.generateSlug(dto.name);
     const prev = await this.pageRepository.findBySlug(slug);
-    if (prev)
-      throw new ConflictException('Page with this name already exists!');
+    if (prev) throw new ConflictException('Page with this name already exists!');
     const payload = { ...dto, slug, href: dto.href ?? `/${slug}` };
     const createdEntity = await this.pageRepository.createPage(payload);
     return plainToInstance(PageResponseDto, createdEntity);

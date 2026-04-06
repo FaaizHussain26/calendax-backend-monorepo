@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { randomBytes, createHmac } from 'crypto';
 import { UserEntity } from '../../modules/tenant-modules/user/user.entity';
-  const expiryMap: Record<string, number> = {
-  's': 1,
-  'm': 60,
-  'h': 60 * 60,
-  'd': 60 * 60 * 24,
-  'y': 60 * 60 * 24 * 365,
+const expiryMap: Record<string, number> = {
+  s: 1,
+  m: 60,
+  h: 60 * 60,
+  d: 60 * 60 * 24,
+  y: 60 * 60 * 24 * 365,
 };
 @Injectable()
 export class HelperFunctions {
@@ -21,7 +21,7 @@ export class HelperFunctions {
       .replace(/-+$/, '');
   }
 
-static parseBool = (val: boolean | string): boolean => val === true || val === 'true';
+  static parseBool = (val: boolean | string): boolean => val === true || val === 'true';
 
   static generateSecurePassword(length = 32): string {
     return randomBytes(length).toString('base64url').slice(0, length);
@@ -39,7 +39,7 @@ static parseBool = (val: boolean | string): boolean => val === true || val === '
   }
 
   private static hashNgram(ngram: string): string {
-    return createHmac('sha256', process.env.NGRAM_PEPPER_SECRET||'dev_secret')
+    return createHmac('sha256', process.env.NGRAM_PEPPER_SECRET || 'dev_secret')
       .update(ngram)
       .digest('hex');
   }
@@ -49,19 +49,17 @@ static parseBool = (val: boolean | string): boolean => val === true || val === '
     return [...new Set(HelperFunctions.generateNgrams(combined).map(HelperFunctions.hashNgram))];
   }
 
+  static parseExpiryToSeconds(value: string | number): number {
+    if (typeof value === 'number') return value;
+    const unit = value.slice(-1);
+    const amount = parseInt(value.slice(0, -1), 10);
+    return amount * (expiryMap[unit] ?? 1);
+  }
+  static resolvePermissions(user: UserEntity): string[] {
+    const fromRole = user.role?.permissions?.map((p) => p.key) ?? [];
+    const direct = user.permissions?.map((p) => p.key) ?? [];
 
-static parseExpiryToSeconds(value: string | number): number {
-  if (typeof value === 'number') return value;
-  const unit = value.slice(-1);
-  const amount = parseInt(value.slice(0, -1), 10);
-  return amount * (expiryMap[unit] ?? 1);
-}
-static  resolvePermissions(user: UserEntity): string[] {
-  const fromRole = user.role?.permissions?.map((p) => p.key) ?? [];
-  const direct = user.permissions?.map((p) => p.key) ?? [];
-
-  // merge + deduplicate
-  return [...new Set([...fromRole, ...direct])];
-}
-
+    // merge + deduplicate
+    return [...new Set([...fromRole, ...direct])];
+  }
 }

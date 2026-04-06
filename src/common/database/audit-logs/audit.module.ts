@@ -3,9 +3,9 @@ import { Global, Module } from '@nestjs/common';
 import { AuditService } from './audit.service';
 import { MongoAdminModule } from '../master/mongo-admin.module';
 
-@Global() 
+@Global()
 @Module({
-  imports: [MongoAdminModule], 
+  imports: [MongoAdminModule],
   providers: [AuditService],
   exports: [AuditService],
 })

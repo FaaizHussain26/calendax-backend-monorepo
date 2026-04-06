@@ -9,14 +9,9 @@ import { AdminPermissionGroupRepository } from './permission-group.repository';
 import { AdminPermissionRepository } from '../permission/permission.repository';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AdminPermissionGroupEntity,AdminPermissionEntity], 'master'),],
+  imports: [TypeOrmModule.forFeature([AdminPermissionGroupEntity, AdminPermissionEntity], 'master')],
   controllers: [AdminPermissionGroupController],
-  providers: [AdminPermissionGroupService, AdminPermissionGroupRepository,   
-    AdminPermissionRepository,        
-  ],
-  exports: [
-    AdminPermissionGroupService,
-    AdminPermissionGroupRepository,  
-  ],
+  providers: [AdminPermissionGroupService, AdminPermissionGroupRepository, AdminPermissionRepository],
+  exports: [AdminPermissionGroupService, AdminPermissionGroupRepository],
 })
 export class AdminPermissionGroupModule {}

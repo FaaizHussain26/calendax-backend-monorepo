@@ -4,11 +4,11 @@ export class CreatePermissionGroupDto {
   @IsString()
   @Length(2, 60)
   name: string;
-               // 'appointments' — used to generate keys
- @IsString()
+  // 'appointments' — used to generate keys
+  @IsString()
   @IsOptional()
   @Length(0, 255)
-  href?: string; 
+  href?: string;
   @IsString()
   @IsOptional()
   @Length(0, 160)
@@ -20,10 +20,10 @@ export class UpdatePermissionGroupDto {
   @IsOptional()
   @Length(2, 60)
   name?: string;
- @IsString()
+  @IsString()
   @IsOptional()
   @Length(0, 255)
-  href?: string; 
+  href?: string;
   @IsString()
   @IsOptional()
   @Length(0, 160)
@@ -33,11 +33,11 @@ export class UpdatePermissionGroupDto {
 export class CreatePermissionDto {
   @IsString()
   @Length(2, 60)
-  key: string;                     // 'appointments.approve'
+  key: string; // 'appointments.approve'
 
   @IsString()
   @Length(2, 60)
-  name: string;                    // 'Approve Appointments'
+  name: string; // 'Approve Appointments'
 
   @IsString()
   @IsOptional()

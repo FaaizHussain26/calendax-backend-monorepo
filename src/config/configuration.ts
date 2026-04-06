@@ -16,8 +16,7 @@ export default () => ({
   },
   tenant: {
     cacheSize: process.env.TENANT_CACHE_SIZE || 100,
-     db:{host: 'localhost',
-    port: 5432,}
+    db: { host: 'localhost', port: 5432 },
   },
   db: {
     host: 'localhost',

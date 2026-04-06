@@ -1,13 +1,5 @@
 // src/modules/tenant-modules/user/user.dto.ts
-import {
-  IsBoolean,
-  IsEmail,
-  IsEnum,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Length,
-} from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, IsUUID, Length } from 'class-validator';
 import { TenantUserRoles } from '../../../enums/tenant.enum';
 
 export class CreateUserDto {
@@ -87,7 +79,7 @@ export class UpdateUserDto {
 export class UserQueryDto {
   @IsEnum(TenantUserRoles)
   @IsOptional()
- userType?: TenantUserRoles;
+  userType?: TenantUserRoles;
 
   @IsBoolean()
   @IsOptional()

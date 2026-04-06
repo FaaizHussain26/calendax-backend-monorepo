@@ -1,9 +1,5 @@
 // src/modules/tenant-modules/user/users.service.ts
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UsersRepository } from './user.repository';
 import { RoleRepository } from '../rbac/role/role.repository';
@@ -41,7 +37,7 @@ export class UsersService {
     }
 
     // validate direct permissions
-    let permissions:PermissionEntity[] = [];
+    let permissions: PermissionEntity[] = [];
     if (dto.permissionIds?.length) {
       permissions = await this.permissionRepository.findByIds(dto.permissionIds);
       if (permissions.length !== dto.permissionIds.length) {
@@ -72,10 +68,9 @@ export class UsersService {
       email: user.email,
       userType: user.userType,
       roleId: user.roleId,
-      tempPassword: rawPassword,           
+      tempPassword: rawPassword,
     };
   }
-
 
   async update(id: string, dto: UpdateUserDto) {
     const user = await this.usersRepository.findById(id);
@@ -106,7 +101,6 @@ export class UsersService {
     });
   }
 
-
   async delete(id: string) {
     const user = await this.usersRepository.findById(id);
     if (!user) throw new NotFoundException('User not found');
@@ -120,7 +114,6 @@ export class UsersService {
     await this.usersRepository.restore(id);
     return { message: 'User restored successfully' };
   }
-
 
   async toggleActive(id: string) {
     const user = await this.usersRepository.findById(id);

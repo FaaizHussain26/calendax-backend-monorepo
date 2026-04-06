@@ -39,7 +39,6 @@ export class TenantConnectionManager implements OnModuleDestroy {
     const cached = this.cache.get(tenant.id);
     if (cached) return cached;
 
-
     const dataSource = new DataSource({
       type: 'postgres',
       host: tenant.dbHost,
@@ -47,7 +46,7 @@ export class TenantConnectionManager implements OnModuleDestroy {
       username: tenant.dbUser,
       password: tenant.dbPassword,
       database: tenant.dbName,
-      synchronize: this.configService.get('environment') !== "production",
+      synchronize: this.configService.get('environment') !== 'production',
       entities: [PermissionGroupEntity, PermissionEntity, RoleEntity, UserEntity, OtpEntity],
 
       migrations: [
@@ -65,14 +64,11 @@ export class TenantConnectionManager implements OnModuleDestroy {
       throw new Error(`MongoDB URI missing for tenant: ${tenant.slug}`);
     }
     const mongoClient = new MongoClient(tenant.mongoUri);
-    await Promise.all([
-      dataSource.initialize(),
-      mongoClient.connect()
-    ]);
+    await Promise.all([dataSource.initialize(), mongoClient.connect()]);
     const connectionContext: TenantConnection = {
       sql: dataSource,
       mongo: mongoClient.db(), // Returns the DB from the URI
-      mongoClient: mongoClient
+      mongoClient: mongoClient,
     };
 
     this.cache.set(tenant.id, connectionContext);
@@ -83,14 +79,14 @@ export class TenantConnectionManager implements OnModuleDestroy {
     if (cached) return cached;
 
     // Initialize both in parallel for speed
-    const sqlAttr:DataSourceOptions = {
+    const sqlAttr: DataSourceOptions = {
       type: 'postgres',
       host: tenant.dbHost,
       port: tenant.dbPort,
       username: tenant.dbUser,
       password: tenant.dbPassword,
       database: tenant.dbName,
-      synchronize: this.configService.get('environment') !== "production",
+      synchronize: this.configService.get('environment') !== 'production',
       entities: [PermissionGroupEntity, PermissionEntity, RoleEntity, UserEntity, OtpEntity],
 
       // migrations: [

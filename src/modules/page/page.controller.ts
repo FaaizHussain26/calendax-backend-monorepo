@@ -45,10 +45,7 @@ export class PageController {
   }
   @Patch('/:id')
   @Permission(AdminPage.PAGE, PermissionNames.UPDATE)
-  async updatePage(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() payload: UpdatePageDto,
-  ) {
+  async updatePage(@Param('id', ParseUUIDPipe) id: string, @Body() payload: UpdatePageDto) {
     return await this.pageService.update(id, payload);
   }
   @Delete('/:id')

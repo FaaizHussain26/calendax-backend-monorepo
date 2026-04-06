@@ -10,12 +10,7 @@ import { AdminSeeder } from '../../../seeders/admin.seeder';
 import { PermissionGroupSeeder } from '../../../seeders/permission-group.seeder';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature(
-      [AdminPermissionGroupEntity, AdminPermissionEntity, AdminEntity],
-      'master',
-    ),
-  ],
+  imports: [TypeOrmModule.forFeature([AdminPermissionGroupEntity, AdminPermissionEntity, AdminEntity], 'master')],
   providers: [RootSeeder, AdminSeeder, PermissionGroupSeeder],
   exports: [RootSeeder],
 })

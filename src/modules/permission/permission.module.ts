@@ -10,16 +10,13 @@ import { AdminPermissionGroupModule } from '../permission-group/permission-group
 @Module({
   imports: [
     TypeOrmModule.forFeature([AdminPermissionEntity], 'master'),
-    AdminPermissionGroupModule,              // ✅ for group validation in service
+    AdminPermissionGroupModule, // ✅ for group validation in service
   ],
   controllers: [AdminPermissionController],
-  providers: [
-    AdminPermissionService,
-    AdminPermissionRepository,
-  ],
+  providers: [AdminPermissionService, AdminPermissionRepository],
   exports: [
     AdminPermissionService,
-    AdminPermissionRepository,               // ✅ exported for TenantService seeding
+    AdminPermissionRepository, // ✅ exported for TenantService seeding
   ],
 })
 export class AdminPermissionModule {}

@@ -17,10 +17,10 @@ export class AdminPermissionEntity {
   id: string;
 
   @Column({ type: 'varchar', length: 60, unique: true })
-  key: string;                     // 'appointments.create'
+  key: string; // 'appointments.create'
 
   @Column({ type: 'varchar', length: 60 })
-  name: string;                    // 'Create Appointments'
+  name: string; // 'Create Appointments'
 
   @Column({ type: 'varchar', length: 160, nullable: true })
   description: string;

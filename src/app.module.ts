@@ -49,22 +49,22 @@ import { TenantContextMiddleware } from './middlewares/tenant-context.middleware
     AdminPermissionModule,
     TenantModule,
     TenantModulesModule,
-    SeederModule
+    SeederModule,
   ],
   controllers: [AppController],
-  providers: [AppService,{
+  providers: [
+    AppService,
+    {
       provide: APP_INTERCEPTOR,
-      useClass: AuditInterceptor
-      ,
-    },],
+      useClass: AuditInterceptor,
+    },
+  ],
 })
 export class AppModule {
-   configure(consumer: MiddlewareConsumer) {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(DecryptPayloadMiddleware).forRoutes('patients', 'tenant');
     consumer
-      .apply(DecryptPayloadMiddleware)
-      .forRoutes('patients','tenant');
-      consumer
       .apply(TenantContextMiddleware)
-      .forRoutes('auth', 'users', 'permission-groups','permissions','roles', 'patients');
+      .forRoutes('auth', 'users', 'permission-groups', 'permissions', 'roles', 'patients');
   }
 }

@@ -2,7 +2,6 @@
 import { IsEnum, IsNotEmpty, IsString, Length } from 'class-validator';
 import { OtpPurpose } from '../../../../enums/system.enum';
 
-
 export class SendOtpDto {
   @IsString()
   @IsNotEmpty()

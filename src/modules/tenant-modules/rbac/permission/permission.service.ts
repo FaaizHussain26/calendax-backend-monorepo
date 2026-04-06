@@ -1,15 +1,8 @@
 // src/modules/tenant-modules/rbac/permission/permission.service.ts
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PermissionRepository } from './permission.repository';
 import { PermissionGroupRepository } from '../permission-group/permission-group.repository';
-import {
-  CreatePermissionDto,
-  UpdatePermissionDto,
-} from '../../../../common/dto/permission.dto';
+import { CreatePermissionDto, UpdatePermissionDto } from '../../../../common/dto/permission.dto';
 import { PaginationDto } from '../../../../common/dto/pagination.dto';
 
 @Injectable()
@@ -19,7 +12,7 @@ export class PermissionService {
     private readonly permissionGroupRepo: PermissionGroupRepository,
   ) {}
 
-  async findAll(query:PaginationDto) {
+  async findAll(query: PaginationDto) {
     return this.permissionRepo.findAll(query);
   }
 

@@ -2,24 +2,22 @@
 import { Injectable } from '@nestjs/common';
 import { Db } from 'mongodb';
 export interface IAuditLog {
-  action: string;     
-  actorId: string;     
-  actorEmail: string;  
+  action: string;
+  actorId: string;
+  actorEmail: string;
   actorType: 'SUPER_ADMIN' | 'TENANT_USER';
-  targetId?: string;   
-  payload: unknown;     
+  targetId?: string;
+  payload: unknown;
   ipAddress: string;
   createdAt: Date;
 }
 @Injectable()
 export class AuditService {
-  /**
-   * Core logic to write a log to a specific MongoDB database instance
-   */
+
   async record(db: Db, data: Partial<IAuditLog>) {
     try {
       const collection = db.collection<IAuditLog>('audit_logs');
-      
+
       const logEntry: IAuditLog = {
         action: data.action!,
         actorId: data.actorId!,

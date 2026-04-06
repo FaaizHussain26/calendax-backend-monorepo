@@ -48,12 +48,8 @@ export class RoleRepository {
 
   // ─── Update ───────────────────────────────────────────────────────────────
 
-  async update(
-    id: string,
-    payload: Partial<RoleEntity>,
-  ): Promise<RoleEntity> {
-   return await this.repo.save({ id, ...payload }); // ✅ use save for relation updates
-   ;
+  async update(id: string, payload: Partial<RoleEntity>): Promise<RoleEntity> {
+    return await this.repo.save({ id, ...payload }); // ✅ use save for relation updates
   }
 
   // ─── Delete ───────────────────────────────────────────────────────────────

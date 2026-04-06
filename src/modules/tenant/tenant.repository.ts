@@ -12,21 +12,21 @@ export class TenantRepository {
     private readonly tenantRepository: Repository<TenantEntity>,
   ) {}
 
-async getAllTenants(query: findTenantDto) {
-  const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC' ,status} = query;
+  async getAllTenants(query: findTenantDto) {
+    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC', status } = query;
 
-  const [data, total] = await this.tenantRepository.findAndCount({
-   where: {
-  ...(search ? [{ name: ILike(`%${search}%`) }, { slug: ILike(`%${search}%`) }] : {}),
-  ...(status && { status }),
-},
-    order: { [sortBy]: sortOrder },
-    skip: (page - 1) * limit,
-    take: limit,
-  });
+    const [data, total] = await this.tenantRepository.findAndCount({
+      where: {
+        ...(search ? [{ name: ILike(`%${search}%`) }, { slug: ILike(`%${search}%`) }] : {}),
+        ...(status && { status }),
+      },
+      order: { [sortBy]: sortOrder },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
 
-  return { data, total, page, limit };
-}
+    return { data, total, page, limit };
+  }
 
   async getByTenantId(id: string) {
     return await this.tenantRepository.findOne({
@@ -38,20 +38,18 @@ async getAllTenants(query: findTenantDto) {
       where: { slug: slug },
     });
   }
-async createTenant(payload: Partial<TenantEntity>): Promise<TenantEntity> {
-  return this.tenantRepository.save(
-    this.tenantRepository.create(payload),       
-  );
-}
+  async createTenant(payload: Partial<TenantEntity>): Promise<TenantEntity> {
+    return this.tenantRepository.save(this.tenantRepository.create(payload));
+  }
 
   async updateTenant(id: string, payload: Partial<TenantEntity>) {
-    console.log("update tenant dto:",id,payload);
-    
+    console.log('update tenant dto:', id, payload);
+
     const updatedEntity = this.tenantRepository.update(id, payload);
     return updatedEntity;
   }
 
   async delete(id: string) {
-    return await this.tenantRepository.delete(id); 
+    return await this.tenantRepository.delete(id);
   }
 }

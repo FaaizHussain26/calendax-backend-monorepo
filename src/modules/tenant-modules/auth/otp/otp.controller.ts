@@ -16,7 +16,7 @@ export class OtpController {
   }
 
   @Post('verify')
-  verifyOtp(@Body() dto: VerifyOtpDto,@Request() req:TenantRequest) {
-    return this.otpService.verify(dto.email, dto.code, dto.purpose,req.tenantId);
+  verifyOtp(@Body() dto: VerifyOtpDto, @Request() req: TenantRequest) {
+    return this.otpService.verify(dto.email, dto.code, dto.purpose, req.tenantId);
   }
 }

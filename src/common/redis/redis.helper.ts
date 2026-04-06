@@ -19,13 +19,11 @@ export class RedisHelper {
     }
   }
 
-
   async get<T>(key: string): Promise<T | null> {
     const data = await this.client.get(key);
     if (!data) return null;
     return JSON.parse(data) as T;
   }
-
 
   async delete(key: string): Promise<void> {
     await this.client.del(key);
@@ -35,12 +33,10 @@ export class RedisHelper {
     if (keys.length) await this.client.del(...keys);
   }
 
-
   async exists(key: string): Promise<boolean> {
     const result = await this.client.exists(key);
     return result === 1;
   }
-
 
   async ttl(key: string): Promise<number> {
     return this.client.ttl(key); // returns -1 if no expiry, -2 if not found
@@ -50,7 +46,6 @@ export class RedisHelper {
     await this.client.expire(key, ttlSeconds);
   }
 
-
   async getKeysByPattern(pattern: string): Promise<string[]> {
     return this.client.keys(pattern); // e.g. 'session:*'
   }
@@ -59,7 +54,6 @@ export class RedisHelper {
     const keys = await this.client.keys(pattern);
     if (keys.length) await this.client.del(...keys);
   }
-
 
   async hset(key: string, field: string, value: unknown): Promise<void> {
     await this.client.hset(key, field, JSON.stringify(value));
@@ -73,9 +67,7 @@ export class RedisHelper {
 
   async hgetAll<T>(key: string): Promise<Record<string, T>> {
     const data = await this.client.hgetall(key);
-    return Object.fromEntries(
-      Object.entries(data).map(([k, v]) => [k, JSON.parse(v as string)]),
-    ) as Record<string, T>;
+    return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, JSON.parse(v as string)])) as Record<string, T>;
   }
 
   async hdel(key: string, field: string): Promise<void> {

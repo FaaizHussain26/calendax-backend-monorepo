@@ -8,7 +8,7 @@ import { TenantModule } from '../../tenant/tenant.module';
 import { OtpModule } from './otp/otp.module';
 
 @Module({
-  imports: [TenantModule, UserModule,RbacModule],
+  imports: [TenantModule, UserModule, RbacModule],
   controllers: [AuthController],
   providers: [AuthService],
   exports: [AuthService],

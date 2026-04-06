@@ -1,16 +1,5 @@
 // src/modules/tenant-modules/rbac/permission-group/permission-group.controller.ts
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/jwt/jwt.provider';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { PermissionsGuard } from '../../common/guards/permission.guard';
@@ -30,10 +19,10 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 export class AdminPermissionGroupController {
   constructor(private readonly service: AdminPermissionGroupService) {}
 
-@Get()
-async findAll(@Query() query: PaginationDto) {
-  return this.service.findAll(query);
-}
+  @Get()
+  async findAll(@Query() query: PaginationDto) {
+    return this.service.findAll(query);
+  }
 
   @Get(':id')
   async findById(@Param('id') id: string) {
@@ -61,10 +50,7 @@ async findAll(@Query() query: PaginationDto) {
   }
   @Post(':id/permissions')
   @HttpCode(201)
-  addCustomPermission(
-    @Param('id') id: string,
-    @Body() dto: CreatePermissionDto,
-  ) {
+  addCustomPermission(@Param('id') id: string, @Body() dto: CreatePermissionDto) {
     // add custom permission beyond CRUD
     // e.g. appointments.approve, appointments.export
     return this.service.addPermission(id, dto);

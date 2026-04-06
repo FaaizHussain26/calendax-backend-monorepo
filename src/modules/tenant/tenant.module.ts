@@ -11,11 +11,7 @@ import { AdminPermissionGroupModule } from '../permission-group/permission-group
 import { MongoAdminModule } from '../../common/database/master/mongo-admin.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([TenantEntity], 'master'),
-    AdminPermissionGroupModule,
-    MongoAdminModule,
-  ],
+  imports: [TypeOrmModule.forFeature([TenantEntity], 'master'), AdminPermissionGroupModule, MongoAdminModule],
   controllers: [TenantController],
   providers: [TenantService, TenantRepository, TenantConnectionManager],
   exports: [TenantRepository, TenantConnectionManager],

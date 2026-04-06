@@ -14,36 +14,30 @@ export class AdminPermissionRepository {
 
   // ─── Create ───────────────────────────────────────────────────────────────
 
-  async create(
-    payload: Partial<AdminPermissionEntity>,
-  ): Promise<AdminPermissionEntity> {
+  async create(payload: Partial<AdminPermissionEntity>): Promise<AdminPermissionEntity> {
     return this.repo.save(this.repo.create(payload));
   }
 
   // ─── Find ─────────────────────────────────────────────────────────────────
 
+  async findAll(query: PaginationDto): Promise<{
+    data: AdminPermissionEntity[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
 
-async findAll(query: PaginationDto): Promise<{
-  data: AdminPermissionEntity[];
-  total: number;
-  page: number;
-  limit: number;
-}> {
-  const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
+    const [data, total] = await this.repo.findAndCount({
+      relations: { group: true },
+      where: search ? [{ name: ILike(`%${search}%`) }, { description: ILike(`%${search}%`) }] : {},
+      order: { [sortBy]: sortOrder },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
 
-  const [data, total] = await this.repo.findAndCount({
-    relations: { group: true },
-    where: search ? [
-      { name: ILike(`%${search}%`) },    
-      { description: ILike(`%${search}%`) }, 
-    ] : {},
-    order: { [sortBy]: sortOrder },
-    skip: (page - 1) * limit,
-    take: limit,
-  });
-
-  return { data, total, page, limit };
-}
+    return { data, total, page, limit };
+  }
 
   async findById(id: string): Promise<AdminPermissionEntity | null> {
     return this.repo.findOne({
@@ -71,10 +65,7 @@ async findAll(query: PaginationDto): Promise<{
 
   // ─── Update ───────────────────────────────────────────────────────────────
 
-  async update(
-    id: string,
-    payload: Partial<AdminPermissionEntity>,
-  ): Promise<void> {
+  async update(id: string, payload: Partial<AdminPermissionEntity>): Promise<void> {
     await this.repo.update(id, payload);
   }
 

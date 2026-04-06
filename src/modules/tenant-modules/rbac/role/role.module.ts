@@ -11,14 +11,10 @@ import { TenantModule } from '../../../tenant/tenant.module';
 @Module({
   imports: [
     TenantModule,
-    PermissionModule,                        // ✅ for permission validation
+    PermissionModule, // ✅ for permission validation
   ],
   controllers: [RoleController],
-  providers: [
-    RoleService,
-    RoleRepository,
-    provideTenantRepository(RoleEntity),
-  ],
+  providers: [RoleService, RoleRepository, provideTenantRepository(RoleEntity)],
   exports: [RoleService, RoleRepository],
 })
 export class RoleModule {}

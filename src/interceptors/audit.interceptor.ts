@@ -32,12 +32,12 @@ export class AuditInterceptor implements NestInterceptor {
             targetDb = this.mongoAdmin.clientInstance.db('system_admin_logs');
             actorType = 'SUPER_ADMIN';
           }
-const logBody = { ...req.body };
-const sensitiveFields = ['password', 'currentPassword', 'newPassword', 'refreshToken'];
+          const logBody = { ...req.body };
+          const sensitiveFields = ['password', 'currentPassword', 'newPassword', 'refreshToken'];
 
-sensitiveFields.forEach(field => {
-  if (logBody[field]) logBody[field] = '********';
-});
+          sensitiveFields.forEach((field) => {
+            if (logBody[field]) logBody[field] = '********';
+          });
           // 2. RECORD THE LOG
           await this.auditService.record(targetDb, {
             action: `${method} ${url}`,

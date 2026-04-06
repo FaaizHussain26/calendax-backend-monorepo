@@ -9,13 +9,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import {
-  AdminCreateUserDto,
-  ChangePasswordDto,
-  LoginDto,
-  ResetPasswordDto,
-  SelfRegisterDto,
-} from './auth.dto';
+import { AdminCreateUserDto, ChangePasswordDto, LoginDto, ResetPasswordDto, SelfRegisterDto } from './auth.dto';
 import { OtpPurpose } from '../../../enums/system.enum';
 import { UserEntity } from '../user/user.entity';
 import { HelperFunctions } from '../../../common/utils/functions';
@@ -48,16 +42,13 @@ export class AuthService {
     if (typeof user === 'string') {
       data = await this.usersRepository.findDetailsById(user);
       if (!data) throw new UnauthorizedException('User not found');
-      if (!data.isActive)
-        throw new UnauthorizedException('Account is inactive');
+      if (!data.isActive) throw new UnauthorizedException('Account is inactive');
     } else {
       data = user;
     }
     const rolePermissions = data.role?.permissions?.map((p) => p.key) ?? [];
     const directPermissions = data.permissions?.map((p) => p.key) ?? [];
-    const allPermissions = [
-      ...new Set([...rolePermissions, ...directPermissions]),
-    ];
+    const allPermissions = [...new Set([...rolePermissions, ...directPermissions])];
 
     return this.jwtHelper.issueToken(
       {
@@ -115,9 +106,7 @@ export class AuthService {
     // validate direct permissions
     let directPermissions: PermissionEntity[] = [];
     if (dto.permissionIds?.length) {
-      directPermissions = await this.permissionsRepository.findByIds(
-        dto.permissionIds,
-      );
+      directPermissions = await this.permissionsRepository.findByIds(dto.permissionIds);
       if (directPermissions.length !== dto.permissionIds.length) {
         throw new NotFoundException('One or more permissions not found');
       }
@@ -203,23 +192,21 @@ export class AuthService {
     };
   }
 
- async resetPassword(dto: ResetPasswordDto) {
-  if (dto.newPassword !== dto.confirmPassword) {
-    throw new BadRequestException('Passwords do not match');
+  async resetPassword(dto: ResetPasswordDto) {
+    if (dto.newPassword !== dto.confirmPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
+
+    const email = await this.redisHelper.get<string>(`reset_password:${dto.verificationId}`);
+    if (!email) throw new UnauthorizedException('Invalid or expired reset token');
+
+    const hashed = await bcrypt.hash(dto.newPassword, 10);
+    await this.usersRepository.findOneAndUpdate({ email }, { password: hashed });
+
+    await this.redisHelper.delete(`reset_password:${dto.verificationId}`);
+
+    return { message: 'Password reset successfully' };
   }
-
-  const email = await this.redisHelper.get<string>(
-    `reset_password:${dto.verificationId}`,
-  );
-  if (!email) throw new UnauthorizedException('Invalid or expired reset token');
-
-  const hashed = await bcrypt.hash(dto.newPassword, 10);
-  await this.usersRepository.findOneAndUpdate({ email }, { password: hashed }); 
-
-  await this.redisHelper.delete(`reset_password:${dto.verificationId}`); 
-
-  return { message: 'Password reset successfully' };
-}
 
   async changePassword(userId: string, dto: ChangePasswordDto) {
     if (dto.newPassword !== dto.confirmPassword) {
@@ -230,8 +217,7 @@ export class AuthService {
     if (!user) throw new NotFoundException('User not found');
 
     const isMatch = await bcrypt.compare(dto.currentPassword, user.password);
-    if (!isMatch)
-      throw new UnauthorizedException('Current password is incorrect');
+    if (!isMatch) throw new UnauthorizedException('Current password is incorrect');
 
     const hashed = await bcrypt.hash(dto.newPassword, 10);
     await this.usersRepository.update(userId, { password: hashed });

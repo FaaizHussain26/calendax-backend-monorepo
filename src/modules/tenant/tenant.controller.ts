@@ -1,15 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto, findTenantDto, UpdateTenantDto } from './tenant.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -26,7 +15,7 @@ export class TenantController {
   constructor(private readonly tenantService: TenantService) {}
   @Permission(AdminPage.TENANT, PermissionNames.READ)
   @Get('/')
-  async getAllTenants(@Query() query:findTenantDto) {
+  async getAllTenants(@Query() query: findTenantDto) {
     return await this.tenantService.getAllTenants(query);
   }
   @Permission(AdminPage.TENANT, PermissionNames.READ)
@@ -41,10 +30,7 @@ export class TenantController {
   }
   @Permission(AdminPage.TENANT, PermissionNames.UPDATE)
   @Patch('/:id')
-  async updateTenant(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() payload: UpdateTenantDto,
-  ) {
+  async updateTenant(@Param('id', ParseUUIDPipe) id: string, @Body() payload: UpdateTenantDto) {
     return await this.tenantService.update(id, payload);
   }
   @Permission(AdminPage.TENANT, PermissionNames.DELETE)

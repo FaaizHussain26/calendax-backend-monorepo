@@ -1,13 +1,6 @@
 // common/dto/pagination.dto.ts
 import { Type } from 'class-transformer';
-import {
-  IsBoolean,
-  IsIn,
-  IsOptional,
-  IsPositive,
-  IsString,
-  Min,
-} from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsPositive, IsString, Min } from 'class-validator';
 
 export class PaginationDto {
   @IsOptional()

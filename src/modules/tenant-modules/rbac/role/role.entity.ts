@@ -25,7 +25,7 @@ export class RoleEntity {
   description: string;
 
   @Column({ type: 'boolean', default: false })
-  isDefault: boolean;              // ✅ auto assigned to new users if true
+  isDefault: boolean; // ✅ auto assigned to new users if true
 
   @ManyToMany(() => PermissionEntity, (p) => p.roles)
   @JoinTable({

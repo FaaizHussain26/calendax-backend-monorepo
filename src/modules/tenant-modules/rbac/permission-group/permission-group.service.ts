@@ -1,14 +1,7 @@
 // src/modules/tenant-modules/rbac/permission-group/permission-group.service.ts
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PermissionGroupRepository } from './permission-group.repository';
-import {
-  CreatePermissionGroupDto,
-  UpdatePermissionGroupDto,
-} from '../../../../common/dto/permission.dto';
+import { CreatePermissionGroupDto, UpdatePermissionGroupDto } from '../../../../common/dto/permission.dto';
 import { HelperFunctions } from '../../../../common/utils/functions';
 import { PermissionRepository } from '../permission/permission.repository';
 import { PaginationDto } from '../../../../common/dto/pagination.dto';
@@ -20,7 +13,7 @@ export class PermissionGroupService {
     private readonly permissionRepo: PermissionRepository,
   ) {}
 
-  async findAll(query:PaginationDto) {
+  async findAll(query: PaginationDto) {
     return this.permissionGroupRepo.findAll(query);
   }
 
@@ -31,7 +24,7 @@ export class PermissionGroupService {
   }
 
   async create(dto: CreatePermissionGroupDto) {
-      const slug =HelperFunctions.generateSlug(dto.name)
+    const slug = HelperFunctions.generateSlug(dto.name);
 
     const existing = await this.permissionGroupRepo.findBySlug(slug);
     if (existing) throw new ConflictException('Permission group already exists');
@@ -61,19 +54,17 @@ export class PermissionGroupService {
     if (!group) throw new NotFoundException('Permission group not found');
 
     if (dto.name && dto.name !== group.name) {
-      const slug =HelperFunctions.generateSlug(group.name)
+      const slug = HelperFunctions.generateSlug(group.name);
       const existing = await this.permissionGroupRepo.findBySlug(slug);
       if (existing) {
         throw new ConflictException('Permission group name already in use');
       }
       await this.permissionGroupRepo.update(id, {
         ...dto,
-        slug,                                
+        slug,
       });
-    }
-
-    else await this.permissionGroupRepo.update(id, dto);
-    return this.permissionGroupRepo.findById(id)
+    } else await this.permissionGroupRepo.update(id, dto);
+    return this.permissionGroupRepo.findById(id);
   }
 
   async delete(id: string) {

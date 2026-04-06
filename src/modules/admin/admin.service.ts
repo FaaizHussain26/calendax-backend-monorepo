@@ -27,7 +27,7 @@ export class AdminService {
   constructor(
     private readonly adminRepository: AdminRepository,
     private readonly jwtHelper: JwtHelper,
-    private readonly pageService:PageService
+    private readonly pageService: PageService,
   ) {}
 
   async logIn(email: string, password: string) {
@@ -42,9 +42,7 @@ export class AdminService {
     // ✅ fetch permissions for ADMIN role — SUPER_ADMIN gets all
     let permissions: string[] = [];
     if (admin.role === AdminRoles.ADMIN) {
-      const adminPermissions = await this.adminRepository.findPermissions(
-        admin.id,
-      );
+      const adminPermissions = await this.adminRepository.findPermissions(admin.id);
       // convert page-based permissions to flat permission keys
       permissions = adminPermissions.flatMap((p) => {
         const keys: string[] = [];
@@ -154,23 +152,23 @@ export class AdminService {
     if (!admin) throw new NotFoundException('Admin not found');
     return this.adminRepository.findPermissions(adminId);
   }
-async findAllPagesWithAdminPermissions(user): Promise<PageWithPermissions[]> {
-  const [pages, adminPermissions] = await Promise.all([
-    this.pageService.findAllPages({all:true}),
-    this.adminRepository.findPermissions(user.id),
-  ]);
+  async findAllPagesWithAdminPermissions(user): Promise<PageWithPermissions[]> {
+    const [pages, adminPermissions] = await Promise.all([
+      this.pageService.findAllPages({ all: true }),
+      this.adminRepository.findPermissions(user.id),
+    ]);
 
-  return pages?.data?.map((page) => {
-    const permission = adminPermissions.find((p) => p.pageId === page.id);
-    return {
-      ...page,
-      permissions: {
-        read: permission?.read ?? false,
-        write: permission?.write ?? false,
-        update: permission?.update ?? false,
-        delete: permission?.delete ?? false,
-      },
-    };
-  });
-}
+    return pages?.data?.map((page) => {
+      const permission = adminPermissions.find((p) => p.pageId === page.id);
+      return {
+        ...page,
+        permissions: {
+          read: permission?.read ?? false,
+          write: permission?.write ?? false,
+          update: permission?.update ?? false,
+          delete: permission?.delete ?? false,
+        },
+      };
+    });
+  }
 }

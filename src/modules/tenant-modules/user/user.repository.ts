@@ -3,21 +3,23 @@ import { Inject, Injectable, Scope } from '@nestjs/common';
 import { FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { TenantUserRoles } from '../../../enums/tenant.enum';
-const userFields={id: true,
-      firstName: true,
-      lastName: true,
-      middleName: true,
-      email: true,
-      phoneNumber: true,
-      isActive: true,
-      userType: true,
-      roleId: true,
-      emailVerifiedAt: true,
-      lastLoginAt: true,
-      createdAt: true,
-      updatedAt: true,
-      deletedAt:true}
-@Injectable({ scope: Scope.REQUEST })     
+const userFields = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  middleName: true,
+  email: true,
+  phoneNumber: true,
+  isActive: true,
+  userType: true,
+  roleId: true,
+  emailVerifiedAt: true,
+  lastLoginAt: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+};
+@Injectable({ scope: Scope.REQUEST })
 export class UsersRepository {
   constructor(
     @Inject(`${UserEntity.name}Repository`)
@@ -29,14 +31,13 @@ export class UsersRepository {
   }
 
   async findByEmail(email: string) {
-    return this.repo.findOne({ where: { email },
-    select:{...userFields,password:true} });
+    return this.repo.findOne({ where: { email }, select: { ...userFields, password: true } });
   }
 
   async findById(id: string) {
-    return this.repo.findOne({ where: { id }, });
+    return this.repo.findOne({ where: { id } });
   }
-   async findAllWithDetails(query: {
+  async findAllWithDetails(query: {
     userType?: TenantUserRoles;
     isActive?: boolean;
     search?: string;
@@ -44,7 +45,7 @@ export class UsersRepository {
     limit?: number;
   }) {
     const { userType, isActive, search, page = 1, limit = 10 } = query;
-    const baseWhere:FindOptionsWhere<UserEntity>  = {
+    const baseWhere: FindOptionsWhere<UserEntity> = {
       ...(userType && { userType }),
       ...(isActive !== undefined && { isActive }),
     };
@@ -68,17 +69,17 @@ export class UsersRepository {
 
     return { data, total, page, limit };
   }
-async findDetailsById(id: string): Promise<UserEntity | null> {
-  return this.repo.findOne({
-    where: { id },
-    relations: {
-      role: { permissions: true },
-      permissions: true,
-    },
-     select: userFields,
-  });
-}
-async findByIds(ids: string[]): Promise<UserEntity[]> {
+  async findDetailsById(id: string): Promise<UserEntity | null> {
+    return this.repo.findOne({
+      where: { id },
+      relations: {
+        role: { permissions: true },
+        permissions: true,
+      },
+      select: userFields,
+    });
+  }
+  async findByIds(ids: string[]): Promise<UserEntity[]> {
     return this.repo.find({
       where: { id: In(ids) },
     });
@@ -91,14 +92,14 @@ async findByIds(ids: string[]): Promise<UserEntity[]> {
   async update(id: string, payload: Partial<UserEntity>) {
     return this.repo.update(id, payload);
   }
-  async findOneAndUpdate(condition:FindOptionsWhere<UserEntity>, payload: Partial<UserEntity>) {
+  async findOneAndUpdate(condition: FindOptionsWhere<UserEntity>, payload: Partial<UserEntity>) {
     return this.repo.update(condition, payload);
   }
 
   async delete(id: string) {
     return this.repo.delete(id);
   }
-   async softDelete(id: string): Promise<void> {
+  async softDelete(id: string): Promise<void> {
     await this.repo.softDelete(id);
   }
 

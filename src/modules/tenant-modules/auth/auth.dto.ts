@@ -1,14 +1,4 @@
-import {
-  IsBoolean,
-  IsEmail,
-  IsEnum,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Length,
-  Matches,
-  MinLength,
-} from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, IsUUID, Length, Matches, MinLength } from 'class-validator';
 import { TenantUserRoles } from '../../../enums/tenant.enum';
 export class LoginDto {
   @IsEmail()
@@ -74,13 +64,9 @@ export class SelfRegisterDto {
 
   @IsString()
   @MinLength(8)
-  @Matches(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/,
-    {
-      message:
-        'Password must contain uppercase, lowercase, number and special character',
-    },
-  )
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/, {
+    message: 'Password must contain uppercase, lowercase, number and special character',
+  })
   password: string;
 
   @IsString()
@@ -98,20 +84,14 @@ export class ForgotPasswordDto {
 }
 
 export class ResetPasswordDto {
- 
   @IsUUID()
   verificationId: string;
   @IsString()
-
   @IsString()
   @MinLength(8)
-  @Matches(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/,
-    {
-      message:
-        'Password must contain uppercase, lowercase, number and special character',
-    },
-  )
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/, {
+    message: 'Password must contain uppercase, lowercase, number and special character',
+  })
   newPassword: string;
 
   @IsString()
@@ -124,13 +104,9 @@ export class ChangePasswordDto {
 
   @IsString()
   @MinLength(8)
-  @Matches(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/,
-    {
-      message:
-        'Password must contain uppercase, lowercase, number and special character',
-    },
-  )
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/, {
+    message: 'Password must contain uppercase, lowercase, number and special character',
+  })
   newPassword: string;
 
   @IsString()

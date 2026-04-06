@@ -7,9 +7,7 @@ export const EncryptionTransformer: ValueTransformer = {
     if (value === null || value === undefined) return value;
     if (typeof value !== 'string') {
       // ✅ guard against non-string values
-      throw new Error(
-        `EncryptionTransformer: expected string but got ${typeof value}`,
-      );
+      throw new Error(`EncryptionTransformer: expected string but got ${typeof value}`);
     }
     return EncryptionUtil.encrypt(value);
   },

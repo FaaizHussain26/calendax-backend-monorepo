@@ -7,6 +7,6 @@ import { OtpModule } from './auth/otp/otp.module';
 
 @Module({
   imports: [AuthModule, OtpModule, RbacModule, UserModule],
-  exports: [AuthModule,OtpModule, RbacModule, UserModule],
+  exports: [AuthModule, OtpModule, RbacModule, UserModule],
 })
 export class TenantModulesModule {}

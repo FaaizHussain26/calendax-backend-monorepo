@@ -11,16 +11,9 @@ import { RoleModule } from '../rbac/role/role.module';
 import { PermissionModule } from '../rbac/permission/permission.module';
 
 @Module({
-  imports:[TenantModule,RoleModule,PermissionModule],
+  imports: [TenantModule, RoleModule, PermissionModule],
   controllers: [UsersController],
-  providers: [
-    UsersService,
-    UsersRepository,
-    provideTenantRepository(UserEntity),   
-  ],
-  exports: [
-    UsersService,
-    UsersRepository,                       
-  ],
+  providers: [UsersService, UsersRepository, provideTenantRepository(UserEntity)],
+  exports: [UsersService, UsersRepository],
 })
 export class UserModule {}

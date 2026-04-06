@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  ExecutionContext,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -17,12 +13,7 @@ import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { HelperFunctions } from '../utils/functions';
 import { SignOptions } from 'jsonwebtoken';
-import {
-  CachedPermission,
-  JwtPayload,
-  SessionData,
-  TokenUser,
-} from '../interfaces/request.interface';
+import { CachedPermission, JwtPayload, SessionData, TokenUser } from '../interfaces/request.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -74,13 +65,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         permissions = parsed.map((p) => (typeof p === 'string' ? p : p.key));
       }
     }
-    console.log("user looged in attach token:",user.id,user.role,user.userType)
+    console.log('user looged in attach token:', user.id, user.role, user.userType);
     return {
       id: user.id,
       role: user.role,
       tokenId: jti,
       exp: exp,
-      userType:user.userType,
+      userType: user.userType,
       permissions,
     };
   }
@@ -120,13 +111,10 @@ export class JwtHelper {
     const refreshJti = randomUUID();
 
     const expiresIn = this.configService.get<string>('jwt.expiresIn') || '1d';
-    const refreshExpiresIn =
-      this.configService.get<string>('jwt.refreshExpiresIn') || '7d';
+    const refreshExpiresIn = this.configService.get<string>('jwt.refreshExpiresIn') || '7d';
     const redisExpiresIn = HelperFunctions.parseExpiryToSeconds(expiresIn);
-    const refreshRedisExpiresIn =
-      HelperFunctions.parseExpiryToSeconds(refreshExpiresIn);
-    const secret =
-      this.configService.get<string>('jwt.secret') || 'default_secret';
+    const refreshRedisExpiresIn = HelperFunctions.parseExpiryToSeconds(refreshExpiresIn);
+    const secret = this.configService.get<string>('jwt.secret') || 'default_secret';
     const refreshSecret = this.configService.get<string>('jwt.refreshSecret');
 
     const sessionData = {
@@ -138,12 +126,7 @@ export class JwtHelper {
       roleId: user.roleId ?? null,
     };
     // Store session
-    await redis.set(
-      `session:${jti}`,
-      JSON.stringify(sessionData),
-      'EX',
-      redisExpiresIn,
-    );
+    await redis.set(`session:${jti}`, JSON.stringify(sessionData), 'EX', redisExpiresIn);
     await redis.set(
       `refresh:${refreshJti}`,
       JSON.stringify({
@@ -155,18 +138,13 @@ export class JwtHelper {
     );
     // Store permissions
     if (permissions && permissions.length > 0) {
-      await redis.set(
-        `perm:${user.id}`,
-        JSON.stringify(permissions),
-        'EX',
-        redisExpiresIn,
-      );
+      await redis.set(`perm:${user.id}`, JSON.stringify(permissions), 'EX', redisExpiresIn);
     }
 
-    const accessToken = this.jwtService.sign(
-      { sub: user.id, role: user.role, jti },
-      { secret, expiresIn } as SignOptions,
-    );
+    const accessToken = this.jwtService.sign({ sub: user.id, role: user.role, jti }, {
+      secret,
+      expiresIn,
+    } as SignOptions);
 
     const refreshToken = this.jwtService.sign(
       { sub: user.id, jti: refreshJti }, // ✅ refresh has its own jti

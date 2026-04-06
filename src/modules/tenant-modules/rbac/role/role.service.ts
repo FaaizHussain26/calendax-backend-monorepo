@@ -1,17 +1,8 @@
 // src/modules/tenant-modules/rbac/role/role.service.ts
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { RoleRepository } from './role.repository';
 import { PermissionRepository } from '../permission/permission.repository';
-import {
-  AssignPermissionsDto,
-  CreateRoleDto,
-  UpdateRoleDto,
-} from './role.dto';
+import { AssignPermissionsDto, CreateRoleDto, UpdateRoleDto } from './role.dto';
 import { PermissionEntity } from '../permission/permission.entity';
 
 @Injectable()
@@ -36,7 +27,7 @@ export class RoleService {
     if (existing) throw new ConflictException('Role already exists');
 
     // validate permissions if provided
-    let permissions :PermissionEntity[]= [];
+    let permissions: PermissionEntity[] = [];
     if (dto.permissionIds?.length) {
       permissions = await this.permissionRepo.findByIds(dto.permissionIds);
       if (permissions.length !== dto.permissionIds.length) {
@@ -67,7 +58,7 @@ export class RoleService {
     }
 
     // validate permissions if provided
-    let permissions = role.permissions;  // keep existing if not provided
+    let permissions = role.permissions; // keep existing if not provided
     if (dto.permissionIds?.length) {
       permissions = await this.permissionRepo.findByIds(dto.permissionIds);
       if (permissions.length !== dto.permissionIds.length) {
@@ -105,9 +96,7 @@ export class RoleService {
     if (!role) throw new NotFoundException('Role not found');
 
     // remove specified permissions from role
-    const remaining = role.permissions.filter(
-      (p) => !dto.permissionIds.includes(p.id),
-    );
+    const remaining = role.permissions.filter((p) => !dto.permissionIds.includes(p.id));
 
     return this.roleRepo.update(id, { permissions: remaining });
   }
@@ -117,9 +106,7 @@ export class RoleService {
     if (!role) throw new NotFoundException('Role not found');
 
     if (role.isDefault) {
-      throw new BadRequestException(
-        'Cannot delete default role. Assign another default role first',
-      );
+      throw new BadRequestException('Cannot delete default role. Assign another default role first');
     }
 
     await this.roleRepo.softDelete(id);

@@ -13,30 +13,19 @@ export class PermissionGroupRepository {
 
   // ─── Create ───────────────────────────────────────────────────────────────
 
-  async create(
-    payload: Partial<PermissionGroupEntity>,
-  ): Promise<PermissionGroupEntity> {
+  async create(payload: Partial<PermissionGroupEntity>): Promise<PermissionGroupEntity> {
     return this.repo.save(this.repo.create(payload));
   }
 
   // ─── Find ─────────────────────────────────────────────────────────────────
 
-  async findAll(
-    query: PaginationDto,
-  ): Promise<{
+  async findAll(query: PaginationDto): Promise<{
     data: PermissionGroupEntity[];
     total: number;
     page: number;
     limit: number;
   }> {
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      sortBy = 'createdAt',
-      sortOrder = 'DESC',
-      all = false,
-    } = query;
+    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC', all = false } = query;
 
     const [data, total] = await this.repo.findAndCount({
       relations: { permissions: true },
@@ -65,10 +54,7 @@ export class PermissionGroupRepository {
 
   // ─── Update ───────────────────────────────────────────────────────────────
 
-  async update(
-    id: string,
-    payload: Partial<PermissionGroupEntity>,
-  ): Promise<void> {
+  async update(id: string, payload: Partial<PermissionGroupEntity>): Promise<void> {
     await this.repo.update(id, payload);
   }
 

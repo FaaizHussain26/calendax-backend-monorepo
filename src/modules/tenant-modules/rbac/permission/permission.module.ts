@@ -11,14 +11,10 @@ import { TenantModule } from '../../../tenant/tenant.module';
 @Module({
   imports: [
     TenantModule,
-    PermissionGroupModule,                         // ✅ for group validation
+    PermissionGroupModule, // ✅ for group validation
   ],
   controllers: [PermissionController],
-  providers: [
-    PermissionService,
-    PermissionRepository,
-    provideTenantRepository(PermissionEntity),
-  ],
+  providers: [PermissionService, PermissionRepository, provideTenantRepository(PermissionEntity)],
   exports: [PermissionService, PermissionRepository],
 })
 export class PermissionModule {}

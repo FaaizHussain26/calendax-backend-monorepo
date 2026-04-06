@@ -15,19 +15,19 @@
       "key": "adminToken",
       "value": "",
       "type": "string",
-      "description": "JWT token for admin (set after admin login)"
+      "description": "JWT token for admin (auto-set after admin login)"
     },
     {
       "key": "tenantToken",
       "value": "",
       "type": "string",
-      "description": "JWT token for tenant user (set after tenant login)"
+      "description": "JWT token for tenant user (auto-set after tenant login)"
     },
     {
       "key": "tenantId",
       "value": "",
       "type": "string",
-      "description": "Tenant slug/ID used in x-tenant-id header"
+      "description": "Tenant slug used in x-tenant-id header"
     },
     {
       "key": "adminId",
@@ -78,8 +78,7 @@
               "raw": "{{baseUrl}}/",
               "host": ["{{baseUrl}}"],
               "path": [""]
-            },
-            "description": "Basic health check endpoint"
+            }
           }
         }
       ]
@@ -117,7 +116,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["admin", "login"]
             },
-            "description": "Login as super admin. Saves accessToken to {{adminToken}} variable."
+            "description": "Public route. Saves accessToken to {{adminToken}}."
           }
         }
       ]
@@ -151,6 +150,21 @@
               "host": ["{{baseUrl}}"],
               "path": ["admin", "{{adminId}}"]
             }
+          }
+        },
+        {
+          "name": "Get Admin Pages Sidebar",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/pages/side-bar",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "pages", "side-bar"]
+            },
+            "description": "Requires ADMIN role. Returns pages accessible for sidebar."
           }
         },
         {
@@ -204,6 +218,58 @@
               "path": ["admin", "{{adminId}}"]
             }
           }
+        },
+        {
+          "name": "Get Admin Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/{{adminId}}/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "{{adminId}}", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "Assign Page Permission to Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageId\": \"<page-uuid>\",\n  \"read\": true,\n  \"write\": true,\n  \"update\": true,\n  \"delete\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/{{adminId}}/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "{{adminId}}", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "Remove Page Permission from Admin",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageId\": \"<page-uuid>\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/{{adminId}}/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "{{adminId}}", "permissions"]
+            }
+          }
         }
       ]
     },
@@ -218,9 +284,17 @@
               { "key": "Authorization", "value": "Bearer {{adminToken}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/page",
+              "raw": "{{baseUrl}}/page?page=1&limit=10&sortBy=createdAt&sortOrder=DESC",
               "host": ["{{baseUrl}}"],
-              "path": ["page"]
+              "path": ["page"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "DESC" },
+                { "key": "all", "value": "false", "disabled": true }
+              ]
             }
           }
         },
@@ -248,7 +322,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Dashboard\",\n  \"slug\": \"dashboard\"\n}"
+              "raw": "{\n  \"name\": \"Dashboard\",\n  \"href\": \"/dashboard\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/page",
@@ -267,7 +341,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Dashboard\",\n  \"slug\": \"updated-dashboard\"\n}"
+              "raw": "{\n  \"name\": \"Updated Dashboard\",\n  \"href\": \"/updated-dashboard\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/page/{{pageId}}",
@@ -303,9 +377,17 @@
               { "key": "Authorization", "value": "Bearer {{adminToken}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/admin-permission-groups",
+              "raw": "{{baseUrl}}/admin-permission-groups?page=1&limit=10&sortBy=createdAt&sortOrder=DESC",
               "host": ["{{baseUrl}}"],
-              "path": ["admin", "permission-groups"]
+              "path": ["admin-permission-groups"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "DESC" },
+                { "key": "all", "value": "false", "disabled": true }
+              ]
             }
           }
         },
@@ -319,7 +401,7 @@
             "url": {
               "raw": "{{baseUrl}}/admin-permission-groups/{{permissionGroupId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["admin", "permission-groups", "{{permissionGroupId}}"]
+              "path": ["admin-permission-groups", "{{permissionGroupId}}"]
             }
           }
         },
@@ -338,7 +420,7 @@
             "url": {
               "raw": "{{baseUrl}}/admin-permission-groups",
               "host": ["{{baseUrl}}"],
-              "path": ["admin", "permission-groups"]
+              "path": ["admin-permission-groups"]
             }
           }
         },
@@ -357,7 +439,7 @@
             "url": {
               "raw": "{{baseUrl}}/admin-permission-groups/{{permissionGroupId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["admin", "permission-groups", "{{permissionGroupId}}"]
+              "path": ["admin-permission-groups", "{{permissionGroupId}}"]
             }
           }
         },
@@ -371,7 +453,7 @@
             "url": {
               "raw": "{{baseUrl}}/admin-permission-groups/{{permissionGroupId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["admin", "permission-groups", "{{permissionGroupId}}"]
+              "path": ["admin-permission-groups", "{{permissionGroupId}}"]
             }
           }
         },
@@ -385,7 +467,7 @@
             "url": {
               "raw": "{{baseUrl}}/admin-permission-groups/{{permissionGroupId}}/restore",
               "host": ["{{baseUrl}}"],
-              "path": ["admin", "permission-groups", "{{permissionGroupId}}", "restore"]
+              "path": ["admin-permission-groups", "{{permissionGroupId}}", "restore"]
             }
           }
         },
@@ -404,7 +486,7 @@
             "url": {
               "raw": "{{baseUrl}}/admin-permission-groups/{{permissionGroupId}}/permissions",
               "host": ["{{baseUrl}}"],
-              "path": ["admin", "permission-groups", "{{permissionGroupId}}", "permissions"]
+              "path": ["admin-permission-groups", "{{permissionGroupId}}", "permissions"]
             }
           }
         }
@@ -421,9 +503,17 @@
               { "key": "Authorization", "value": "Bearer {{adminToken}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/admin-permissions",
+              "raw": "{{baseUrl}}/admin-permissions?page=1&limit=10&sortBy=createdAt&sortOrder=DESC",
               "host": ["{{baseUrl}}"],
-              "path": ["admin", "permissions"]
+              "path": ["admin-permissions"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "DESC" },
+                { "key": "all", "value": "false", "disabled": true }
+              ]
             }
           }
         },
@@ -437,7 +527,7 @@
             "url": {
               "raw": "{{baseUrl}}/admin-permissions/{{permissionId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["admin", "permissions", "{{permissionId}}"]
+              "path": ["admin-permissions", "{{permissionId}}"]
             }
           }
         },
@@ -451,7 +541,7 @@
             "url": {
               "raw": "{{baseUrl}}/admin-permissions/group/{{permissionGroupId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["admin", "permissions", "group", "{{permissionGroupId}}"]
+              "path": ["admin-permissions", "group", "{{permissionGroupId}}"]
             }
           }
         },
@@ -470,7 +560,7 @@
             "url": {
               "raw": "{{baseUrl}}/admin-permissions/group/{{permissionGroupId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["admin", "permissions", "group", "{{permissionGroupId}}"]
+              "path": ["admin-permissions", "group", "{{permissionGroupId}}"]
             }
           }
         },
@@ -489,7 +579,7 @@
             "url": {
               "raw": "{{baseUrl}}/admin-permissions/{{permissionId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["admin", "permissions", "{{permissionId}}"]
+              "path": ["admin-permissions", "{{permissionId}}"]
             }
           }
         },
@@ -503,7 +593,7 @@
             "url": {
               "raw": "{{baseUrl}}/admin-permissions/{{permissionId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["admin", "permissions", "{{permissionId}}"]
+              "path": ["admin-permissions", "{{permissionId}}"]
             }
           }
         },
@@ -517,7 +607,7 @@
             "url": {
               "raw": "{{baseUrl}}/admin-permissions/{{permissionId}}/restore",
               "host": ["{{baseUrl}}"],
-              "path": ["admin", "permissions", "{{permissionId}}", "restore"]
+              "path": ["admin-permissions", "{{permissionId}}", "restore"]
             }
           }
         }
@@ -534,9 +624,18 @@
               { "key": "Authorization", "value": "Bearer {{adminToken}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/tenant",
+              "raw": "{{baseUrl}}/tenant?page=1&limit=10&sortBy=createdAt&sortOrder=DESC",
               "host": ["{{baseUrl}}"],
-              "path": ["tenant"]
+              "path": ["tenant"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "DESC" },
+                { "key": "all", "value": "false", "disabled": true },
+                { "key": "status", "value": "active", "disabled": true, "description": "TenantStatus: active | inactive | suspended" }
+              ]
             }
           }
         },
@@ -571,7 +670,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["tenant"]
             },
-            "description": "Creates a new tenant and provisions its database. The tenant slug becomes the x-tenant-id for subsequent requests."
+            "description": "Creates tenant + provisions its database. The tenant slug is used as x-tenant-id for all subsequent tenant requests."
           }
         },
         {
@@ -584,7 +683,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Acme Corporation\"\n}"
+              "raw": "{\n  \"name\": \"Acme Corporation\",\n  \"permissionGroupIds\": []\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/tenant/{{tenantRecordId}}",
@@ -644,7 +743,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["auth", "login"]
             },
-            "description": "Tenant user login. Saves accessToken to {{tenantToken}}."
+            "description": "Saves accessToken to {{tenantToken}}."
           }
         },
         {
@@ -663,7 +762,8 @@
               "raw": "{{baseUrl}}/auth/register",
               "host": ["{{baseUrl}}"],
               "path": ["auth", "register"]
-            }
+            },
+            "description": "Password must contain uppercase, lowercase, number, and special char."
           }
         },
         {
@@ -714,13 +814,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": \"<user-uuid>\",\n  \"code\": \"123456\",\n  \"newPassword\": \"NewPass@1234\",\n  \"confirmPassword\": \"NewPass@1234\"\n}"
+              "raw": "{\n  \"verificationId\": \"<verification-uuid from forgot-password response>\",\n  \"newPassword\": \"NewPass@1234\",\n  \"confirmPassword\": \"NewPass@1234\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/reset-password",
               "host": ["{{baseUrl}}"],
               "path": ["auth", "reset-password"]
-            }
+            },
+            "description": "verificationId is returned from the forgot-password flow. No OTP code field."
           }
         },
         {
@@ -760,7 +861,8 @@
               "raw": "{{baseUrl}}/auth/users/create",
               "host": ["{{baseUrl}}"],
               "path": ["auth", "users", "create"]
-            }
+            },
+            "description": "Requires TENANT_ADMIN role."
           }
         }
       ]
@@ -785,7 +887,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["auth", "otp", "send"]
             },
-            "description": "OtpPurpose enum values: email_verification, password_reset, etc."
+            "description": "purpose: OtpPurpose enum value (e.g. email_verification, password_reset)"
           }
         },
         {
@@ -810,7 +912,7 @@
       ]
     },
     {
-      "name": "Tenant - RBAC - Permission Groups",
+      "name": "Tenant - Permission Groups",
       "item": [
         {
           "name": "Get All Permission Groups",
@@ -821,9 +923,17 @@
               { "key": "x-tenant-id", "value": "{{tenantId}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rbac/permission-groups",
+              "raw": "{{baseUrl}}/permission-groups?page=1&limit=10&sortBy=createdAt&sortOrder=DESC",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "permission-groups"]
+              "path": ["permission-groups"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "DESC" },
+                { "key": "all", "value": "false", "disabled": true }
+              ]
             }
           }
         },
@@ -836,9 +946,9 @@
               { "key": "x-tenant-id", "value": "{{tenantId}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rbac/permission-groups/{{permissionGroupId}}",
+              "raw": "{{baseUrl}}/permission-groups/{{permissionGroupId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "permission-groups", "{{permissionGroupId}}"]
+              "path": ["permission-groups", "{{permissionGroupId}}"]
             }
           }
         },
@@ -856,9 +966,9 @@
               "raw": "{\n  \"name\": \"Billing\",\n  \"href\": \"/billing\",\n  \"description\": \"Billing related permissions\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/rbac/permission-groups",
+              "raw": "{{baseUrl}}/permission-groups",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "permission-groups"]
+              "path": ["permission-groups"]
             }
           }
         },
@@ -876,9 +986,9 @@
               "raw": "{\n  \"name\": \"Updated Billing\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/rbac/permission-groups/{{permissionGroupId}}",
+              "raw": "{{baseUrl}}/permission-groups/{{permissionGroupId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "permission-groups", "{{permissionGroupId}}"]
+              "path": ["permission-groups", "{{permissionGroupId}}"]
             }
           }
         },
@@ -891,9 +1001,9 @@
               { "key": "x-tenant-id", "value": "{{tenantId}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rbac/permission-groups/{{permissionGroupId}}",
+              "raw": "{{baseUrl}}/permission-groups/{{permissionGroupId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "permission-groups", "{{permissionGroupId}}"]
+              "path": ["permission-groups", "{{permissionGroupId}}"]
             }
           }
         },
@@ -906,16 +1016,16 @@
               { "key": "x-tenant-id", "value": "{{tenantId}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rbac/permission-groups/{{permissionGroupId}}/restore",
+              "raw": "{{baseUrl}}/permission-groups/{{permissionGroupId}}/restore",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "permission-groups", "{{permissionGroupId}}", "restore"]
+              "path": ["permission-groups", "{{permissionGroupId}}", "restore"]
             }
           }
         }
       ]
     },
     {
-      "name": "Tenant - RBAC - Permissions",
+      "name": "Tenant - Permissions",
       "item": [
         {
           "name": "Get All Permissions",
@@ -926,9 +1036,17 @@
               { "key": "x-tenant-id", "value": "{{tenantId}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rbac/permissions",
+              "raw": "{{baseUrl}}/permissions?page=1&limit=10&sortBy=createdAt&sortOrder=DESC",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "permissions"]
+              "path": ["permissions"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "DESC" },
+                { "key": "all", "value": "false", "disabled": true }
+              ]
             }
           }
         },
@@ -941,9 +1059,9 @@
               { "key": "x-tenant-id", "value": "{{tenantId}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rbac/permissions/{{permissionId}}",
+              "raw": "{{baseUrl}}/permissions/{{permissionId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "permissions", "{{permissionId}}"]
+              "path": ["permissions", "{{permissionId}}"]
             }
           }
         },
@@ -956,9 +1074,9 @@
               { "key": "x-tenant-id", "value": "{{tenantId}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rbac/permissions/group/{{permissionGroupId}}",
+              "raw": "{{baseUrl}}/permissions/group/{{permissionGroupId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "permissions", "group", "{{permissionGroupId}}"]
+              "path": ["permissions", "group", "{{permissionGroupId}}"]
             }
           }
         },
@@ -976,9 +1094,9 @@
               "raw": "{\n  \"key\": \"manage_invoices\",\n  \"name\": \"Manage Invoices\",\n  \"description\": \"Create and manage invoices\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/rbac/permissions/group/{{permissionGroupId}}",
+              "raw": "{{baseUrl}}/permissions/group/{{permissionGroupId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "permissions", "group", "{{permissionGroupId}}"]
+              "path": ["permissions", "group", "{{permissionGroupId}}"]
             }
           }
         },
@@ -996,9 +1114,9 @@
               "raw": "{\n  \"name\": \"Updated Permission\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/rbac/permissions/{{permissionId}}",
+              "raw": "{{baseUrl}}/permissions/{{permissionId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "permissions", "{{permissionId}}"]
+              "path": ["permissions", "{{permissionId}}"]
             }
           }
         },
@@ -1011,9 +1129,9 @@
               { "key": "x-tenant-id", "value": "{{tenantId}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rbac/permissions/{{permissionId}}",
+              "raw": "{{baseUrl}}/permissions/{{permissionId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "permissions", "{{permissionId}}"]
+              "path": ["permissions", "{{permissionId}}"]
             }
           }
         },
@@ -1026,16 +1144,16 @@
               { "key": "x-tenant-id", "value": "{{tenantId}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rbac/permissions/{{permissionId}}/restore",
+              "raw": "{{baseUrl}}/permissions/{{permissionId}}/restore",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "permissions", "{{permissionId}}", "restore"]
+              "path": ["permissions", "{{permissionId}}", "restore"]
             }
           }
         }
       ]
     },
     {
-      "name": "Tenant - RBAC - Roles",
+      "name": "Tenant - Roles",
       "item": [
         {
           "name": "Get All Roles",
@@ -1046,9 +1164,9 @@
               { "key": "x-tenant-id", "value": "{{tenantId}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rbac/roles",
+              "raw": "{{baseUrl}}/roles",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "roles"]
+              "path": ["roles"]
             }
           }
         },
@@ -1061,9 +1179,9 @@
               { "key": "x-tenant-id", "value": "{{tenantId}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rbac/roles/{{roleId}}",
+              "raw": "{{baseUrl}}/roles/{{roleId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "roles", "{{roleId}}"]
+              "path": ["roles", "{{roleId}}"]
             }
           }
         },
@@ -1081,9 +1199,9 @@
               "raw": "{\n  \"name\": \"Manager\",\n  \"description\": \"Team manager role\",\n  \"isDefault\": false,\n  \"permissionIds\": []\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/rbac/roles",
+              "raw": "{{baseUrl}}/roles",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "roles"]
+              "path": ["roles"]
             }
           }
         },
@@ -1101,9 +1219,9 @@
               "raw": "{\n  \"name\": \"Senior Manager\",\n  \"description\": \"Updated role description\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/rbac/roles/{{roleId}}",
+              "raw": "{{baseUrl}}/roles/{{roleId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "roles", "{{roleId}}"]
+              "path": ["roles", "{{roleId}}"]
             }
           }
         },
@@ -1121,9 +1239,9 @@
               "raw": "{\n  \"permissionIds\": [\"<permission-uuid-1>\", \"<permission-uuid-2>\"]\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/rbac/roles/{{roleId}}/permissions/assign",
+              "raw": "{{baseUrl}}/roles/{{roleId}}/permissions/assign",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "roles", "{{roleId}}", "permissions", "assign"]
+              "path": ["roles", "{{roleId}}", "permissions", "assign"]
             }
           }
         },
@@ -1141,9 +1259,9 @@
               "raw": "{\n  \"permissionIds\": [\"<permission-uuid-1>\"]\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/rbac/roles/{{roleId}}/permissions/revoke",
+              "raw": "{{baseUrl}}/roles/{{roleId}}/permissions/revoke",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "roles", "{{roleId}}", "permissions", "revoke"]
+              "path": ["roles", "{{roleId}}", "permissions", "revoke"]
             }
           }
         },
@@ -1156,9 +1274,9 @@
               { "key": "x-tenant-id", "value": "{{tenantId}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rbac/roles/{{roleId}}",
+              "raw": "{{baseUrl}}/roles/{{roleId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "roles", "{{roleId}}"]
+              "path": ["roles", "{{roleId}}"]
             }
           }
         },
@@ -1171,9 +1289,9 @@
               { "key": "x-tenant-id", "value": "{{tenantId}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rbac/roles/{{roleId}}/restore",
+              "raw": "{{baseUrl}}/roles/{{roleId}}/restore",
               "host": ["{{baseUrl}}"],
-              "path": ["rbac", "roles", "{{roleId}}", "restore"]
+              "path": ["roles", "{{roleId}}", "restore"]
             }
           }
         }
@@ -1198,7 +1316,7 @@
                 { "key": "page", "value": "1" },
                 { "key": "limit", "value": "10" },
                 { "key": "search", "value": "", "disabled": true },
-                { "key": "userType", "value": "", "disabled": true },
+                { "key": "userType", "value": "", "disabled": true, "description": "TenantUserRoles enum value" },
                 { "key": "isActive", "value": "", "disabled": true }
               ]
             }
@@ -1250,7 +1368,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"firstName\": \"Alice\",\n  \"lastName\": \"Johnson\",\n  \"phoneNumber\": \"+0987654321\"\n}"
+              "raw": "{\n  \"firstName\": \"Alice\",\n  \"lastName\": \"Johnson\",\n  \"phoneNumber\": \"+0987654321\",\n  \"isActive\": true\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/users/{{userId}}",

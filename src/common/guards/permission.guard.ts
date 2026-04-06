@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Roles } from '../../enums/admin.enum';
 import { PERMISSION_KEY } from '../decorators/permission.decorator';
@@ -13,7 +8,7 @@ import { AllRoles } from '../../enums/system.enum';
 export class PermissionsGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
-    private extractResource(path: string): string {
+  private extractResource(path: string): string {
     // '/api/patients/123' → 'patients'
     const parts = path.replace(/^\/api\//, '').split('/');
     return parts[0];
@@ -41,7 +36,7 @@ export class PermissionsGuard implements CanActivate {
     if (!user) {
       throw new ForbiddenException('Unauthenticated');
     }
-console.log("user role in permissions:",req.tenantId,user.role,user.userType)
+    console.log('user role in permissions:', req.tenantId, user.role, user.userType);
     // ✅ SUPER ADMIN = FULL ACCESS
     if (user.role === Roles.SUPER_ADMIN) {
       return true;
@@ -53,13 +48,9 @@ console.log("user role in permissions:",req.tenantId,user.role,user.userType)
 
     if (required) {
       // explicit permission check (admin module)
-      const perm = permissions.find(
-        (p) => p === `${required.resource}.${required.action}`,
-      );
+      const perm = permissions.find((p) => p === `${required.resource}.${required.action}`);
       if (!perm) {
-        throw new ForbiddenException(
-          `No ${required.action} access to ${required.resource}`,
-        );
+        throw new ForbiddenException(`No ${required.action} access to ${required.resource}`);
       }
       return true;
     }
@@ -73,5 +64,4 @@ console.log("user role in permissions:",req.tenantId,user.role,user.userType)
 
     return true;
   }
-
 }
