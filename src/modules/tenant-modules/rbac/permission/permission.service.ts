@@ -10,6 +10,7 @@ import {
   CreatePermissionDto,
   UpdatePermissionDto,
 } from '../../../../common/dto/permission.dto';
+import { PaginationDto } from '../../../../common/dto/pagination.dto';
 
 @Injectable()
 export class PermissionService {
@@ -18,8 +19,8 @@ export class PermissionService {
     private readonly permissionGroupRepo: PermissionGroupRepository,
   ) {}
 
-  async findAll() {
-    return this.permissionRepo.findAll();
+  async findAll(query:PaginationDto) {
+    return this.permissionRepo.findAll(query);
   }
 
   async findById(id: string) {

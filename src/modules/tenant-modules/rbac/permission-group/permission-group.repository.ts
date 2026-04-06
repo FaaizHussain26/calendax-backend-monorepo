@@ -1,7 +1,8 @@
 // src/modules/tenant-modules/rbac/permission-group/permission-group.repository.ts
 import { Inject, Injectable, Scope } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { PermissionGroupEntity } from './permission-group.entity';
+import { PaginationDto } from '../../../../common/dto/pagination.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class PermissionGroupRepository {
@@ -20,11 +21,31 @@ export class PermissionGroupRepository {
 
   // ─── Find ─────────────────────────────────────────────────────────────────
 
-  async findAll(): Promise<PermissionGroupEntity[]> {
-    return this.repo.find({
+  async findAll(
+    query: PaginationDto,
+  ): Promise<{
+    data: PermissionGroupEntity[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
+      all = false,
+    } = query;
+
+    const [data, total] = await this.repo.findAndCount({
       relations: { permissions: true },
-      order: { createdAt: 'DESC' },
+      where: search ? { name: ILike(`%${search}%`) } : {},
+      order: { [sortBy]: sortOrder },
+      ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
     });
+
+    return { data, total, page, limit };
   }
 
   async findById(id: string): Promise<PermissionGroupEntity | null> {
@@ -55,6 +76,9 @@ export class PermissionGroupRepository {
 
   async softDelete(id: string): Promise<void> {
     await this.repo.softDelete(id);
+  }
+  async delete(id: string): Promise<void> {
+    await this.repo.delete(id);
   }
 
   async restore(id: string): Promise<void> {

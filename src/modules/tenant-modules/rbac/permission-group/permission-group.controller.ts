@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { PermissionGroupService } from './permission-group.service';
@@ -15,6 +16,7 @@ import { JwtAuthGuard } from '../../../../common/jwt/jwt.provider';
 import { TenantGuard } from '../../../../common/guards/tenant.guard';
 import { PermissionsGuard } from '../../../../common/guards/permission.guard';
 import { CreatePermissionGroupDto, UpdatePermissionGroupDto } from '../../../../common/dto/permission.dto';
+import { PaginationDto } from '../../../../common/dto/pagination.dto';
 
 
 @Controller('permission-groups')
@@ -23,8 +25,8 @@ export class PermissionGroupController {
   constructor(private readonly service: PermissionGroupService) {}
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  findAll(@Query() query: PaginationDto) {
+    return this.service.findAll(query);
   }
 
   @Get(':id')
@@ -33,7 +35,6 @@ export class PermissionGroupController {
   }
 
   @Post()
-  @HttpCode(201)
   create(@Body() dto: CreatePermissionGroupDto) {
     return this.service.create(dto);
   }

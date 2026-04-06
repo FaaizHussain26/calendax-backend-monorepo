@@ -45,11 +45,13 @@ async createTenant(payload: Partial<TenantEntity>): Promise<TenantEntity> {
 }
 
   async updateTenant(id: string, payload: Partial<TenantEntity>) {
+    console.log("update tenant dto:",id,payload);
+    
     const updatedEntity = this.tenantRepository.update(id, payload);
     return updatedEntity;
   }
 
   async delete(id: string) {
-    return await this.tenantRepository.delete(id);
+    return await this.tenantRepository.delete(id); 
   }
 }

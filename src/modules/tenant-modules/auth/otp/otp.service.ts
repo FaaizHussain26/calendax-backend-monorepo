@@ -61,7 +61,7 @@ export class OtpService {
     code: string,
     purpose: OtpPurpose,
     tenantId: string,
-  ): Promise<{ verified: boolean; verificationId?: string; authToken?: any }> {
+  ): Promise<{ verified: boolean;user?:any; verificationId?: string; authToken?: any }> {
     const otp = await this.otpRepo.findLatestUnverified(email, purpose);
 
     if (!otp) {
@@ -102,6 +102,7 @@ export class OtpService {
 
       return {
         verified: true,
+        user:user,
         authToken: await this.authService.issueTokenForUser(user.id, tenantId), // ← use TokenService
       };
     } else if (purpose === OtpPurpose.RESET_PASSWORD) {

@@ -1,7 +1,8 @@
 // src/modules/tenant-modules/rbac/permission/permission.repository.ts
 import { Inject, Injectable, Scope } from '@nestjs/common';
-import { In, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { PermissionEntity } from './permission.entity';
+import { PaginationDto } from '../../../../common/dto/pagination.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class PermissionRepository {
@@ -17,13 +18,19 @@ export class PermissionRepository {
   }
 
   // ─── Find ─────────────────────────────────────────────────────────────────
+async findAll(query: PaginationDto): Promise<{ data: PermissionEntity[]; total: number; page: number; limit: number }> {
+  const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC', all = false } = query;
 
-  async findAll(): Promise<PermissionEntity[]> {
-    return this.repo.find({
-      relations: { group: true },
-      order: { createdAt: 'DESC' },
-    });
-  }
+  const [data, total] = await this.repo.findAndCount({
+    relations: { group: true },
+    where: search ? { name: ILike(`%${search}%`) } : {},
+    order: { [sortBy]: sortOrder },
+    ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
+  });
+
+  return { data, total, page, limit };
+}
+ 
 
   async findById(id: string): Promise<PermissionEntity | null> {
     return this.repo.findOne({

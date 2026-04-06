@@ -74,11 +74,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         permissions = parsed.map((p) => (typeof p === 'string' ? p : p.key));
       }
     }
+    console.log("user looged in attach token:",user.id,user.role,user.userType)
     return {
       id: user.id,
       role: user.role,
       tokenId: jti,
       exp: exp,
+      userType:user.userType,
       permissions,
     };
   }
@@ -135,7 +137,6 @@ export class JwtHelper {
       userType: user.userType ?? null,
       roleId: user.roleId ?? null,
     };
-
     // Store session
     await redis.set(
       `session:${jti}`,

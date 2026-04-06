@@ -11,6 +11,7 @@ import {
 } from '../../../../common/dto/permission.dto';
 import { HelperFunctions } from '../../../../common/utils/functions';
 import { PermissionRepository } from '../permission/permission.repository';
+import { PaginationDto } from '../../../../common/dto/pagination.dto';
 
 @Injectable()
 export class PermissionGroupService {
@@ -19,8 +20,8 @@ export class PermissionGroupService {
     private readonly permissionRepo: PermissionRepository,
   ) {}
 
-  async findAll() {
-    return this.permissionGroupRepo.findAll();
+  async findAll(query:PaginationDto) {
+    return this.permissionGroupRepo.findAll(query);
   }
 
   async findById(id: string) {
@@ -78,7 +79,7 @@ export class PermissionGroupService {
   async delete(id: string) {
     const group = await this.permissionGroupRepo.findById(id);
     if (!group) throw new NotFoundException('Permission group not found');
-    await this.permissionGroupRepo.softDelete(id);
+    await this.permissionGroupRepo.delete(id);
     return { message: 'Permission group deleted successfully' };
   }
 

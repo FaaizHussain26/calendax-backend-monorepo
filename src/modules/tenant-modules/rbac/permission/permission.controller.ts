@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { PermissionService } from './permission.service';
@@ -18,15 +19,16 @@ import {
   UpdatePermissionDto,
 } from '../../../../common/dto/permission.dto';
 import { PermissionsGuard } from '../../../../common/guards/permission.guard';
+import { PaginationDto } from '../../../../common/dto/pagination.dto';
 
 @Controller('permissions')
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard,PermissionsGuard)
 export class PermissionController {
   constructor(private readonly service: PermissionService) {}
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  findAll(@Query() query: PaginationDto) {
+    return this.service.findAll(query);
   }
 
   @Get(':id')
