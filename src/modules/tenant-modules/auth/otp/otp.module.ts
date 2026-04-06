@@ -5,7 +5,7 @@ import { OtpService } from './otp.service';
 import { TenantModule } from '../../../tenant/tenant.module';
 import { OtpController } from './otp.controller';
 import { OtpRepository } from './otp.repository';
-import { provideTenantRepository } from '../../../../common/database/tenant/tenant-repository.helper';
+import { provideTenantRepository } from '../../../../database/tenant/tenant-repository.helper';
 import { OtpEntity } from './otp.entity';
 import { AuthModule } from '../auth.module';
 

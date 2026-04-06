@@ -1,7 +1,7 @@
 // src/modules/tenant-modules/user/user.module.ts
 import { Module } from '@nestjs/common';
 
-import { provideTenantRepository } from '../../../common/database/tenant/tenant-repository.helper';
+import { provideTenantRepository } from '../../../database/tenant/tenant-repository.helper';
 import { UserEntity } from './user.entity';
 import { UsersRepository } from './user.repository';
 import { TenantModule } from '../../tenant/tenant.module';

@@ -1,4 +1,4 @@
-// src/common/database/audit.service.ts
+// src/database/audit.service.ts
 import { Injectable } from '@nestjs/common';
 import { Db } from 'mongodb';
 export interface IAuditLog {

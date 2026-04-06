@@ -5,7 +5,7 @@ import { PermissionGroupService } from './permission-group.service';
 import { PermissionGroupRepository } from './permission-group.repository';
 import { PermissionGroupEntity } from './permission-group.entity';
 import { PermissionEntity } from '../permission/permission.entity';
-import { provideTenantRepository } from '../../../../common/database/tenant/tenant-repository.helper';
+import { provideTenantRepository } from '../../../../database/tenant/tenant-repository.helper';
 import { PermissionRepository } from '../permission/permission.repository';
 import { TenantModule } from '../../../tenant/tenant.module';
 

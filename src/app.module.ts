@@ -9,14 +9,14 @@ import configuration from './config/configuration';
 import { TenantModule } from './modules/tenant/tenant.module';
 import { DecryptPayloadMiddleware } from './middlewares/decrypt-payload.middleware';
 import { JwtCommonModule } from './common/jwt/jwt.module';
-import { SeederModule } from './common/database/master/seeder.module';
+import { SeederModule } from './database/master/seeder.module';
 import { TenantModulesModule } from './modules/tenant-modules/tenant-modules.module';
 import { AdminPermissionGroupModule } from './modules/permission-group/permission-group.module';
 import { AdminPermissionModule } from './modules/permission/permission.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuditInterceptor } from './interceptors/audit.interceptor';
-import { AuditModule } from './common/database/audit-logs/audit.module';
-import { MongoAdminModule } from './common/database/master/mongo-admin.module';
+import { AuditModule } from './database/audit-logs/audit.module';
+import { MongoAdminModule } from './database/master/mongo-admin.module';
 import { TenantContextMiddleware } from './middlewares/tenant-context.middleware';
 
 @Module({
@@ -29,16 +29,30 @@ import { TenantContextMiddleware } from './middlewares/tenant-context.middleware
     TypeOrmModule.forRootAsync({
       name: 'master',
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
+useFactory: (config: ConfigService) => {
+    const url = config.get<string>('DATABASE_URL');
+    if (url) {
+      return {
         type: 'postgres',
-        host: config.get<string>('DB_HOST'),
-        port: config.get<number>('DB_PORT'),
-        username: config.get<string>('DB_USER'),
-        password: config.get<string>('DB_PASSWORD'),
-        database: config.get<string>('DB_NAME'),
+        url,
         autoLoadEntities: true,
-        synchronize: true,
-      }),
+        synchronize: false, 
+        ssl: { rejectUnauthorized: false },
+      };
+    }
+
+    // Development — use individual credentials
+    return {
+      type: 'postgres',
+      host: config.get<string>('DB_HOST'),
+      port: config.get<number>('DB_PORT'),
+      username: config.get<string>('DB_USER'),
+      password: config.get<string>('DB_PASSWORD'),
+      database: config.get<string>('DB_NAME'),
+      autoLoadEntities: true,
+      synchronize: true,
+    };
+  },
     }),
     AuditModule,
     MongoAdminModule,

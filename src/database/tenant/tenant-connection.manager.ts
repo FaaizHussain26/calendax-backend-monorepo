@@ -2,14 +2,14 @@
 import { Injectable, NotFoundException, OnModuleDestroy } from '@nestjs/common';
 import { LRUCache } from 'lru-cache';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { TenantRepository } from '../../../modules/tenant/tenant.repository';
+import { TenantRepository } from '../../modules/tenant/tenant.repository';
 import { ConfigService } from '@nestjs/config';
-import { TenantEntity } from '../../../modules/tenant/tenant.entity';
-import { PermissionGroupEntity } from '../../../modules/tenant-modules/rbac/permission-group/permission-group.entity';
-import { PermissionEntity } from '../../../modules/tenant-modules/rbac/permission/permission.entity';
-import { RoleEntity } from '../../../modules/tenant-modules/rbac/role/role.entity';
-import { UserEntity } from '../../../modules/tenant-modules/user/user.entity';
-import { OtpEntity } from '../../../modules/tenant-modules/auth/otp/otp.entity';
+import { TenantEntity } from '../../modules/tenant/tenant.entity';
+import { PermissionGroupEntity } from '../../modules/tenant-modules/rbac/permission-group/permission-group.entity';
+import { PermissionEntity } from '../../modules/tenant-modules/rbac/permission/permission.entity';
+import { RoleEntity } from '../../modules/tenant-modules/rbac/role/role.entity';
+import { UserEntity } from '../../modules/tenant-modules/user/user.entity';
+import { OtpEntity } from '../../modules/tenant-modules/auth/otp/otp.entity';
 import { Db, MongoClient } from 'mongodb';
 export type TenantConnection = {
   sql: DataSource;

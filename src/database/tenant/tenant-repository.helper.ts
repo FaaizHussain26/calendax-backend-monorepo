@@ -2,7 +2,8 @@ import { Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { ObjectType } from 'typeorm';
 import { Db } from 'mongodb';
-import { TenantRequest } from '../../interfaces/request.interface';
+import { TenantRequest } from '../../common/interfaces/request.interface';
+
 export function provideTenantRepository<T>(entity: ObjectType<T>) {
   return {
     provide: `${entity.name}Repository`,
