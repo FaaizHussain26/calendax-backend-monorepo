@@ -1,5 +1,5 @@
 // src/modules/tenant-modules/user/user.module.ts
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 
 import { provideTenantRepository } from '../../../database/tenant/tenant-repository.helper';
 import { UserEntity } from './user.entity';
@@ -9,9 +9,10 @@ import { UsersController } from './user.controller';
 import { UsersService } from './user.service';
 import { RoleModule } from '../rbac/role/role.module';
 import { PermissionModule } from '../rbac/permission/permission.module';
+import { SiteModule } from '../site/site.module';
 
 @Module({
-  imports: [TenantModule, RoleModule, PermissionModule],
+  imports: [TenantModule, RoleModule, PermissionModule,   forwardRef(() => SiteModule)],
   controllers: [UsersController],
   providers: [UsersService, UsersRepository, provideTenantRepository(UserEntity)],
   exports: [UsersService, UsersRepository],

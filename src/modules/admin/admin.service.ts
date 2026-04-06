@@ -21,6 +21,7 @@ import { JwtHelper } from '../../common/jwt/jwt.provider';
 import { JwtPayload, TokenUser } from '../../common/interfaces/request.interface';
 import { PageService } from '../page/page.service';
 import { PageWithPermissions } from '../../common/interfaces/page-permissions.interface';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Injectable()
 export class AdminService {
@@ -65,8 +66,9 @@ export class AdminService {
     );
   }
 
-  async getAllAdmins() {
-    return this.adminRepository.findAll();
+  async getAllAdmins(query:PaginationDto,userId:string) {
+    console.log("userId:",userId)
+    return this.adminRepository.findAll(query,userId);
   }
 
   async getAdminById(id: string) {
@@ -110,7 +112,7 @@ export class AdminService {
   async deleteAdmin(id: string) {
     const existing = await this.adminRepository.findById(id);
     if (!existing) throw new NotFoundException('Admin not found');
-    await this.adminRepository.softDelete(id);
+    await this.adminRepository.delete(id);
     return { message: 'Admin deleted successfully' };
   }
 

@@ -1,12 +1,14 @@
 // src/modules/admin/admin.repository.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Not, Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { AdminEntity } from './entities/admin.entity';
 import { AdminPermissions } from './entities/admin-permissions.entity';
 import { AdminResponseDto } from './admin.dto';
 import { PageRepository } from '../page/page.repository';
+import { PaginationDto } from '../../common/dto/pagination.dto';
+import { AdminRoles } from '../../enums/admin.enum';
 
 @Injectable()
 export class AdminRepository {
@@ -20,13 +22,29 @@ export class AdminRepository {
 
   // ─── Admin ────────────────────────────────────────────────────────────────
 
-  async findAll(): Promise<AdminResponseDto[]> {
-    const admins = await this.adminRepo.find({
-      order: { createdAt: 'DESC' },
+  async findAll(
+    query: PaginationDto,
+    userId: string,
+  ): Promise<{ data: AdminResponseDto[]; total: number; page: number; limit: number }> {
+    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC', all = false } = query;
+    const baseWhere = { id: Not(userId), role: Not(AdminRoles.SUPER_ADMIN) };
+    const [admins, total] = await this.adminRepo.findAndCount({
+      where: search
+        ? [
+            { ...baseWhere, name: ILike(`%${search}%`) },
+            { ...baseWhere, email: ILike(`%${search}%`) },
+          ]
+        : baseWhere,
+      order: { [sortBy]: sortOrder },
+      ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
     });
-    return plainToInstance(AdminResponseDto, admins, {
-      excludeExtraneousValues: true,
-    });
+
+    return {
+      data: admins,
+      total,
+      page,
+      limit,
+    };
   }
 
   async findById(id: string): Promise<AdminEntity | null> {
@@ -63,7 +81,10 @@ export class AdminRepository {
   async softDelete(id: string): Promise<void> {
     await this.adminRepo.softDelete(id);
   }
-
+  async delete(id: string): Promise<void> {
+    await this.adminRepo.delete(id);
+  }
+  
   // ─── Permissions ──────────────────────────────────────────────────────────
 
   async findPermissions(adminId: string): Promise<AdminPermissions[]> {

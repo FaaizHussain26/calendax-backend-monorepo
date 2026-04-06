@@ -14,6 +14,7 @@ import {
 import { TenantUserRoles } from '../../../enums/tenant.enum';
 import { PermissionEntity } from '../rbac/permission/permission.entity';
 import { RoleEntity } from '../rbac/role/role.entity';
+import { Site } from '../site/site.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -71,6 +72,9 @@ export class UserEntity {
     inverseJoinColumn: { name: 'permissionId', referencedColumnName: 'id' },
   })
   permissions: PermissionEntity[];
+
+  @ManyToMany(() => Site, (site) => site.siteUsers)
+  assignedSites: Site[];
 
   @CreateDateColumn()
   createdAt: Date;

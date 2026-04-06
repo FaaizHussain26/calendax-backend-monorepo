@@ -225,8 +225,10 @@ export class TenantService {
       // Simply drop the database using the master client
       await this.mongoAdmin.clientInstance.db(dbName).dropDatabase();
       console.log(`Successfully dropped Mongo DB: ${dbName}`);
-    } catch (e) {
-      console.warn(`Mongo cleanup warning: ${e.message}`);
+    } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+
+      console.warn(`Mongo cleanup warning: ${err.message}`);
     }
   }
   private async provisionDatabase(dbName: string, dbUser: string, dbPassword: string) {
@@ -273,7 +275,9 @@ export class TenantService {
       // Note: No authSource=dbName here because we are using the Master User
       return `mongodb+srv://${user}:${pass}@${host}/${dbName}?retryWrites=true&w=majority`;
     } catch (error) {
-      throw new Error(`Mongo Provisioning Failed: ${error.message}`);
+        const err = error instanceof Error ? error : new Error(String(error));
+
+      throw new Error(`Mongo Provisioning Failed: ${err?.message}`);
     }
   }
   private async deprovisionDatabase(dbName: string, dbUser: string) {
