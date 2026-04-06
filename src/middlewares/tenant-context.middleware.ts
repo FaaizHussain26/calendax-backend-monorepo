@@ -26,7 +26,7 @@ export class TenantContextMiddleware implements NestMiddleware {
           req.tenantConnection = await this.connectionManager.getConnection(tenant);
         }
       } catch (error) {
-        console.error('Tenant Middleware Error:', error.message);
+        console.error('Tenant Middleware Error:', );
       }
     }
 
