@@ -36,7 +36,7 @@ useFactory: (config: ConfigService) => {
         type: 'postgres',
         url,
         autoLoadEntities: true,
-        synchronize: false, 
+        synchronize:config.get<string>('environment')==="production"? false:true, 
         ssl: { rejectUnauthorized: false },
       };
     }
