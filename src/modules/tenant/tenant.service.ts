@@ -10,7 +10,7 @@ import { TenantRepository } from './tenant.repository';
 import { CreateTenantDto, findTenantDto, TenantResponseDto, UpdateTenantDto } from './tenant.dto';
 import { plainToInstance } from 'class-transformer';
 import { entityNotFound } from '../../common/exceptions/notFound.exception';
-import { TenantConnectionManager } from '../../common/database/tenant/tenant-connection.manager';
+import { TenantConnectionManager } from '../../database/tenant/tenant-connection.manager';
 import { ConfigService } from '@nestjs/config';
 import { HelperFunctions } from '../../common/utils/functions';
 import { TenantStatus, TenantUserRoles } from '../../enums/tenant.enum';
@@ -24,7 +24,7 @@ import { PermissionEntity } from '../tenant-modules/rbac/permission/permission.e
 import { RoleEntity } from '../tenant-modules/rbac/role/role.entity';
 import { UserEntity } from '../tenant-modules/user/user.entity';
 import * as bcrypt from 'bcrypt';
-import { MongoAdminService } from '../../common/database/master/mongo-admin.service';
+import { MongoAdminService } from '../../database/master/mongo-admin.service';
 @Injectable()
 export class TenantService {
   constructor(

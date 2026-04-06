@@ -2,7 +2,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Response, NextFunction } from 'express';
 import { TenantRepository } from '../modules/tenant/tenant.repository';
-import { TenantConnectionManager } from '../common/database/tenant/tenant-connection.manager';
+import { TenantConnectionManager } from '../database/tenant/tenant-connection.manager';
 import { TenantStatus } from '../enums/tenant.enum';
 import { TenantRequest } from '../common/interfaces/request.interface';
 
