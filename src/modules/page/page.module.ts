@@ -17,7 +17,7 @@ const services = [PageService];
     ],
     controllers,
     providers: [...services, ...repostories],
-    exports:[PageRepository]
+    exports:[PageService,PageRepository]
 })
 
 export class PageModule{}

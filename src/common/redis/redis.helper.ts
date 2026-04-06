@@ -10,7 +10,7 @@ export class RedisHelper {
     this.client = this.redisService.getClient();
   }
 
-  async set(key: string, value: any, ttlSeconds?: number): Promise<void> {
+  async set(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
     const serialized = JSON.stringify(value);
     if (ttlSeconds) {
       await this.client.set(key, serialized, 'EX', ttlSeconds);
@@ -61,7 +61,7 @@ export class RedisHelper {
   }
 
 
-  async hset(key: string, field: string, value: any): Promise<void> {
+  async hset(key: string, field: string, value: unknown): Promise<void> {
     await this.client.hset(key, field, JSON.stringify(value));
   }
 

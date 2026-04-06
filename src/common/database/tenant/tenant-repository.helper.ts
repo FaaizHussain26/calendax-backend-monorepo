@@ -1,13 +1,14 @@
 import { Scope } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { ObjectType } from "typeorm";
-
+import { Db } from "mongodb";
+import { TenantRequest } from "../../interfaces/request.interface";
 export function provideTenantRepository<T>(entity: ObjectType<T>) {
   return {
     provide: `${entity.name}Repository`,
     scope: Scope.REQUEST,
     inject: [REQUEST],
-   useFactory: (req: any) => {
+   useFactory: (req: TenantRequest) => {
       const sqlConnection = req.tenantConnection?.sql;
       // console.log("tenant conn:",req.tenantConnection)
       if (!sqlConnection) {
@@ -27,5 +28,5 @@ export const TENANT_MONGO_DB = {
   provide: 'TENANT_MONGO_DB',
   scope: Scope.REQUEST,
   inject: [REQUEST],
-  useFactory: (req: any) => req.tenantConnection?.mongo,
+  useFactory: (req: TenantRequest): Db | undefined => req.tenantConnection?.mongo, 
 };

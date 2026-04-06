@@ -18,12 +18,16 @@ import {
   UpdateAdminDto,
 } from './admin.dto';
 import { JwtHelper } from '../../common/jwt/jwt.provider';
+import { JwtPayload, TokenUser } from '../../common/interfaces/request.interface';
+import { PageService } from '../page/page.service';
+import { PageWithPermissions } from '../../common/interfaces/page-permissions.interface';
 
 @Injectable()
 export class AdminService {
   constructor(
     private readonly adminRepository: AdminRepository,
     private readonly jwtHelper: JwtHelper,
+    private readonly pageService:PageService
   ) {}
 
   async logIn(email: string, password: string) {
@@ -144,17 +148,29 @@ export class AdminService {
   }
 
   async getAdminPermissions(adminId: string) {
-    console.log("controller hit")
+    console.log('controller hit');
 
     const admin = await this.adminRepository.findById(adminId);
     if (!admin) throw new NotFoundException('Admin not found');
     return this.adminRepository.findPermissions(adminId);
   }
-  async findAllPagesWithAdminPermissions(user) {
-      try {
-        return await this.adminRepository.findAllPagesWithAdminPermissions(user.id);
-      } catch (error: any) {
-        throw new BadRequestException(error.message);
-      }
-    }
+async findAllPagesWithAdminPermissions(user): Promise<PageWithPermissions[]> {
+  const [pages, adminPermissions] = await Promise.all([
+    this.pageService.findAllPages({all:true}),
+    this.adminRepository.findPermissions(user.id),
+  ]);
+
+  return pages?.data?.map((page) => {
+    const permission = adminPermissions.find((p) => p.pageId === page.id);
+    return {
+      ...page,
+      permissions: {
+        read: permission?.read ?? false,
+        write: permission?.write ?? false,
+        update: permission?.update ?? false,
+        delete: permission?.delete ?? false,
+      },
+    };
+  });
+}
 }

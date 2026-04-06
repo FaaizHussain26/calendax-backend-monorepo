@@ -17,14 +17,12 @@ import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { HelperFunctions } from '../utils/functions';
 import { SignOptions } from 'jsonwebtoken';
-
-export interface JwtPayload {
-  sub: string;
-  role: string;
-  jti: string;
-  exp?: number;
-  tenantId?: string;
-}
+import {
+  CachedPermission,
+  JwtPayload,
+  SessionData,
+  TokenUser,
+} from '../interfaces/request.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -61,26 +59,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!session) {
       throw new UnauthorizedException('Session expired');
     }
-    const user = JSON.parse(session);
-
+    const user = JSON.parse(session) as SessionData;
     // if (!user.isActive) {
     //   throw new UnauthorizedException('User inactive');
     // }
 
     // 3. Get permissions
-    let permissions: any[] = [];
+    let permissions: string[] = [];
 
-    if (user.role === AdminRoles.ADMIN) {
-      const cachedPerms = await redis.get(`admin_perm:${user.id}`);
+    if (user.role !== AdminRoles.SUPER_ADMIN) {
+      const cachedPerms = await redis.get(`perm:${user.id}`);
       if (cachedPerms) {
-        const parsed = JSON.parse(cachedPerms);
-        // ✅ handle both cases — array of strings OR array of objects
-        permissions = parsed.map((p: any) =>
-          typeof p === 'string' ? p : p.key,
-        );
+        const parsed = JSON.parse(cachedPerms) as (string | CachedPermission)[];
+        permissions = parsed.map((p) => (typeof p === 'string' ? p : p.key));
       }
     }
-
     return {
       id: user.id,
       role: user.role,
@@ -119,7 +112,7 @@ export class JwtHelper {
     private readonly redisService: RedisService,
   ) {}
 
-  async issueToken(user: any, permissions?: any[]) {
+  async issueToken(user: TokenUser, permissions?: string[]) {
     const redis = this.redisService.getClient();
     const jti = randomUUID();
     const refreshJti = randomUUID();

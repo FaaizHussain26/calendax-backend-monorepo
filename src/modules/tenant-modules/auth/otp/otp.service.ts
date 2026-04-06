@@ -21,8 +21,8 @@ export class OtpService {
     private readonly otpRepo: OtpRepository,
     private readonly authService: AuthService,
     private readonly userRepo: UsersRepository,
-    private readonly config:ConfigService,
-    private readonly redisHelper:RedisHelper
+    private readonly config: ConfigService,
+    private readonly redisHelper: RedisHelper,
     // private readonly emailService: EmailService,
   ) {}
 
@@ -61,7 +61,7 @@ export class OtpService {
     code: string,
     purpose: OtpPurpose,
     tenantId: string,
-  ): Promise<{ verified: boolean;verificationId?:string; authToken?: any }> {
+  ): Promise<{ verified: boolean; verificationId?: string; authToken?: any }> {
     const otp = await this.otpRepo.findLatestUnverified(email, purpose);
 
     if (!otp) {
@@ -77,7 +77,10 @@ export class OtpService {
         'Too many attempts. Please request a new OTP',
       );
     }
-    if (this.config.get<string>('NODE_ENV') === 'development'&&code == '1234') {
+    if (
+      this.config.get<string>('NODE_ENV') === 'development' &&
+      code == '1234'
+    ) {
       console.log('Bypassing default otp');
     } else {
       const isValid = await bcrypt.compare(code, otp.code);
@@ -92,26 +95,22 @@ export class OtpService {
       }
     }
     await this.otpRepo.update(otp.id, { verified: true });
-    await this.invalidate(email, purpose); 
-     if (purpose === OtpPurpose.VERIFICATION) {
-    const user = await this.userRepo.findByEmail(email);
-    if (!user) return { verified: true };
+    await this.invalidate(email, purpose);
+    if (purpose === OtpPurpose.VERIFICATION) {
+      const user = await this.userRepo.findByEmail(email);
+      if (!user) return { verified: true };
 
-    return {
-      verified: true,
-      authToken: await this.authService.issueTokenForUser(user.id, tenantId), // ← use TokenService
-    };
+      return {
+        verified: true,
+        authToken: await this.authService.issueTokenForUser(user.id, tenantId), // ← use TokenService
+      };
+    } else if (purpose === OtpPurpose.RESET_PASSWORD) {
+      let key = randomUUID();
+      await this.redisHelper.set(`reset_password:${key}`, otp.email, 15 * 60);
+      return { verified: true, verificationId: key };
+    }
+    return { verified: true };
   }
-else if(purpose===OtpPurpose.RESET_PASSWORD){
-  let key=randomUUID()
-await this.redisHelper.set(
-    `reset_password:${key}`,
-    otp.email,                          
-    15 * 60                           
-  );return {verified:true,verificationId:key}
-}
-  return { verified: true};
-}
 
   async invalidate(email: string, purpose: OtpPurpose): Promise<void> {
     await this.invalidateExisting(email, purpose);

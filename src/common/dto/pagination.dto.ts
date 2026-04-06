@@ -1,6 +1,13 @@
 // common/dto/pagination.dto.ts
 import { Type } from 'class-transformer';
-import { IsIn, IsOptional, IsPositive, IsString, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsOptional,
+  IsPositive,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class PaginationDto {
   @IsOptional()
@@ -13,7 +20,7 @@ export class PaginationDto {
   @IsPositive()
   limit?: number = 10;
 
-   @IsOptional()
+  @IsOptional()
   @IsString()
   search?: string;
 
@@ -24,4 +31,9 @@ export class PaginationDto {
   @IsOptional()
   @IsIn(['ASC', 'DESC'])
   sortOrder?: 'ASC' | 'DESC' = 'DESC';
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  all?: boolean;
 }

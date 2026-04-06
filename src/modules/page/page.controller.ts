@@ -21,7 +21,6 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { Permission } from '../../common/decorators/permission.decorator';
 import { AllRoles, PermissionNames } from '../../enums/system.enum';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-import type { RequestWithUser } from '../../common/interface/request-with-user';
 
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(AllRoles.SUPER_ADMIN, AllRoles.ADMIN)

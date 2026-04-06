@@ -7,7 +7,7 @@ export interface IAuditLog {
   actorEmail: string;  
   actorType: 'SUPER_ADMIN' | 'TENANT_USER';
   targetId?: string;   
-  payload: any;     
+  payload: unknown;     
   ipAddress: string;
   createdAt: Date;
 }

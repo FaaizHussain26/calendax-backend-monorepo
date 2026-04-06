@@ -5,6 +5,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { createDecipheriv, createCipheriv, randomBytes } from 'crypto';
+import { NextFunction } from 'express';
+import { EncryptedRequest } from '../common/interfaces/encryption.interface';
 
 @Injectable()
 export class DecryptPayloadMiddleware implements NestMiddleware {
@@ -14,7 +16,7 @@ export class DecryptPayloadMiddleware implements NestMiddleware {
     'hex',
   );
 
-  use(req: any, res: any, next: () => void) {
+  use(req: EncryptedRequest, res: Response, next: NextFunction) {
     if (req.body?.encryptedData) {
       try {
         const { iv, data } = req.body.encryptedData;

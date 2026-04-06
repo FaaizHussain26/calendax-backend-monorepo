@@ -7,49 +7,55 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
- 
+import { QueryFailedError } from 'typeorm';
+import { HttpErrorResponse } from '../common/interfaces/request.interface';
+
 @Catch()
 export class ErrorResponseFilter implements ExceptionFilter {
-    private readonly logger = new Logger('HTTP-EXCEPTION');
- 
-  catch(exception: any, host: ArgumentsHost) {
+  private readonly logger = new Logger('HTTP-EXCEPTION');
+
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
- 
+
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
-    let errorData: any = null;
- 
+    let errorData: string | null = null;
+
     // If it's an HttpException (BadRequest, Unauthorized, etc.)
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const errorResponse = exception.getResponse();
- 
+
       if (typeof errorResponse === 'string') {
         message = errorResponse;
       } else if (typeof errorResponse === 'object') {
-        message =
-          (errorResponse as any)?.message ||
-          exception.message ||
-          'Something went wrong';
-        errorData = (errorResponse as any)?.error || null;
+        const typed = errorResponse as HttpErrorResponse;
+        message = typed?.message || exception.message || 'Something went wrong';
+        errorData = typed?.error || null;
       }
-    } else if (exception.code === 11000 && exception?.keyValue) {
-      // ✅ Handle MongoDB duplicate key error
-      status = 400;
-      message = Object.keys(exception?.keyValue)
-        .map((key) => `${key}: ${exception?.keyValue[key]} already exists`)
-        .join(', ');
-    } else if (exception instanceof Error) {
-      message = exception.message;
+    } else if (exception instanceof QueryFailedError) {
+      const err = exception as QueryFailedError & {
+        code: string;
+        detail: string;
+      };
+
+      if (err.code === '23505') {
+        // PostgreSQL unique violation code
+        status = HttpStatus.BAD_REQUEST;
+        message = err.detail || 'Duplicate entry violation';
+      } else {
+        status = HttpStatus.INTERNAL_SERVER_ERROR;
+        message = 'Database error';
+      }
     }
     // 🔥 STRUCTURED JSON LOG
     this.logger.error(
       'HTTP_EXCEPTION',
       JSON.stringify({
         level: 'error',
-        service:'calendax-api',
+        service: 'calendax-api',
         method: request.method,
         path: request.url,
         statusCode: status,
@@ -58,7 +64,7 @@ export class ErrorResponseFilter implements ExceptionFilter {
         requestId: request.headers['x-request-id'] || null,
         ip: request.ip,
         userAgent: request.headers['user-agent'],
-        stack: exception?.stack,
+        stack: exception instanceof Error ? exception.stack : undefined,
       }),
     );
     return response.status(status).json({

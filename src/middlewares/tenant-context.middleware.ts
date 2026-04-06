@@ -4,6 +4,7 @@ import { Response, NextFunction } from 'express';
 import { TenantRepository } from '../modules/tenant/tenant.repository';
 import { TenantConnectionManager } from '../common/database/tenant/tenant-connection.manager';
 import { TenantStatus } from '../enums/tenant.enum';
+import { TenantRequest } from '../common/interfaces/request.interface';
 
 @Injectable()
 export class TenantContextMiddleware implements NestMiddleware {
@@ -12,12 +13,12 @@ export class TenantContextMiddleware implements NestMiddleware {
     private readonly connectionManager: TenantConnectionManager,
   ) {}
 
-  async use(req: any, res: Response, next: NextFunction) {
+  async use(req: TenantRequest, res: Response, next: NextFunction) {
     const tenantId = req.headers['x-tenant-id'] ?? req.subdomains?.[0];
 
     if (tenantId) {
       try {
-        const tenant = await this.tenantRepository.getByTenantId(tenantId);
+        const tenant = await this.tenantRepository.getByTenantId(tenantId?.toString());
         if (tenant && tenant.status === TenantStatus.ACTIVE) {
           req.tenant = tenant;
           req.tenantId = tenant.id;

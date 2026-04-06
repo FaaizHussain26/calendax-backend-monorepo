@@ -23,7 +23,7 @@ async find(){
       limit = 10,
       search,
       sortBy = 'createdAt',
-      sortOrder = 'DESC',
+      sortOrder = 'DESC',all = false
     } = query;
 
     const [data, total] = await this.pageRepository.findAndCount({
@@ -31,8 +31,7 @@ async find(){
         ? [{ name: ILike(`%${search}%`) }, { slug: ILike(`%${search}%`) }]
         : {},
       order: { [sortBy]: sortOrder },
-      skip: (page - 1) * limit,
-      take: limit,
+      ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
     });
 
     return { data, total, page, limit };

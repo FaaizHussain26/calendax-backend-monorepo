@@ -21,7 +21,7 @@ export class HelperFunctions {
       .replace(/-+$/, '');
   }
 
-  static parseBool = (val: any) => val === true || val === 'true';
+static parseBool = (val: boolean | string): boolean => val === true || val === 'true';
 
   static generateSecurePassword(length = 32): string {
     return randomBytes(length).toString('base64url').slice(0, length);

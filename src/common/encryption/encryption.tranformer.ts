@@ -3,7 +3,7 @@ import { ValueTransformer } from 'typeorm';
 import { EncryptionUtil } from './encryption.util';
 
 export const EncryptionTransformer: ValueTransformer = {
-  to(value: any): string {
+  to(value): string {
     if (value === null || value === undefined) return value;
     if (typeof value !== 'string') {
       // ✅ guard against non-string values

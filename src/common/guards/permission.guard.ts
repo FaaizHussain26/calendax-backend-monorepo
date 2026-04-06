@@ -13,6 +13,23 @@ import { AllRoles } from '../../enums/system.enum';
 export class PermissionsGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
+    private extractResource(path: string): string {
+    // '/api/patients/123' → 'patients'
+    const parts = path.replace(/^\/api\//, '').split('/');
+    return parts[0];
+  }
+
+  private extractAction(method: string): string {
+    const map: Record<string, string> = {
+      GET: 'read',
+      POST: 'write',
+      PATCH: 'update',
+      PUT: 'update',
+      DELETE: 'delete',
+    };
+    return map[method] ?? 'read';
+  }
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
     const user = req.user;
@@ -56,20 +73,5 @@ export class PermissionsGuard implements CanActivate {
 
     return true;
   }
-  private extractResource(path: string): string {
-    // '/api/patients/123' → 'patients'
-    const parts = path.replace(/^\/api\//, '').split('/');
-    return parts[0];
-  }
 
-  private extractAction(method: string): string {
-    const map: Record<string, string> = {
-      GET: 'read',
-      POST: 'write',
-      PATCH: 'update',
-      PUT: 'update',
-      DELETE: 'delete',
-    };
-    return map[method] ?? 'read';
-  }
 }

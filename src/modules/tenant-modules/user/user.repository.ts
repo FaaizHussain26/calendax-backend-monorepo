@@ -91,7 +91,7 @@ async findByIds(ids: string[]): Promise<UserEntity[]> {
   async update(id: string, payload: Partial<UserEntity>) {
     return this.repo.update(id, payload);
   }
-  async findOneAndUpdate(condition:any, payload: Partial<UserEntity>) {
+  async findOneAndUpdate(condition:FindOptionsWhere<UserEntity>, payload: Partial<UserEntity>) {
     return this.repo.update(condition, payload);
   }
 

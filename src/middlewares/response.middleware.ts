@@ -6,7 +6,22 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { MessageResponse, PaginatedResponse, PaginationMeta } from '../common/interfaces/response.interface';
  
+function isPaginated<T>(res: unknown): res is PaginatedResponse<T> {
+  return (
+    typeof res === 'object' &&
+    res !== null &&
+    'data' in res &&
+    'total' in res &&
+    'page' in res &&
+    'limit' in res
+  );
+}
+
+function isMessageResponse<T>(res: unknown): res is MessageResponse<T> {
+  return typeof res === 'object' && res !== null && 'message' in res;
+}
 @Injectable()
 export class ResponseInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
@@ -14,9 +29,9 @@ export class ResponseInterceptor implements NestInterceptor {
  
     return next.handle().pipe(
       map((response) => {
-        let metadata: any = null;
-        let data: any = response;
-        let message: string = '';
+     let metadata: PaginationMeta | null = null;
+        let data: unknown = response;
+        let message = '';
         if (response && typeof response === 'object' && 'message' in response) {
           message = response.message;
           data = response.data;
