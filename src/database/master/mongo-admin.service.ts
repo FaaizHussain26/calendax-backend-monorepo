@@ -19,7 +19,7 @@ export class MongoAdminService implements OnModuleInit, OnModuleDestroy {
       await this.client.connect();
       this.logger.log('Successfully connected to MongoDB Admin');
     } catch (error) {
-      this.logger.error('Failed to connect to MongoDB Admin',);
+      this.logger.error('Failed to connect to MongoDB Admin');
     }
   }
 

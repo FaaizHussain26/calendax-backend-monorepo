@@ -12,7 +12,7 @@ import { PermissionModule } from '../rbac/permission/permission.module';
 import { SiteModule } from '../site/site.module';
 
 @Module({
-  imports: [TenantModule, RoleModule, PermissionModule,   forwardRef(() => SiteModule)],
+  imports: [TenantModule, RoleModule, PermissionModule, forwardRef(() => SiteModule)],
   controllers: [UsersController],
   providers: [UsersService, UsersRepository, provideTenantRepository(UserEntity)],
   exports: [UsersService, UsersRepository],

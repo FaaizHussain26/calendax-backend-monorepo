@@ -35,9 +35,9 @@ export class CreateUserDto {
   permissionIds?: string[];
 
   @IsArray()
-@IsUUID('4', { each: true })
-@IsOptional()
-siteIds?: string[];
+  @IsUUID('4', { each: true })
+  @IsOptional()
+  siteIds?: string[];
 
   @IsBoolean()
   @IsOptional()

@@ -15,12 +15,7 @@ export class ProtocolRepository {
     const { search, page = 1, limit = 10, all = false } = query;
 
     const [data, total] = await this.repo.findAndCount({
-      where: search
-        ? [
-            { name: ILike(`%${search}%`) },
-            { protocolNumber: ILike(`%${search}%`) },
-          ]
-        : {},
+      where: search ? [{ name: ILike(`%${search}%`) }, { protocolNumber: ILike(`%${search}%`) }] : {},
       relations: { indication: true, sites: true },
       order: { createdAt: 'DESC' },
       ...(all ? {} : { skip: (page - 1) * limit, take: limit }),

@@ -10,16 +10,8 @@ import { SiteModule } from '../site/site.module';
 import { IndicationModule } from '../indication/indication.module';
 
 @Module({
-  imports: [
-    TenantModule,
-    IndicationModule,
-    forwardRef(() => SiteModule), 
-  ],
-  providers: [
-    ProtocolService,
-    ProtocolRepository,
-    provideTenantRepository(ProtocolEntity),
-  ],
+  imports: [TenantModule, IndicationModule, forwardRef(() => SiteModule)],
+  providers: [ProtocolService, ProtocolRepository, provideTenantRepository(ProtocolEntity)],
   controllers: [ProtocolController],
   exports: [ProtocolService, ProtocolRepository],
 })

@@ -6,4 +6,3 @@ export class CreateIndicationDto {
   name: string;
 }
 export class UpdateIndicationDto extends PartialType(CreateIndicationDto) {}
-

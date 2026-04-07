@@ -95,7 +95,7 @@ export class TenantService {
       });
       return tenant;
     } catch (error) {
-      // 5. Rollback everything if anything fails 
+      // 5. Rollback everything if anything fails
       await this.handleProvisioningFailure(tenant, dbName, slug, error);
       throw new InternalServerErrorException('Tenant provisioning failed. Changes have been rolled back.');
     }
@@ -225,7 +225,7 @@ export class TenantService {
       await this.mongoAdmin.clientInstance.db(dbName).dropDatabase();
       console.log(`Successfully dropped Mongo DB: ${dbName}`);
     } catch (error) {
-        const err = error instanceof Error ? error : new Error(String(error));
+      const err = error instanceof Error ? error : new Error(String(error));
 
       console.warn(`Mongo cleanup warning: ${err.message}`);
     }
@@ -274,7 +274,7 @@ export class TenantService {
       // Note: No authSource=dbName here because we are using the Master User
       return `mongodb+srv://${user}:${pass}@${host}/${dbName}?retryWrites=true&w=majority`;
     } catch (error) {
-        const err = error instanceof Error ? error : new Error(String(error));
+      const err = error instanceof Error ? error : new Error(String(error));
 
       throw new Error(`Mongo Provisioning Failed: ${err?.message}`);
     }

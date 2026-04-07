@@ -50,7 +50,16 @@ export class TenantConnectionManager implements OnModuleDestroy {
       password: tenant.dbPassword,
       database: tenant.dbName,
       synchronize: this.configService.get('environment') !== 'production',
-      entities: [PermissionGroupEntity, PermissionEntity, RoleEntity, UserEntity, OtpEntity,SiteEntity,ProtocolEntity,IndicationEntity],
+      entities: [
+        PermissionGroupEntity,
+        PermissionEntity,
+        RoleEntity,
+        UserEntity,
+        OtpEntity,
+        SiteEntity,
+        ProtocolEntity,
+        IndicationEntity,
+      ],
 
       migrations: [
         __dirname + '/../../modules/tenant-modules/migrations/**/*{.ts,.js}', // ← add this

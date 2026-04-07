@@ -1,10 +1,5 @@
 // src/common/interceptors/audit.interceptor.ts
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
 import { AuditService } from '../database/audit-logs/audit.service';
 import { MongoAdminService } from '../database/master/mongo-admin.service';
@@ -38,12 +33,7 @@ export class AuditInterceptor implements NestInterceptor {
             actorType = 'SUPER_ADMIN';
           }
           const logBody = { ...req.body };
-          const sensitiveFields = [
-            'password',
-            'currentPassword',
-            'newPassword',
-            'refreshToken',
-          ];
+          const sensitiveFields = ['password', 'currentPassword', 'newPassword', 'refreshToken'];
 
           sensitiveFields.forEach((field) => {
             if (logBody[field]) logBody[field] = '********';
@@ -61,7 +51,7 @@ export class AuditInterceptor implements NestInterceptor {
             },
           });
         } catch (error) {
-          console.error('Audit Interceptor Error:',);
+          console.error('Audit Interceptor Error:');
         }
       }),
     );

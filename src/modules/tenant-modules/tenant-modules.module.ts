@@ -10,7 +10,7 @@ import { ProtocolModule } from './protocol/protocol.module';
 // import { SiteModule } from './site/site.module';
 
 @Module({
-  imports: [AuthModule, OtpModule, RbacModule, UserModule,SiteModule,ProtocolModule,IndicationModule],
-  exports: [AuthModule, OtpModule, RbacModule, UserModule,SiteModule,ProtocolModule,IndicationModule],
+  imports: [AuthModule, OtpModule, RbacModule, UserModule, SiteModule, ProtocolModule, IndicationModule],
+  exports: [AuthModule, OtpModule, RbacModule, UserModule, SiteModule, ProtocolModule, IndicationModule],
 })
 export class TenantModulesModule {}

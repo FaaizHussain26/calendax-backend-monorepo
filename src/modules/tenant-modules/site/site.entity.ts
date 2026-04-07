@@ -61,10 +61,10 @@ export class SiteEntity {
 
   @Column({ nullable: true })
   indicationId: string;
-  @ManyToOne(() => IndicationEntity, (indication) => indication.sites,{
-  nullable: true,
-  onDelete: 'SET NULL',
-})
+  @ManyToOne(() => IndicationEntity, (indication) => indication.sites, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   indication: IndicationEntity;
 
   @ManyToMany(() => UserEntity, (user) => user.sites)

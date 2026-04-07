@@ -34,7 +34,7 @@ export class ProtocolService {
     return protocols;
   }
 
-  async create(dto: CreateProtocolDto): Promise<ProtocolEntity|null> {
+  async create(dto: CreateProtocolDto): Promise<ProtocolEntity | null> {
     const { siteIds, indicationId, ...protocolData } = dto;
 
     // check duplicate protocol number
@@ -60,7 +60,7 @@ export class ProtocolService {
     return this.protocolRepository.findById(protocol.id);
   }
 
-  async update(id: string, dto: UpdateProtocolDto): Promise<ProtocolEntity|null> {
+  async update(id: string, dto: UpdateProtocolDto): Promise<ProtocolEntity | null> {
     await this.findById(id);
     const { siteIds, indicationId, ...protocolData } = dto;
 

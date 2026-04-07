@@ -9,15 +9,8 @@ import { UserModule } from '../user/user.module'; // 👈 import UserModule for 
 import { TenantModule } from '../../tenant/tenant.module';
 
 @Module({
-  imports: [
-    TenantModule,
-     forwardRef(() => UserModule), 
-  ],
-  providers: [
-    SiteService,
-    SiteRepository,
-    provideTenantRepository(SiteEntity), 
-  ],
+  imports: [TenantModule, forwardRef(() => UserModule)],
+  providers: [SiteService, SiteRepository, provideTenantRepository(SiteEntity)],
   controllers: [SiteController],
   exports: [SiteService, SiteRepository],
 })

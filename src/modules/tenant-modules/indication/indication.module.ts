@@ -9,11 +9,7 @@ import { TenantModule } from '../../tenant/tenant.module';
 
 @Module({
   imports: [TenantModule],
-  providers: [
-    IndicationService,
-    IndicationRepository,
-    provideTenantRepository(IndicationEntity),
-  ],
+  providers: [IndicationService, IndicationRepository, provideTenantRepository(IndicationEntity)],
   controllers: [IndicationController],
   exports: [IndicationService, IndicationRepository],
 })

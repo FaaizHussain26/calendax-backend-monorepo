@@ -54,5 +54,4 @@ export class SiteService {
     await this.findById(id);
     await this.siteRepository.delete(id);
   }
-
 }

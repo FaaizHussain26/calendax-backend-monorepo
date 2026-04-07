@@ -23,16 +23,16 @@ export class IndicationRepository {
 
     return { data, total, page, limit };
   }
-  async findById(id:string){
-    return await this.repo.findOne({where:{id:id}})
+  async findById(id: string) {
+    return await this.repo.findOne({ where: { id: id } });
   }
-  async create(dto:Partial<IndicationEntity>):Promise<IndicationEntity>{
-    return this.repo.save(this.repo.create(dto))
+  async create(dto: Partial<IndicationEntity>): Promise<IndicationEntity> {
+    return this.repo.save(this.repo.create(dto));
   }
-  async findOneByCondition(condition:FindOptionsWhere<IndicationEntity>):Promise<IndicationEntity|null>{
-    return this.repo.findOne({where:condition})
+  async findOneByCondition(condition: FindOptionsWhere<IndicationEntity>): Promise<IndicationEntity | null> {
+    return this.repo.findOne({ where: condition });
   }
-   async update(id: string, data: Partial<IndicationEntity>): Promise<IndicationEntity | null> {
+  async update(id: string, data: Partial<IndicationEntity>): Promise<IndicationEntity | null> {
     await this.repo.update(id, data);
     return this.findById(id);
   }
@@ -43,5 +43,4 @@ export class IndicationRepository {
   async delete(id: string): Promise<void> {
     await this.repo.delete(id);
   }
-
 }

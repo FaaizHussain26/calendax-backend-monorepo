@@ -74,12 +74,12 @@ export class UserEntity {
   permissions: PermissionEntity[];
 
   @ManyToMany(() => SiteEntity, (site) => site.users)
-@JoinTable({
-  name: 'user_sites',
-  joinColumn: { name: 'userId', referencedColumnName: 'id' },
-  inverseJoinColumn: { name: 'siteId', referencedColumnName: 'id' },
-})
-sites: SiteEntity[];
+  @JoinTable({
+    name: 'user_sites',
+    joinColumn: { name: 'userId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'siteId', referencedColumnName: 'id' },
+  })
+  sites: SiteEntity[];
 
   @CreateDateColumn()
   createdAt: Date;

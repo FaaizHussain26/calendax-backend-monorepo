@@ -42,8 +42,8 @@ export class AdminController {
 
   @Roles(AdminRoles.SUPER_ADMIN)
   @Get()
-  async getAll(@Query() query:PaginationDto, @Req() req:RequestWithUser) {
-    return this.adminService.getAllAdmins(query,req.user.id);
+  async getAll(@Query() query: PaginationDto, @Req() req: RequestWithUser) {
+    return this.adminService.getAllAdmins(query, req.user.id);
   }
 
   @Roles(AdminRoles.SUPER_ADMIN)

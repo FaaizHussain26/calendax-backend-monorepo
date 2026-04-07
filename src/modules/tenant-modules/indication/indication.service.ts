@@ -13,25 +13,25 @@ export class IndicationService {
   async findAll(query: PaginationDto) {
     return this.repository.findAll(query);
   }
-    async findById(id: string): Promise<IndicationEntity> {
+  async findById(id: string): Promise<IndicationEntity> {
     const indication = await this.repository.findById(id);
     if (!indication) throw new NotFoundException('Indication not found');
     return indication;
   }
-  async create(dto: CreateIndicationDto) :Promise<IndicationEntity> {
+  async create(dto: CreateIndicationDto): Promise<IndicationEntity> {
     const slug = HelperFunctions.generateSlug(dto.name);
     const existing = await this.repository.findOneByCondition({ slug: slug });
     if (existing) throw new ConflictException('Site Already Exists with this name');
-   return await this.repository.create({ ...dto, slug });
+    return await this.repository.create({ ...dto, slug });
   }
-  async update(id: string, dto: UpdateIndicationDto): Promise<IndicationEntity|null> {
+  async update(id: string, dto: UpdateIndicationDto): Promise<IndicationEntity | null> {
     await this.findById(id);
 
     const updateData: Partial<IndicationEntity> = {};
 
     if (dto.name) {
       const slug = HelperFunctions.generateSlug(dto.name);
-      const existing = await this.repository.findOneByCondition({slug:slug});
+      const existing = await this.repository.findOneByCondition({ slug: slug });
       if (existing && existing.id !== id) {
         throw new ConflictException('Indication already exists with this name');
       }

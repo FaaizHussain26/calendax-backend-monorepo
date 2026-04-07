@@ -84,7 +84,7 @@ export class AdminRepository {
   async delete(id: string): Promise<void> {
     await this.adminRepo.delete(id);
   }
-  
+
   // ─── Permissions ──────────────────────────────────────────────────────────
 
   async findPermissions(adminId: string): Promise<AdminPermissions[]> {
