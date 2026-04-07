@@ -7,6 +7,9 @@ import { PermissionRepository } from '../rbac/permission/permission.repository';
 import { CreateUserDto, UpdateUserDto, UserQueryDto } from './user.dto';
 import { HelperFunctions } from '../../../common/utils/functions';
 import { PermissionEntity } from '../rbac/permission/permission.entity';
+import { ConfigService } from '@nestjs/config';
+import { Site } from '../site/site.entity';
+import { SiteService } from '../site/site.service';
 
 @Injectable()
 export class UsersService {
@@ -14,6 +17,8 @@ export class UsersService {
     private readonly usersRepository: UsersRepository,
     private readonly roleRepository: RoleRepository,
     private readonly permissionRepository: PermissionRepository,
+    private readonly configService:ConfigService,
+      private readonly siteService: SiteService,
   ) {}
 
   async findAll(query: UserQueryDto) {
@@ -30,7 +35,6 @@ export class UsersService {
     const existing = await this.usersRepository.findByEmail(dto.email);
     if (existing) throw new ConflictException('Email already in use');
 
-    // validate role
     if (dto.roleId) {
       const role = await this.roleRepository.findById(dto.roleId);
       if (!role) throw new NotFoundException('Role not found');
@@ -44,8 +48,14 @@ export class UsersService {
         throw new NotFoundException('One or more permissions not found');
       }
     }
-
-    const rawPassword = HelperFunctions.generateSecurePassword(12);
+let sites: Site[] = [];
+  if (dto.siteIds?.length) {
+    sites = await this.siteService.findByIds(dto.siteIds);
+    if (sites.length !== dto.siteIds.length) {
+      throw new NotFoundException('One or more sites not found');
+    }
+  }
+    const rawPassword = this.configService.get<string>('defaultPassword');
     const hashed = await bcrypt.hash(rawPassword, 10);
 
     const user = await this.usersRepository.create({
@@ -68,7 +78,6 @@ export class UsersService {
       email: user.email,
       userType: user.userType,
       roleId: user.roleId,
-      tempPassword: rawPassword,
     };
   }
 

@@ -27,6 +27,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { AdminRoles } from '../../enums/admin.enum';
 import type { RequestWithUser } from '../../common/interfaces/request.interface';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -41,8 +42,8 @@ export class AdminController {
 
   @Roles(AdminRoles.SUPER_ADMIN)
   @Get()
-  async getAll() {
-    return this.adminService.getAllAdmins();
+  async getAll(@Query() query:PaginationDto, @Req() req:RequestWithUser) {
+    return this.adminService.getAllAdmins(query,req.user.id);
   }
 
   @Roles(AdminRoles.SUPER_ADMIN)

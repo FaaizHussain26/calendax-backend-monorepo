@@ -1,5 +1,5 @@
 // src/modules/tenant-modules/user/user.dto.ts
-import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, IsUUID, Length } from 'class-validator';
+import { IsArray, IsBoolean, IsEmail, IsEnum, IsOptional, IsString, IsUUID, Length } from 'class-validator';
 import { TenantUserRoles } from '../../../enums/tenant.enum';
 
 export class CreateUserDto {
@@ -33,6 +33,11 @@ export class CreateUserDto {
   @IsUUID('4', { each: true })
   @IsOptional()
   permissionIds?: string[];
+
+  @IsArray()
+@IsUUID('4', { each: true })
+@IsOptional()
+siteIds?: string[];
 
   @IsBoolean()
   @IsOptional()
