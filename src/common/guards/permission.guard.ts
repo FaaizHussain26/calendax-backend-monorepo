@@ -36,7 +36,6 @@ export class PermissionsGuard implements CanActivate {
     if (!user) {
       throw new ForbiddenException('Unauthenticated');
     }
-    console.log('user role in permissions:', req.tenantId, user.role, user.userType);
     // ✅ SUPER ADMIN = FULL ACCESS
     if (user.role === Roles.SUPER_ADMIN) {
       return true;

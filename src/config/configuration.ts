@@ -1,7 +1,7 @@
 export default () => ({
   environment: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT!, 10) || 3000,
-  defaultPassword: 'Assd@123',
+  defaultPassword: process.env.DEFAULT_PASSWORD,
 
   jwt: {
     secret: process.env.JWT_ADMIN_SECRET_KEY || 'dev_secret',
@@ -27,5 +27,13 @@ export default () => ({
       user: process.env.MONGODB_USER,
       password: process.env.MONGODB_PASSWORD,
     },
+    postgres:{
+      host:process.env.PGHOST,
+      port:process.env.PGPORT,
+      user:process.env.PGUSER,
+      password:process.env.PGPASSWORD,
+      db:process.env.PGDATABASE,
+      url:process.env.DATABASE_URL||''
+    }
   },
 });

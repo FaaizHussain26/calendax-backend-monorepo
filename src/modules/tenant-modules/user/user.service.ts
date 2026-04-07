@@ -8,7 +8,7 @@ import { CreateUserDto, UpdateUserDto, UserQueryDto } from './user.dto';
 import { HelperFunctions } from '../../../common/utils/functions';
 import { PermissionEntity } from '../rbac/permission/permission.entity';
 import { ConfigService } from '@nestjs/config';
-import { Site } from '../site/site.entity';
+import { SiteEntity } from '../site/site.entity';
 import { SiteService } from '../site/site.service';
 
 @Injectable()
@@ -48,7 +48,7 @@ export class UsersService {
         throw new NotFoundException('One or more permissions not found');
       }
     }
-let sites: Site[] = [];
+let sites: SiteEntity[] = [];
   if (dto.siteIds?.length) {
     sites = await this.siteService.findByIds(dto.siteIds);
     if (sites.length !== dto.siteIds.length) {

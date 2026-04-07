@@ -5,6 +5,7 @@ import {
   IsEmail,
   IsArray,
   IsUUID,
+  IsNumber,
 } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 
@@ -26,6 +27,10 @@ export class CreateSiteDto {
   @IsString()
   @IsOptional()
   phoneNumber?: string;
+
+  @IsNumber()
+  @IsOptional()
+  patientCount?: number;
 
   @IsString()
   @IsOptional()
@@ -52,12 +57,8 @@ export class CreateSiteDto {
   image?: string;
 
   @IsString()
-  @IsOptional()
-  indication?: string;
+  indicationId: string;
 
-  @IsArray()
-  @IsUUID('4', { each: true })
-  @IsOptional()
-  userIds?: string[]; 
+
 }
 export class UpdateSiteDto extends PartialType(CreateSiteDto) {}

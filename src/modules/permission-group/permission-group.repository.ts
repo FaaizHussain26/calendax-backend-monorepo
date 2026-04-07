@@ -11,18 +11,36 @@ export class AdminPermissionGroupRepository {
     private readonly repo: Repository<AdminPermissionGroupEntity>,
   ) {}
 
-  async create(payload: Partial<AdminPermissionGroupEntity>): Promise<AdminPermissionGroupEntity> {
+  async create(
+    payload: Partial<AdminPermissionGroupEntity>,
+  ): Promise<AdminPermissionGroupEntity> {
     return this.repo.save(this.repo.create(payload));
   }
 
   async findAll(
     query: PaginationDto,
-  ): Promise<{ data: AdminPermissionGroupEntity[]; total: number; page: number; limit: number }> {
-    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
+  ): Promise<{
+    data: AdminPermissionGroupEntity[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
+    } = query;
 
     const [data, total] = await this.repo.findAndCount({
       relations: { permissions: true },
-      where: search ? [{ name: ILike(`%${search}%`) }, { description: ILike(`%${search}%`) }] : {},
+      where: search
+        ? [
+            { name: ILike(`%${search}%`) },
+            { description: ILike(`%${search}%`) },
+          ]
+        : {},
       order: { [sortBy]: sortOrder },
       skip: (page - 1) * limit,
       take: limit,
@@ -42,7 +60,9 @@ export class AdminPermissionGroupRepository {
       where: { id: In(ids) },
     });
   }
-  async findDetailedByIds(ids: string[]): Promise<AdminPermissionGroupEntity[]> {
+  async findDetailedByIds(
+    ids: string[],
+  ): Promise<AdminPermissionGroupEntity[]> {
     return this.repo.find({
       where: { id: In(ids) },
       relations: { permissions: true },
@@ -65,7 +85,10 @@ export class AdminPermissionGroupRepository {
       order: { createdAt: 'DESC' },
     });
   }
-  async update(id: string, payload: Partial<AdminPermissionGroupEntity>): Promise<void> {
+  async update(
+    id: string,
+    payload: Partial<AdminPermissionGroupEntity>,
+  ): Promise<void> {
     await this.repo.update(id, payload);
   }
 

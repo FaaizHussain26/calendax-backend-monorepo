@@ -11,6 +11,9 @@ import { RoleEntity } from '../../modules/tenant-modules/rbac/role/role.entity';
 import { UserEntity } from '../../modules/tenant-modules/user/user.entity';
 import { OtpEntity } from '../../modules/tenant-modules/auth/otp/otp.entity';
 import { Db, MongoClient } from 'mongodb';
+import { SiteEntity } from '../../modules/tenant-modules/site/site.entity';
+import { ProtocolEntity } from '../../modules/tenant-modules/protocol/protocol.entity';
+import { IndicationEntity } from '../../modules/tenant-modules/indication/indication.entity';
 export type TenantConnection = {
   sql: DataSource;
   mongo: Db;
@@ -47,7 +50,7 @@ export class TenantConnectionManager implements OnModuleDestroy {
       password: tenant.dbPassword,
       database: tenant.dbName,
       synchronize: this.configService.get('environment') !== 'production',
-      entities: [PermissionGroupEntity, PermissionEntity, RoleEntity, UserEntity, OtpEntity],
+      entities: [PermissionGroupEntity, PermissionEntity, RoleEntity, UserEntity, OtpEntity,SiteEntity,ProtocolEntity,IndicationEntity],
 
       migrations: [
         __dirname + '/../../modules/tenant-modules/migrations/**/*{.ts,.js}', // ← add this

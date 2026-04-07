@@ -1,29 +1,22 @@
 // site.repository.ts
 import { Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { FindOptionsWhere, ILike, In, Repository } from 'typeorm';
-import { Site } from './site.entity';
+import { SiteEntity } from './site.entity';
 import { UserEntity } from '../user/user.entity';
+import { PaginationDto } from '../../../common/dto/pagination.dto';
 
 @Injectable({ scope: Scope.REQUEST }) // 👈 REQUEST scope — tenant DB connection
 export class SiteRepository {
   constructor(
-    @Inject(`${Site.name}Repository`)
-    private readonly repo: Repository<Site>,
+    @Inject(`${SiteEntity.name}Repository`)
+    private readonly repo: Repository<SiteEntity>,
   ) {}
 
-  async findAll(query: {
-    search?: string;
-    page?: number;
-    limit?: number;
-    all?: boolean;
-  }) {
+  async findAll(query: PaginationDto) {
     const { search, page = 1, limit = 10, all = false } = query;
 
     const [data, total] = await this.repo.findAndCount({
-      where: search
-        ? [{ name: ILike(`%${search}%`) }, { city: ILike(`%${search}%`) }]
-        : {},
-      relations: { siteUsers: true },
+      where: search ? [{ name: ILike(`%${search}%`) }, { city: ILike(`%${search}%`) }] : {},
       order: { createdAt: 'DESC' },
       ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
     });
@@ -31,31 +24,30 @@ export class SiteRepository {
     return { data, total, page, limit };
   }
 
-  async findById(id: string): Promise<Site | null> {
+  async findById(id: string): Promise<SiteEntity | null> {
     return this.repo.findOne({
       where: { id },
-      relations: { siteUsers: true },
     });
   }
-async findByIds(ids:string[]){
-return this.repo.find({where:{id:In(ids)}})
-}
- async findByAssignedUser(userId: string): Promise<Site[]> {
-  return await this.repo.find({
-    where: { siteUsers: { id: userId } },
-    relations: { siteUsers: true },
-  });
-}
+  async findByIds(ids: string[]) {
+    return this.repo.find({ where: { id: In(ids) } });
+  }
+  async findByAssignedUser(userId: string): Promise<SiteEntity[]> {
+    return await this.repo.find({
+      where: { users: { id: userId } },
+      relations: { users: true },
+    });
+  }
 
-  async findOneByCondition(condition: FindOptionsWhere<Site>): Promise<Site | null> {
+  async findOneByCondition(condition: FindOptionsWhere<SiteEntity>): Promise<SiteEntity | null> {
     return this.repo.findOne({ where: condition });
   }
 
-  async create(data: Partial<Site>): Promise<Site> {
+  async create(data: Partial<SiteEntity>): Promise<SiteEntity> {
     return this.repo.save(this.repo.create(data));
   }
 
-  async update(id: string, data: Partial<Site>): Promise<Site | null> {
+  async update(id: string, data: Partial<SiteEntity>): Promise<SiteEntity | null> {
     await this.repo.update(id, data);
     return this.findById(id);
   }
@@ -63,10 +55,10 @@ return this.repo.find({where:{id:In(ids)}})
   async assignUsers(siteId: string, users: UserEntity[]): Promise<void> {
     const site = await this.repo.findOne({
       where: { id: siteId },
-      relations: { siteUsers: true },
+      relations: { users: true },
     });
     if (!site) throw new NotFoundException('Site not found');
-    site.siteUsers = users;
+    site.users = users;
     await this.repo.save(site);
   }
 

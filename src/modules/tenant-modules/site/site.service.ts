@@ -1,17 +1,14 @@
 // site.service.ts
-import {
-  Injectable,
-  NotFoundException,
-  Scope,
-} from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { SiteRepository } from './site.repository';
 import { UsersRepository } from '../user/user.repository';
 
-import { Site } from './site.entity';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { CreateSiteDto, UpdateSiteDto } from './site.dto';
+import { SiteEntity } from './site.entity';
+import { HelperFunctions } from '../../../common/utils/functions';
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class SiteService {
   constructor(
     private readonly siteRepository: SiteRepository,
@@ -21,41 +18,33 @@ export class SiteService {
   async findAll(query: PaginationDto) {
     return this.siteRepository.findAll(query);
   }
-  async findByIds(ids:string[] ) {
+  async findByIds(ids: string[]) {
     return this.siteRepository.findByIds(ids);
   }
 
-  async findById(id: string): Promise<Site> {
+  async findById(id: string): Promise<SiteEntity> {
     const site = await this.siteRepository.findById(id);
     if (!site) throw new NotFoundException('Site not found');
     return site;
   }
 
-  async findMySites(userId: string): Promise<Site[]> {
+  async findMySites(userId: string): Promise<SiteEntity[]> {
     return this.siteRepository.findByAssignedUser(userId);
   }
 
-  async create(dto: CreateSiteDto): Promise<Site|null> {
-    const { userIds, ...siteData } = dto;
-    const site = await this.siteRepository.create(siteData);
-
-    if (userIds?.length) {
-      await this.assignUsers(site.id, userIds);
-    }
-
+  async create(dto: CreateSiteDto): Promise<SiteEntity | null> {
+    const slug = HelperFunctions.generateSlug(dto.name);
+    const existing = await this.siteRepository.findOneByCondition({ slug: slug });
+    if (existing) throw new ConflictException('Site Already Exists with this name');
+    const site = await this.siteRepository.create({ ...dto, slug });
     return this.siteRepository.findById(site.id)!;
   }
 
-  async update(id: string, dto: UpdateSiteDto): Promise<Site|null> {
+  async update(id: string, dto: UpdateSiteDto): Promise<SiteEntity | null> {
     await this.findById(id);
-    const { userIds, ...siteData } = dto;
 
-    if (Object.keys(siteData).length) {
-      await this.siteRepository.update(id, siteData);
-    }
-
-    if (userIds?.length) {
-      await this.assignUsers(id, userIds);
+    if (Object.keys(dto).length) {
+      await this.siteRepository.update(id, dto);
     }
 
     return this.siteRepository.findById(id);
@@ -63,16 +52,7 @@ export class SiteService {
 
   async remove(id: string): Promise<void> {
     await this.findById(id);
-    await this.siteRepository.softDelete(id);
+    await this.siteRepository.delete(id);
   }
 
-  private async assignUsers(siteId: string, userIds: string[]): Promise<void> {
-    const users = await this.usersRepository.findByIds(userIds);
-
-    if (users.length !== userIds.length) {
-      throw new NotFoundException('One or more users not found');
-    }
-
-    await this.siteRepository.assignUsers(siteId, users);
-  }
 }

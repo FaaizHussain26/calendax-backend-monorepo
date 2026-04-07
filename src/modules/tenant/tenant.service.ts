@@ -72,7 +72,6 @@ export class TenantService {
 
     // ✅ merge dashboard + requested groups, deduplicate
     const allGroups = [dashboardGroup, ...requestedGroups.filter((g) => g.slug !== 'dashboard')];
-    console.log('all groups:::', allGroups);
     try {
       await this.provisionDatabase(dbName, slug, dbPassword);
       const mongoUri = await this.provisionMongoDatabase(dbName);
@@ -96,7 +95,7 @@ export class TenantService {
       });
       return tenant;
     } catch (error) {
-      // 5. Rollback everything if anything fails
+      // 5. Rollback everything if anything fails 
       await this.handleProvisioningFailure(tenant, dbName, slug, error);
       throw new InternalServerErrorException('Tenant provisioning failed. Changes have been rolled back.');
     }

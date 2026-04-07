@@ -1,6 +1,6 @@
 // site.module.ts
 import { forwardRef, Module } from '@nestjs/common';
-import { Site } from './site.entity';
+import { SiteEntity } from './site.entity';
 import { SiteRepository } from './site.repository';
 import { SiteService } from './site.service';
 import { SiteController } from './site.controller';
@@ -16,7 +16,7 @@ import { TenantModule } from '../../tenant/tenant.module';
   providers: [
     SiteService,
     SiteRepository,
-    provideTenantRepository(Site), 
+    provideTenantRepository(SiteEntity), 
   ],
   controllers: [SiteController],
   exports: [SiteService, SiteRepository],
