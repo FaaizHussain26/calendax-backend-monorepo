@@ -53,7 +53,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
         // Development — use individual credentials
         return {
           type: 'postgres',
-                      // namingStrategy: new SnakeNamingStrategy(),
+                      namingStrategy: new SnakeNamingStrategy(),
           host: config.get<string>('db.postgres.host'),
           port: config.get<number>('db.postgres.port'),
           username: config.get<string>('db.postgres.user'),
