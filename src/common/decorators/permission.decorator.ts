@@ -1,6 +1,6 @@
 // permission.decorator.ts
 import { SetMetadata } from '@nestjs/common';
-import { PermissionNames } from '../../enums/system.enum';
+import { PermissionNames } from '../enums/system.enum';
 
 export const PERMISSION_KEY = 'permission';
 

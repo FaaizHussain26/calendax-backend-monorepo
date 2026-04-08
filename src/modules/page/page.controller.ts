@@ -13,13 +13,13 @@ import {
 } from '@nestjs/common';
 import { PageService } from './page.service';
 import { CreatePageDto, UpdatePageDto } from './page.dto';
-import { JwtAuthGuard } from '../../common/jwt/jwt.provider';
+import { JwtAuthGuard } from '../../services/jwt/jwt.provider';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { PermissionsGuard } from '../../common/guards/permission.guard';
-import { AdminPage } from '../../enums/admin.enum';
+import { AdminPage } from '../../common/enums/admin.enum';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Permission } from '../../common/decorators/permission.decorator';
-import { AllRoles, PermissionNames } from '../../enums/system.enum';
+import { AllRoles, PermissionNames } from '../../common/enums/system.enum';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)

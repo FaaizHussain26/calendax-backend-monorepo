@@ -2,7 +2,7 @@
 import { Inject, Injectable, Scope } from '@nestjs/common';
 import { FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import { UserEntity } from './user.entity';
-import { TenantUserRoles } from '../../../enums/tenant.enum';
+import { TenantUserRoles } from '../../../common/enums/tenant.enum';
 const userFields = {
   id: true,
   firstName: true,

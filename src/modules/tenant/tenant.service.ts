@@ -13,7 +13,7 @@ import { entityNotFound } from '../../common/exceptions/notFound.exception';
 import { TenantConnectionManager } from '../../database/tenant/tenant-connection.manager';
 import { ConfigService } from '@nestjs/config';
 import { HelperFunctions } from '../../common/utils/functions';
-import { TenantStatus, TenantUserRoles } from '../../enums/tenant.enum';
+import { TenantStatus, TenantUserRoles } from '../../common/enums/tenant.enum';
 import { TenantEntity } from './tenant.entity';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -56,22 +56,20 @@ export class TenantService {
     const existing = await this.tenantRepository.findBySlug(slug);
     if (existing) throw new ConflictException('Tenant with this name already exists');
 
-    const dashboardGroup = await this.adminPermissionGroupRepository.findDetailedByCondition({
-      slug: 'dashboard',
-    });
-    if (!dashboardGroup) {
-      throw new NotFoundException('Dashboard permission group not found. Run seeders first.');
-    }
     let requestedGroups: AdminPermissionGroupEntity[] = [];
-    if (dto.permissionGroupIds?.length) {
+
+    if (dto.allPermissions) {
+      const { data } = await this.adminPermissionGroupRepository.findAll({ all: true });
+      requestedGroups = data;
+    } else if (dto.permissionGroupIds?.length) {
       requestedGroups = await this.adminPermissionGroupRepository.findDetailedByIds(dto.permissionGroupIds);
       if (requestedGroups.length !== dto.permissionGroupIds.length) {
         throw new NotFoundException('One or more permission groups not found');
       }
+    } else {
+      throw new BadRequestException('Select at least one permission group or enable allPermissions');
     }
 
-    // ✅ merge dashboard + requested groups, deduplicate
-    const allGroups = [dashboardGroup, ...requestedGroups.filter((g) => g.slug !== 'dashboard')];
     try {
       await this.provisionDatabase(dbName, slug, dbPassword);
       const mongoUri = await this.provisionMongoDatabase(dbName);
@@ -85,11 +83,11 @@ export class TenantService {
         dbName,
         mongoUri,
         status: TenantStatus.PROVISIONING,
-        permissionGroups: allGroups,
+        permissionGroups: requestedGroups,
       });
       const connection = await this.connectionManager.getConnection(tenant);
       await connection.sql.runMigrations();
-      await this.seedTenantDatabase(connection.sql, dto, allGroups);
+      await this.seedTenantDatabase(connection.sql, dto, requestedGroups);
       await this.tenantRepository.updateTenant(tenant.id, {
         status: TenantStatus.ACTIVE,
       });

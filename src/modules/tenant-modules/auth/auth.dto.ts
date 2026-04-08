@@ -1,5 +1,5 @@
 import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, IsUUID, Length, Matches, MinLength } from 'class-validator';
-import { TenantUserRoles } from '../../../enums/tenant.enum';
+import { TenantUserRoles } from '../../../common/enums/tenant.enum';
 export class LoginDto {
   @IsEmail()
   email: string;

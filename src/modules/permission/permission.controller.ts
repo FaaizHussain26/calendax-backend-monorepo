@@ -1,10 +1,10 @@
 // src/modules/admin/permission/permission.controller.ts
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AdminPermissionService } from './permission.service';
-import { JwtAuthGuard } from '../../common/jwt/jwt.provider';
+import { JwtAuthGuard } from '../../services/jwt/jwt.provider';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { AdminRoles } from '../../enums/admin.enum';
+import { AdminRoles } from '../../common/enums/admin.enum';
 import { CreatePermissionDto, UpdatePermissionDto } from '../../common/dto/permission.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 

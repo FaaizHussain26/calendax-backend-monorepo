@@ -18,6 +18,8 @@ export class PageEntity {
 
   @Column({ type: 'varchar', length: 255 })
   name: string;
+  @Column({ type: 'varchar', length: 255,nullable:true })
+  icon: string;
 
   @Column({ type: 'varchar', length: 255, unique: true })
   slug: string;

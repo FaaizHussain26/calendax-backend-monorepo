@@ -1,7 +1,7 @@
 // src/modules/tenant-modules/rbac/permission/permission.controller.ts
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { PermissionService } from './permission.service';
-import { JwtAuthGuard } from '../../../../common/jwt/jwt.provider';
+import { JwtAuthGuard } from '../../../../services/jwt/jwt.provider';
 import { TenantGuard } from '../../../../common/guards/tenant.guard';
 import { CreatePermissionDto, UpdatePermissionDto } from '../../../../common/dto/permission.dto';
 import { PermissionsGuard } from '../../../../common/guards/permission.guard';

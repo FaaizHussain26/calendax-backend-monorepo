@@ -8,7 +8,7 @@ import { PageModule } from './modules/page/page.module';
 import configuration from './config/configuration';
 import { TenantModule } from './modules/tenant/tenant.module';
 import { DecryptPayloadMiddleware } from './middlewares/decrypt-payload.middleware';
-import { JwtCommonModule } from './common/jwt/jwt.module';
+import { JwtCommonModule } from './services/jwt/jwt.module';
 import { SeederModule } from './database/master/seeder.module';
 import { TenantModulesModule } from './modules/tenant-modules/tenant-modules.module';
 import { AdminPermissionGroupModule } from './modules/permission-group/permission-group.module';
@@ -19,8 +19,9 @@ import { AuditModule } from './database/audit-logs/audit.module';
 import { MongoAdminModule } from './database/master/mongo-admin.module';
 import { TenantContextMiddleware } from './middlewares/tenant-context.middleware';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { RedisModule } from './common/redis/redis.module';
+import { RedisModule } from './services/redis/redis.module';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import { FileUploadModule } from './modules/file-upload/file-upload.module';
 
 @Module({
   imports: [
@@ -60,7 +61,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
           password: config.get<string>('db.postgres.password'),
           database: config.get<string>('db.postgres.db'),
           autoLoadEntities: true,
-          synchronize: true,
+          synchronize: true,logging: true,
         };
       },
     }),
@@ -75,6 +76,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
     TenantModule,
     TenantModulesModule,
     SeederModule,
+    FileUploadModule,
   ],
   controllers: [AppController],
   providers: [
@@ -90,6 +92,6 @@ export class AppModule {
     // consumer.apply(DecryptPayloadMiddleware).forRoutes('patients', 'tenant');
     consumer
       .apply(TenantContextMiddleware)
-      .forRoutes('auth', 'users', 'permission-groups', 'permissions', 'roles', 'patients', 'sites', 'indication');
+      .forRoutes('auth', 'users', 'permission-groups', 'permissions', 'roles', 'patients', 'sites', 'indication','protocols');
   }
 }

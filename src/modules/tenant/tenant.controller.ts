@@ -2,12 +2,12 @@ import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query
 import { TenantService } from './tenant.service';
 import { CreateTenantDto, findTenantDto, UpdateTenantDto } from './tenant.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { AllRoles, PermissionNames } from '../../enums/system.enum';
-import { JwtAuthGuard } from '../../common/jwt/jwt.provider';
+import { AllRoles, PermissionNames } from '../../common/enums/system.enum';
+import { JwtAuthGuard } from '../../services/jwt/jwt.provider';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { PermissionsGuard } from '../../common/guards/permission.guard';
 import { Permission } from '../../common/decorators/permission.decorator';
-import { AdminPage } from '../../enums/admin.enum';
+import { AdminPage } from '../../common/enums/admin.enum';
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(AllRoles.SUPER_ADMIN, AllRoles.ADMIN)
 @Controller('/tenant')

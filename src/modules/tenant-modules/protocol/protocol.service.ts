@@ -3,7 +3,7 @@ import { ConflictException, Injectable, NotFoundException, Scope } from '@nestjs
 import { ProtocolRepository } from './protocol.repository';
 import { SiteService } from '../site/site.service';
 import { IndicationService } from '../indication/indication.service';
-import { CreateProtocolDto, UpdateProtocolDto } from './protocol.dto';
+import { CreateProtocolDto, ListAllProtocolQueryDto, UpdateProtocolDto } from './protocol.dto';
 import { ProtocolEntity } from './protocol.entity';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { HelperFunctions } from '../../../common/utils/functions';
@@ -16,7 +16,7 @@ export class ProtocolService {
     private readonly indicationService: IndicationService,
   ) {}
 
-  async findAll(query: PaginationDto) {
+  async findAll(query: ListAllProtocolQueryDto) {
     return this.protocolRepository.findAll(query);
   }
 
@@ -34,18 +34,16 @@ export class ProtocolService {
     return protocols;
   }
 
-  async create(dto: CreateProtocolDto): Promise<ProtocolEntity | null> {
+  async create(dto: CreateProtocolDto,file:Express.Multer.File): Promise<ProtocolEntity | null> {
     const { siteIds, indicationId, ...protocolData } = dto;
 
-    // check duplicate protocol number
     const existing = await this.protocolRepository.findOneByCondition({
       protocolNumber: protocolData.protocolNumber,
     });
     if (existing) throw new ConflictException('Protocol number already exists');
 
-    // validate indication
     if (indicationId) {
-      await this.indicationService.findById(indicationId); // throws if not found
+      await this.indicationService.findById(indicationId); 
     }
     const protocol = await this.protocolRepository.create({
       ...protocolData,

@@ -1,7 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { IndicationService } from './indication.service';
 import { CreateIndicationDto, UpdateIndicationDto } from './indication.dto';
+import { PermissionsGuard } from '../../../common/guards/permission.guard';
+import { TenantGuard } from '../../../common/guards/tenant.guard';
+import { JwtAuthGuard } from '../../../services/jwt/jwt.provider';
+@UseGuards(JwtAuthGuard, TenantGuard, PermissionsGuard)
 
 @Controller('indication')
 export class IndicationController {

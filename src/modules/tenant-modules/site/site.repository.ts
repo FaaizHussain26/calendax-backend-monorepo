@@ -19,6 +19,7 @@ export class SiteRepository {
       where: search ? [{ name: ILike(`%${search}%`) }, { city: ILike(`%${search}%`) }] : {},
       order: { createdAt: 'DESC' },
       ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
+      relations:{indication:true}
     });
 
     return { data, total, page, limit };

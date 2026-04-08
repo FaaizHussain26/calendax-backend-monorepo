@@ -3,9 +3,9 @@ import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Response, NextFunction } from 'express';
 import { TenantRepository } from '../modules/tenant/tenant.repository';
 import { TenantConnectionManager } from '../database/tenant/tenant-connection.manager';
-import { TenantStatus } from '../enums/tenant.enum';
+import { TenantStatus } from '../common/enums/tenant.enum';
 import { TenantRequest } from '../common/interfaces/request.interface';
-import { RedisHelper } from '../common/redis/redis.helper';
+import { RedisHelper } from '../services/redis/redis.helper';
 import { TenantEntity } from '../modules/tenant/tenant.entity';
 const TENANT_CACHE_TTL = 60 * 5; // 5 min
 const tenantCacheKey = (id: string) => `tenant:${id}`;

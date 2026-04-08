@@ -4,6 +4,10 @@ export class CreatePermissionGroupDto {
   @IsString()
   @Length(2, 60)
   name: string;
+  @IsString()
+  @IsOptional()
+  @Length(2, 60)
+  icon?: string;
   // 'appointments' — used to generate keys
   @IsString()
   @IsOptional()
@@ -20,6 +24,10 @@ export class UpdatePermissionGroupDto {
   @IsOptional()
   @Length(2, 60)
   name?: string;
+  @IsString()
+  @IsOptional()
+  @Length(2, 60)
+  icon?: string;
   @IsString()
   @IsOptional()
   @Length(0, 255)

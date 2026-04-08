@@ -15,14 +15,15 @@ export class AdminPermissionGroupEntity {
   id: string;
 
   @Column({ type: 'varchar', length: 60, unique: true })
-  name: string; // 'Appointments'
+  name: string; 
+  @Column({ type: 'varchar', length: 60, nullable: true })
+  icon: string; 
 
   @Column({ type: 'varchar', length: 60, unique: true })
-  slug: string; // 'appointments' — auto generated from name
-  // used for: permission key generation + frontend
+  slug: string; 
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  href: string; // '/dashboard/appointments'
+  href: string; 
 
   @Column({ type: 'varchar', length: 160, nullable: true })
   description: string;

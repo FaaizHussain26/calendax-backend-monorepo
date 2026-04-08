@@ -11,7 +11,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { AdminEntity } from '../admin/entities/admin.entity';
-import { TenantStatus } from '../../enums/tenant.enum';
+import { TenantStatus } from '../../common/enums/tenant.enum';
 import { EncryptionTransformer } from '../../common/encryption/encryption.tranformer';
 import { AdminPermissionGroupEntity } from '../permission-group/permission-group.entity';
 @Entity('tenants')
@@ -35,9 +35,9 @@ export class TenantEntity {
   @ManyToMany(() => AdminPermissionGroupEntity)
   @JoinTable({
     name: 'tenant_permission_groups',
-    joinColumn: { name: 'tenantId', referencedColumnName: 'id' },
+    joinColumn: { name: 'tenant_id', referencedColumnName: 'id' },
     inverseJoinColumn: {
-      name: 'permissionGroupId',
+      name: 'permission_group_id',
       referencedColumnName: 'id',
     },
   })
@@ -48,14 +48,14 @@ export class TenantEntity {
   createdById: string;
 
   @ManyToOne(() => AdminEntity, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'createdById' })
+  @JoinColumn({  })
   createdBy: AdminEntity;
 
   @Column({ type: 'uuid', nullable: true })
   updatedById: string;
 
   @ManyToOne(() => AdminEntity, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'updatedById' })
+  @JoinColumn({  })
   updatedBy: AdminEntity;
 
   // -------- Tenant DB credentials (for connection manager) --------

@@ -8,7 +8,7 @@ import { AdminPermissions } from './entities/admin-permissions.entity';
 import { AdminResponseDto } from './admin.dto';
 import { PageRepository } from '../page/page.repository';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-import { AdminRoles } from '../../enums/admin.enum';
+import { AdminRoles } from '../../common/enums/admin.enum';
 
 @Injectable()
 export class AdminRepository {
@@ -85,15 +85,28 @@ export class AdminRepository {
     await this.adminRepo.delete(id);
   }
 
-  // ─── Permissions ──────────────────────────────────────────────────────────
 
-  async findPermissions(adminId: string): Promise<AdminPermissions[]> {
+  async findPermissions2(adminId: string): Promise<AdminPermissions[]> {
     return this.permissionRepo.find({
       where: { adminId },
       relations: { page: true },
     });
   }
+async findPermissions(adminId: string) {
+  const permissions = await this.permissionRepo.find({
+    where: { adminId },
+  });
 
+  // manually fetch pages
+  const pageIds = permissions.map((p) => p.pageId);
+  const pages = await this.pageRepository.findByIds(pageIds);
+
+  // map pages back to permissions
+  return permissions.map((perm) => ({
+    ...perm,
+    page: pages.find((p) => p.id === perm.pageId) ?? null,
+  }));
+}
   async upsertPermission(payload: Partial<AdminPermissions>): Promise<AdminPermissions | null> {
     const existing = await this.permissionRepo.findOne({
       where: { adminId: payload.adminId, pageId: payload.pageId },

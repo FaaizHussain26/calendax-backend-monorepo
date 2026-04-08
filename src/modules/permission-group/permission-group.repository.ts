@@ -21,14 +21,13 @@ export class AdminPermissionGroupRepository {
     page: number;
     limit: number;
   }> {
-    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
+    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC', all = false } = query;
 
     const [data, total] = await this.repo.findAndCount({
       relations: { permissions: true },
       where: search ? [{ name: ILike(`%${search}%`) }, { description: ILike(`%${search}%`) }] : {},
       order: { [sortBy]: sortOrder },
-      skip: (page - 1) * limit,
-      take: limit,
+      ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
     });
 
     return { data, total, page, limit };

@@ -27,7 +27,6 @@ export class HelperFunctions {
     return randomBytes(length).toString('base64url').slice(0, length);
   }
 
-  // --- Searchable Encryption Helpers ---
 
   private static generateNgrams(text: string, n = 3): string[] {
     const normalized = text.toLowerCase().trim();

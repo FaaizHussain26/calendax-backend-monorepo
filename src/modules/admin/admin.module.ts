@@ -5,7 +5,7 @@ import { AdminController } from './admin.controller';
 import { AdminRepository } from './admin.repository';
 import { AdminEntity } from './entities/admin.entity';
 import { AdminPermissions } from './entities/admin-permissions.entity';
-import { JwtCommonModule } from '../../common/jwt/jwt.module';
+import { JwtCommonModule } from '../../services/jwt/jwt.module';
 import { PageModule } from '../page/page.module';
 
 const services = [AdminService];

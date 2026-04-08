@@ -22,6 +22,7 @@ export interface RequestWithUser extends Request {
     permissions: string[];
   };
 }
+export type AuthUser = RequestWithUser['user'];
 export interface TokenUser {
   id: string;
   role: string;

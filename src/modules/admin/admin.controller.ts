@@ -21,11 +21,11 @@ import {
   RemovePagePermissionDto,
   UpdateAdminDto,
 } from './admin.dto';
-import { JwtAuthGuard } from '../../common/jwt/jwt.provider';
+import { JwtAuthGuard } from '../../services/jwt/jwt.provider';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
-import { AdminRoles } from '../../enums/admin.enum';
+import { AdminRoles } from '../../common/enums/admin.enum';
 import type { RequestWithUser } from '../../common/interfaces/request.interface';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
@@ -91,6 +91,6 @@ export class AdminController {
   @Roles(AdminRoles.ADMIN)
   @Get('/pages/side-bar')
   async getAllPagesWithAdminPermissions(@Req() req: RequestWithUser) {
-    return await this.adminService.findAllPagesWithAdminPermissions(req.user);
+    return this.adminService.getMyPermissions(req.user);
   }
 }

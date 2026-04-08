@@ -33,7 +33,7 @@ export class PermissionEntity {
   @ManyToOne(() => PermissionGroupEntity, (g) => g.permissions, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'groupId' })
+  @JoinColumn({  })
   group: PermissionGroupEntity;
 
   @ManyToMany(() => RoleEntity, (r) => r.permissions)

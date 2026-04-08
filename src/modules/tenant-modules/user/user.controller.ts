@@ -1,7 +1,7 @@
 // src/modules/tenant-modules/user/users.controller.ts
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { CreateUserDto, UpdateUserDto, UserQueryDto } from './user.dto';
-import { JwtAuthGuard } from '../../../common/jwt/jwt.provider';
+import { JwtAuthGuard } from '../../../services/jwt/jwt.provider';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { PermissionsGuard } from '../../../common/guards/permission.guard';
 import { UsersService } from './user.service';
