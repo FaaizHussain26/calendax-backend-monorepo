@@ -24,7 +24,22 @@ export class RedisHelper {
     if (!data) return null;
     return JSON.parse(data) as T;
   }
+  async mget(keys: string[]): Promise<(string | null)[]> {
+    if (!keys.length) return [];
+    return this.client.mget(...keys);
+  }
 
+  async pipeline(commands: [string, ...unknown[]][]): Promise<unknown[]> {
+    const pipe = this.client.pipeline();
+    commands.forEach(([command, ...args]) => {
+      (pipe as unknown as Record<string, (...a: unknown[]) => void>)[command](...args);
+    });
+    const results = await pipe.exec();
+    return results.map(([err, value]) => {
+      if (err) throw err;
+      return value;
+    });
+  }
   async delete(key: string): Promise<void> {
     await this.client.del(key);
   }

@@ -54,7 +54,6 @@ export class AdminService {
         return keys;
       });
     }
-
     // ✅ pass permissions to issueToken — cached in Redis
     return this.jwtHelper.issueToken(
       {
@@ -66,9 +65,8 @@ export class AdminService {
     );
   }
 
-  async getAllAdmins(query:PaginationDto,userId:string) {
-    console.log("userId:",userId)
-    return this.adminRepository.findAll(query,userId);
+  async getAllAdmins(query: PaginationDto, userId: string) {
+    return this.adminRepository.findAll(query, userId);
   }
 
   async getAdminById(id: string) {
@@ -148,11 +146,9 @@ export class AdminService {
   }
 
   async getAdminPermissions(adminId: string) {
-    console.log('controller hit');
-
     const admin = await this.adminRepository.findById(adminId);
     if (!admin) throw new NotFoundException('Admin not found');
-    return this.adminRepository.findPermissions(adminId);
+    return this.findAllPagesWithAdminPermissions(adminId);
   }
   async findAllPagesWithAdminPermissions(user): Promise<PageWithPermissions[]> {
     const [pages, adminPermissions] = await Promise.all([

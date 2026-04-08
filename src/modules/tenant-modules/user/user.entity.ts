@@ -14,7 +14,7 @@ import {
 import { TenantUserRoles } from '../../../enums/tenant.enum';
 import { PermissionEntity } from '../rbac/permission/permission.entity';
 import { RoleEntity } from '../rbac/role/role.entity';
-import { Site } from '../site/site.entity';
+import { SiteEntity } from '../site/site.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -73,8 +73,13 @@ export class UserEntity {
   })
   permissions: PermissionEntity[];
 
-  @ManyToMany(() => Site, (site) => site.siteUsers)
-  assignedSites: Site[];
+  @ManyToMany(() => SiteEntity, (site) => site.users)
+  @JoinTable({
+    name: 'user_sites',
+    joinColumn: { name: 'userId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'siteId', referencedColumnName: 'id' },
+  })
+  sites: SiteEntity[];
 
   @CreateDateColumn()
   createdAt: Date;

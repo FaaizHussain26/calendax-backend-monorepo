@@ -9,31 +9,39 @@ import {
   ManyToMany,
   JoinTable,
   PrimaryGeneratedColumn,
+  ManyToOne,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { UserEntity } from '../user/user.entity';
+import { ProtocolEntity } from '../protocol/protocol.entity';
+import { IndicationEntity } from '../indication/indication.entity';
 
 @Entity('sites')
-export class Site {
+export class SiteEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-  
+
   @Column({ nullable: true })
   email: string;
 
   @Column({ nullable: false })
   prefix: string;
+  @Column({ nullable: false, unique: true })
+  slug: string;
 
   @Column({ nullable: false })
   name: string;
 
-  @Column({ nullable: true, name: 'site_number' })
+  @Column({ nullable: true })
   siteNumber: string;
 
-  @Column({ nullable: true, name: 'phone_number' })
+  @Column({ default: 0 })
+  patientCount: number;
+
+  @Column({ nullable: true })
   phoneNumber: string;
 
-  @Column({ nullable: true, name: 'street_address' })
+  @Column({ nullable: true })
   streetAddress: string;
 
   @Column({ nullable: true })
@@ -42,7 +50,7 @@ export class Site {
   @Column({ nullable: true })
   state: string;
 
-  @Column({ nullable: true, name: 'zip_code' })
+  @Column({ nullable: true })
   zipCode: string;
 
   @Column({ nullable: true })
@@ -52,28 +60,31 @@ export class Site {
   image: string;
 
   @Column({ nullable: true })
-  indication: string;
-
-  @ManyToMany(() => UserEntity, (user) => user.assignedSites)
-  @JoinTable({
-    name: 'site_users',
-    joinColumn: { name: 'siteId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
+  indicationId: string;
+  @ManyToOne(() => IndicationEntity, (indication) => indication.sites, {
+    nullable: true,
+    onDelete: 'SET NULL',
   })
-  siteUsers: UserEntity[];
+  indication: IndicationEntity;
+
+  @ManyToMany(() => UserEntity, (user) => user.sites)
+  users: UserEntity[];
+
+  @ManyToMany(() => ProtocolEntity, (protocol) => protocol.sites)
+  protocols: ProtocolEntity[];
 
   //   @OneToMany(() => PatientSite, (ps) => ps.site)
   //   patientSites: PatientSite[];
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({})
   @Exclude()
   public createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({})
   @Exclude()
   public updatedAt: Date;
 
-  @DeleteDateColumn({ name: 'deleted_at' })
+  @DeleteDateColumn({})
   @Exclude()
   public deletedAt: Date;
 }

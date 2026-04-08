@@ -18,6 +18,9 @@ import { AuditInterceptor } from './interceptors/audit.interceptor';
 import { AuditModule } from './database/audit-logs/audit.module';
 import { MongoAdminModule } from './database/master/mongo-admin.module';
 import { TenantContextMiddleware } from './middlewares/tenant-context.middleware';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { RedisModule } from './common/redis/redis.module';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 @Module({
   imports: [
@@ -25,35 +28,43 @@ import { TenantContextMiddleware } from './middlewares/tenant-context.middleware
       isGlobal: true,
       load: [configuration],
     }),
-
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60,
+        limit: 20,
+      },
+    ]),
     TypeOrmModule.forRootAsync({
       name: 'master',
       inject: [ConfigService],
-useFactory: (config: ConfigService) => {
-    const url = config.get<string>('DATABASE_URL');
-    if (url) {
-      return {
-        type: 'postgres',
-        url,
-        autoLoadEntities: true,
-        synchronize:config.get<string>('environment')==="production"? false:true, 
-        ssl: { rejectUnauthorized: false },
-      };
-    }
+      useFactory: (config: ConfigService) => {
+        const url = config.get<string>('db.postgres.url');
+        if (url) {
+          return {
+            type: 'postgres',
+            namingStrategy: new SnakeNamingStrategy(),
+            url,
+            autoLoadEntities: true,
+            synchronize: config.get<string>('environment') === 'production' ? false : true,
+            ssl: { rejectUnauthorized: false },
+          };
+        }
 
-    // Development — use individual credentials
-    return {
-      type: 'postgres',
-      host: config.get<string>('PGHOST'),
-      port: config.get<number>('PGPORT'),
-      username: config.get<string>('PGUSER'),
-      password: config.get<string>('PGPASSWORD'),
-      database: config.get<string>('PGDATABASE'),
-      autoLoadEntities: true,
-      synchronize: true,
-    };
-  },
+        // Development — use individual credentials
+        return {
+          type: 'postgres',
+          namingStrategy: new SnakeNamingStrategy(),
+          host: config.get<string>('db.postgres.host'),
+          port: config.get<number>('db.postgres.port'),
+          username: config.get<string>('db.postgres.user'),
+          password: config.get<string>('db.postgres.password'),
+          database: config.get<string>('db.postgres.db'),
+          autoLoadEntities: true,
+          synchronize: true,
+        };
+      },
     }),
+    RedisModule,
     AuditModule,
     MongoAdminModule,
     JwtCommonModule,
@@ -76,9 +87,9 @@ useFactory: (config: ConfigService) => {
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(DecryptPayloadMiddleware).forRoutes('patients', 'tenant');
+    // consumer.apply(DecryptPayloadMiddleware).forRoutes('patients', 'tenant');
     consumer
       .apply(TenantContextMiddleware)
-      .forRoutes('auth', 'users', 'permission-groups', 'permissions', 'roles', 'patients');
+      .forRoutes('auth', 'users', 'permission-groups', 'permissions', 'roles', 'patients', 'sites', 'indication');
   }
 }

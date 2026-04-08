@@ -15,9 +15,12 @@ export class AdminPermissionGroupRepository {
     return this.repo.save(this.repo.create(payload));
   }
 
-  async findAll(
-    query: PaginationDto,
-  ): Promise<{ data: AdminPermissionGroupEntity[]; total: number; page: number; limit: number }> {
+  async findAll(query: PaginationDto): Promise<{
+    data: AdminPermissionGroupEntity[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
 
     const [data, total] = await this.repo.findAndCount({

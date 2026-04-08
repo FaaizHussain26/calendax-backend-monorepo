@@ -1,6 +1,6 @@
 // site.module.ts
 import { forwardRef, Module } from '@nestjs/common';
-import { Site } from './site.entity';
+import { SiteEntity } from './site.entity';
 import { SiteRepository } from './site.repository';
 import { SiteService } from './site.service';
 import { SiteController } from './site.controller';
@@ -9,15 +9,8 @@ import { UserModule } from '../user/user.module'; // 👈 import UserModule for 
 import { TenantModule } from '../../tenant/tenant.module';
 
 @Module({
-  imports: [
-    TenantModule,
-     forwardRef(() => UserModule), 
-  ],
-  providers: [
-    SiteService,
-    SiteRepository,
-    provideTenantRepository(Site), 
-  ],
+  imports: [TenantModule, forwardRef(() => UserModule)],
+  providers: [SiteService, SiteRepository, provideTenantRepository(SiteEntity)],
   controllers: [SiteController],
   exports: [SiteService, SiteRepository],
 })

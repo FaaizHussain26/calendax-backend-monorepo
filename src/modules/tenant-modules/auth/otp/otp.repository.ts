@@ -11,13 +11,9 @@ export class OtpRepository {
     private readonly repo: Repository<OtpEntity>,
   ) {}
 
-  // ─── Create ───────────────────────────────────────────────────────────────
-
   async create(payload: Partial<OtpEntity>): Promise<OtpEntity> {
     return this.repo.save(this.repo.create(payload));
   }
-
-  // ─── Find ─────────────────────────────────────────────────────────────────
 
   async findAll(): Promise<OtpEntity[]> {
     return this.repo.find({
@@ -49,8 +45,6 @@ export class OtpRepository {
     });
   }
 
-  // ─── Update ───────────────────────────────────────────────────────────────
-
   async update(id: string, payload: Partial<OtpEntity>): Promise<void> {
     await this.repo.update(id, payload);
   }
@@ -68,8 +62,6 @@ export class OtpRepository {
   async invalidateExisting(email: string, purpose: OtpPurpose): Promise<void> {
     await this.repo.update({ email, purpose, verified: false }, { expiresAt: new Date() });
   }
-
-  // ─── Delete ───────────────────────────────────────────────────────────────
 
   async delete(id: string): Promise<void> {
     await this.repo.delete(id);

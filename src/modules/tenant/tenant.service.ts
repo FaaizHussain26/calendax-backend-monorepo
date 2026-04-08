@@ -72,7 +72,6 @@ export class TenantService {
 
     // ✅ merge dashboard + requested groups, deduplicate
     const allGroups = [dashboardGroup, ...requestedGroups.filter((g) => g.slug !== 'dashboard')];
-    console.log('all groups:::', allGroups);
     try {
       await this.provisionDatabase(dbName, slug, dbPassword);
       const mongoUri = await this.provisionMongoDatabase(dbName);
@@ -226,7 +225,7 @@ export class TenantService {
       await this.mongoAdmin.clientInstance.db(dbName).dropDatabase();
       console.log(`Successfully dropped Mongo DB: ${dbName}`);
     } catch (error) {
-        const err = error instanceof Error ? error : new Error(String(error));
+      const err = error instanceof Error ? error : new Error(String(error));
 
       console.warn(`Mongo cleanup warning: ${err.message}`);
     }
@@ -275,7 +274,7 @@ export class TenantService {
       // Note: No authSource=dbName here because we are using the Master User
       return `mongodb+srv://${user}:${pass}@${host}/${dbName}?retryWrites=true&w=majority`;
     } catch (error) {
-        const err = error instanceof Error ? error : new Error(String(error));
+      const err = error instanceof Error ? error : new Error(String(error));
 
       throw new Error(`Mongo Provisioning Failed: ${err?.message}`);
     }

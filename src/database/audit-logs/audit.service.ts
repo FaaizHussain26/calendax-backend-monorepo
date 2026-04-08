@@ -13,7 +13,6 @@ export interface IAuditLog {
 }
 @Injectable()
 export class AuditService {
-
   async record(db: Db, data: Partial<IAuditLog>) {
     try {
       const collection = db.collection<IAuditLog>('audit_logs');
