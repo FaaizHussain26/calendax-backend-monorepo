@@ -41,8 +41,7 @@ export class AdminService {
 
     let permissions: string[] = [];
     if (admin.role === AdminRoles.ADMIN) {
-      const adminPermissions = await this.adminRepository.findPermissions2(admin.id);
-      console.log('admin perms:', adminPermissions?.length, adminPermissions[0]);
+      const adminPermissions = await this.adminRepository.findPermissions(admin.id);
       // convert page-based permissions to flat permission keys
       permissions = adminPermissions.flatMap((p) => {
         if (!p.page?.slug) return [];
@@ -54,18 +53,17 @@ export class AdminService {
         return keys;
       });
     }
-    // ✅ pass permissions to issueToken — cached in Redis
     return {
-      user:{id:admin.id,name:admin.name,email:admin.email,role:admin.role},
-      tokens:this.jwtHelper.issueToken(
-      {
-        id: admin.id,
-        role: admin.role,
-        isActive: admin.isActive,
-      },
-      permissions,
-    )
-    }
+      user: { id: admin.id, name: admin.name, email: admin.email, role: admin.role },
+      tokens: await this.jwtHelper.issueToken(
+        {
+          id: admin.id,
+          role: admin.role,
+          isActive: admin.isActive,
+        },
+        permissions,
+      ),
+    };
   }
 
   async getAllAdmins(query: PaginationDto, userId: string) {
@@ -151,25 +149,41 @@ export class AdminService {
   async getAdminPermissions(adminId: string): Promise<PageWithPermissions[]> {
     const admin = await this.adminRepository.findById(adminId);
     if (!admin) throw new NotFoundException('Admin not found');
-    return this.findAllPagesWithAdminPermissions(admin);
+    return this.findAllPagesWithAdminPermissions(admin,false);
   }
 
   async getMyPermissions(user: TokenUser): Promise<PageWithPermissions[]> {
-    return this.findAllPagesWithAdminPermissions(user);
+    return this.findAllPagesWithAdminPermissions(user,true);
   }
-  private async findAllPagesWithAdminPermissions(user: TokenUser): Promise<PageWithPermissions[]> {
+  private async findAllPagesWithAdminPermissions(user: TokenUser,isUser:boolean): Promise<any[]> {
     const isSuperAdmin = user.role === AdminRoles.SUPER_ADMIN;
-
     const [pages, adminPermissions] = await Promise.all([
       this.pageService.findAllPages({ all: true }),
       isSuperAdmin ? Promise.resolve([]) : this.adminRepository.findPermissions(user.id),
     ]);
-
+    if (!pages?.data?.length) {
+      if (isSuperAdmin) {
+        return [
+          {
+            id: '',
+            name: 'Pages',
+            icon: '',
+            href: '/pages',
+            slug: 'pages',
+            permissions: { read: true, write: true, update: true, delete: true },
+          } as PageWithPermissions,
+        ];
+      }
+      return [];
+    }
     return pages?.data
       ?.map((page) => {
         const permission = adminPermissions.find((p) => p.pageId === page.id);
-        if (!permission || (!permission.read && !permission.write && !permission.update && !permission.delete)) {
-          return null;
+        if (
+          !isSuperAdmin &&
+          (!permission || (!permission.read && !permission.write && !permission.update && !permission.delete))
+        ) {
+          return isUser?null:{...page,permissions:{read:false,write:false,delete:false,update:false}};
         }
         return {
           ...page,
@@ -181,6 +195,6 @@ export class AdminService {
           },
         };
       })
-     .filter((page): page is PageWithPermissions => Boolean(page)); 
+      .filter((page) => Boolean(page));
   }
 }

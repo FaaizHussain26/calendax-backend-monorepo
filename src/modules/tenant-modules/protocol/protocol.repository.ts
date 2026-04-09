@@ -34,6 +34,8 @@ export class ProtocolRepository {
   }
 
   async findById(id: string): Promise<ProtocolEntity | null> {
+    console.log("id:",id);
+    
     return this.repo.findOne({
       where: { id },
       relations: { indication: true, sites: true },

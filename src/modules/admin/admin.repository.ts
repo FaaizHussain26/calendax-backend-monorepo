@@ -86,13 +86,13 @@ export class AdminRepository {
   }
 
 
-  async findPermissions2(adminId: string): Promise<AdminPermissions[]> {
+  async findPermissions(adminId: string): Promise<AdminPermissions[]> {
     return this.permissionRepo.find({
       where: { adminId },
       relations: { page: true },
     });
   }
-async findPermissions(adminId: string) {
+async findPermissions2(adminId: string) {
   const permissions = await this.permissionRepo.find({
     where: { adminId },
   });

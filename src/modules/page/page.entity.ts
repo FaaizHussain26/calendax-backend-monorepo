@@ -27,18 +27,21 @@ export class PageEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   href: string;
 
+  @Column({nullable:true })
+  index: number;
+
   @Column({ type: 'uuid', nullable: true })
   createdById: string;
 
   @ManyToOne(() => AdminEntity, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'createdById' })
+  @JoinColumn({  })
   createdBy: AdminEntity;
 
   @Column({ type: 'uuid', nullable: true })
   updatedById: string;
 
   @ManyToOne(() => AdminEntity, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'updatedById' })
+  @JoinColumn({ })
   updatedBy: AdminEntity;
 
   @CreateDateColumn()

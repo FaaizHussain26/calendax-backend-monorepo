@@ -28,28 +28,23 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 export class PageController {
   constructor(private readonly pageService: PageService) {}
   @Get('/')
-  @Permission(AdminPage.PAGE, PermissionNames.READ)
   async getAllPages(@Query() query: PaginationDto) {
     return await this.pageService.findAllPages(query);
   }
 
   @Get('/:id')
-  @Permission(AdminPage.PAGE, PermissionNames.READ)
   async getpagesById(@Param('id', ParseUUIDPipe) id: string) {
     return await this.pageService.getPageById(id);
   }
   @Post('/')
-  @Permission(AdminPage.PAGE, PermissionNames.WRITE)
   async createPage(@Body() payload: CreatePageDto) {
     return await this.pageService.createPage(payload);
   }
   @Patch('/:id')
-  @Permission(AdminPage.PAGE, PermissionNames.UPDATE)
   async updatePage(@Param('id', ParseUUIDPipe) id: string, @Body() payload: UpdatePageDto) {
     return await this.pageService.update(id, payload);
   }
   @Delete('/:id')
-  @Permission(AdminPage.PAGE, PermissionNames.DELETE)
   async deletePage(@Param('id', ParseUUIDPipe) id: string) {
     return await this.pageService.deletePage(id);
   }

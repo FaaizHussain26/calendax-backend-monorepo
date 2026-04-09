@@ -13,8 +13,8 @@ export class CreatePageDto {
   @IsNotEmpty()
   name: string;
   @IsNumber()
-  @IsNotEmpty()
-  index: string;
+  @IsOptional()
+  index?: number;
   @IsString()
   @IsNotEmpty()
   icon: string;
@@ -34,6 +34,6 @@ export class UpdatePageDto {
   @IsOptional()
   icon?: string;
   @IsNumber()
-  @IsNotEmpty()
-  index?: string;
+  @IsOptional()
+  index?: number;
 }

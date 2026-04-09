@@ -34,19 +34,20 @@ export class ProtocolService {
     return protocols;
   }
 
-  async create(dto: CreateProtocolDto,file:Express.Multer.File): Promise<ProtocolEntity | null> {
+  async create(dto: CreateProtocolDto, file: Express.Multer.File): Promise<ProtocolEntity | null> {
     const { siteIds, indicationId, ...protocolData } = dto;
-
+    console.log('payload of create protocol:', dto, file);
     const existing = await this.protocolRepository.findOneByCondition({
       protocolNumber: protocolData.protocolNumber,
     });
     if (existing) throw new ConflictException('Protocol number already exists');
 
     if (indicationId) {
-      await this.indicationService.findById(indicationId); 
+      await this.indicationService.findById(indicationId);
     }
     const protocol = await this.protocolRepository.create({
       ...protocolData,
+      document:file.path,
       indicationId,
     });
 
@@ -78,8 +79,9 @@ export class ProtocolService {
     return this.protocolRepository.findById(id);
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string) {
     await this.findById(id);
-    await this.protocolRepository.softDelete(id);
+    await this.protocolRepository.delete(id);
+    return { message: 'Protocol Deleted Successfully' };
   }
 }

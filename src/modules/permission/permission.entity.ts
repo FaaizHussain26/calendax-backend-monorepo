@@ -31,7 +31,7 @@ export class AdminPermissionEntity {
   @ManyToOne(() => AdminPermissionGroupEntity, (g) => g.permissions, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'groupId' })
+  @JoinColumn({ })
   group: AdminPermissionGroupEntity;
 
   @CreateDateColumn()
