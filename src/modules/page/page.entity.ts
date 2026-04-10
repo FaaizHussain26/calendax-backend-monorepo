@@ -4,6 +4,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Generated,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -27,7 +28,8 @@ export class PageEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   href: string;
 
-  @Column({nullable:true })
+  @Column({nullable:false})
+  @Generated('increment')
   index: number;
 
   @Column({ type: 'uuid', nullable: true })

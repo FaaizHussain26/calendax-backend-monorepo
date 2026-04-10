@@ -52,6 +52,13 @@ async findByIds(ids: string[]): Promise<PageEntity[]> {
     return updatedEntity;
   }
 
+  async updateindex(index: number, payload: Partial<PageEntity>) {
+    await this.pageRepository.update({index:index}, payload);
+  }
+
+  async maxIndex() {
+    return await this.pageRepository.maximum('index');
+  }
   async delete(id: string) {
     return await this.pageRepository.delete(id);
   }
