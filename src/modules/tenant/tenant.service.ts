@@ -42,7 +42,7 @@ export class TenantService {
   }
 
   async getTenantById(id: string) {
-    const tenant = await this.tenantRepository.getByTenantId(id);
+    const tenant = await this.tenantRepository.getDetailedByTenantId(id);
     entityNotFound(tenant, 'Tenant');
     return tenant;
   }
@@ -94,6 +94,7 @@ export class TenantService {
       return tenant;
     } catch (error) {
       // 5. Rollback everything if anything fails
+      console.log("error crating tenant:",error)
       await this.handleProvisioningFailure(tenant, dbName, slug, error);
       throw new InternalServerErrorException('Tenant provisioning failed. Changes have been rolled back.');
     }
@@ -200,7 +201,7 @@ export class TenantService {
     console.log(`✅ Tenant DB seeded for: ${dto.adminEmail}`);
   }
   private async handleProvisioningFailure(tenant: TenantEntity | null, dbName: string, dbUser: string, error: unknown) {
-    console.error('Provisioning failed, rolling back...', error);
+    console.log('Provisioning failed, rolling back...', error);
 
     try {
       if (tenant?.id) {
@@ -214,7 +215,7 @@ export class TenantService {
       await this.deprovisionMongoDatabase(dbName);
     } catch (rollbackError) {
       // Log rollback failure but don't throw — original error takes priority
-      console.error('Rollback also failed:', rollbackError);
+      console.log('Rollback also failed:', rollbackError);
     }
   }
   private async deprovisionMongoDatabase(dbName: string) {

@@ -1,5 +1,5 @@
 // protocol.service.ts
-import { ConflictException, Injectable, NotFoundException, Scope } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException, Scope } from '@nestjs/common';
 import { ProtocolRepository } from './protocol.repository';
 import { SiteService } from '../site/site.service';
 import { IndicationService } from '../indication/indication.service';
@@ -7,6 +7,13 @@ import { CreateProtocolDto, ListAllProtocolQueryDto, UpdateProtocolDto } from '.
 import { ProtocolEntity } from './protocol.entity';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { HelperFunctions } from '../../../common/utils/functions';
+import { DocumentProcessorService } from '../../../services/doc/document-processor.service';
+import { ProtocolDocumentRepository } from './document/document-embedding.repository';
+import { Db } from 'mongodb';
+import { DocumentChunk } from '../../../common/interfaces/document.interface';
+import { ProtocolDocumentMetaRepository } from './document/document-meta.repository';
+import { ProtocolDocumentStatus } from '../../../common/enums/protocol.enum';
+import { DocumentQueueService } from '../../../services/queues/services/document-queue.service';
 
 @Injectable()
 export class ProtocolService {
@@ -14,8 +21,48 @@ export class ProtocolService {
     private readonly protocolRepository: ProtocolRepository,
     private readonly siteService: SiteService,
     private readonly indicationService: IndicationService,
+    private readonly documentProcessor: DocumentProcessorService,
+    private readonly protocolDocumentMetaRepository: ProtocolDocumentMetaRepository,
+    private readonly documentQueueService: DocumentQueueService,
   ) {}
+  private async processDocumentAsync(
+    file: Express.Multer.File,
+    mongo: Db,
+    protocolId: string,
+    siteIds: string[],
+    indicationId?: string,
+  ) {
+    const { chunks, totalPages, totalChunks } = await this.documentProcessor.processDocument(file, {
+      protocolId,
+      protocolNumber: protocolId,
+      siteIds,
+      indicationId,
+    });
+    const currentDoc = await this.protocolDocumentMetaRepository.findCurrentByProtocolId(protocolId);
+    const nextVersion = (currentDoc?.version ?? 0) + 1;
 
+    const repo = new ProtocolDocumentRepository(mongo);
+    await repo.insertChunks(chunks);
+
+    const newMeta = await this.protocolDocumentMetaRepository.create({
+      protocolId,
+      originalName: file.originalname,
+      fileName: file.filename,
+      filePath: file.path,
+      mimeType: file.mimetype,
+      fileSize: file.size,
+      totalPages,
+      totalChunks,
+      isProcessed: true,
+      version: nextVersion,
+      isCurrent: true,
+    });
+
+    if (currentDoc) {
+      await this.protocolDocumentMetaRepository.markAsReplaced(currentDoc.id, newMeta.id);
+      await repo.deleteByProtocolId(protocolId);
+    }
+  }
   async findAll(query: ListAllProtocolQueryDto) {
     return this.protocolRepository.findAll(query);
   }
@@ -34,9 +81,13 @@ export class ProtocolService {
     return protocols;
   }
 
-  async create(dto: CreateProtocolDto, file: Express.Multer.File): Promise<ProtocolEntity | null> {
+  async create(
+    dto: CreateProtocolDto,
+    file: Express.Multer.File,
+    tenantId: string,
+  ): Promise<{ protocol: ProtocolEntity | null; message: string; jobId: string }> {
     const { siteIds, indicationId, ...protocolData } = dto;
-    console.log('payload of create protocol:', dto, file);
+    console.log('file is:', file);
     const existing = await this.protocolRepository.findOneByCondition({
       protocolNumber: protocolData.protocolNumber,
     });
@@ -45,10 +96,14 @@ export class ProtocolService {
     if (indicationId) {
       await this.indicationService.findById(indicationId);
     }
+    const slug = protocolData?.name ? HelperFunctions.generateSlug(protocolData.name) : undefined;
+
     const protocol = await this.protocolRepository.create({
       ...protocolData,
-      document:file.path,
+      slug,
       indicationId,
+      documentStatus: ProtocolDocumentStatus.PENDING,
+      isUploaded: false,
     });
 
     if (siteIds?.length) {
@@ -56,11 +111,31 @@ export class ProtocolService {
       await this.protocolRepository.assignSites(protocol.id, sites);
     }
 
-    return this.protocolRepository.findById(protocol.id);
+    const jobId = await this.documentQueueService.addDocumentJob({
+      protocolId: protocol.id,
+      filePath: file.path,
+      originalName: file.originalname,
+      fileName: file.filename,
+      mimeType: file.mimetype,
+      fileSize: file.size,
+      siteIds: siteIds ?? [],
+      indicationId,
+      tenantId,
+    });
+    return {
+      protocol: await this.protocolRepository.findById(protocol.id),
+      message: 'Protocol created. Document processing queued.',
+      jobId,
+    };
   }
 
-  async update(id: string, dto: UpdateProtocolDto): Promise<ProtocolEntity | null> {
-    await this.findById(id);
+  async update(
+    id: string,
+    dto: UpdateProtocolDto,
+    file?: Express.Multer.File,
+    tenantId?: string,
+  ): Promise<{ protocol: ProtocolEntity | null; message: string; jobId?: string }> {
+    const protocol = await this.findById(id);
     const { siteIds, indicationId, ...protocolData } = dto;
 
     if (indicationId) {
@@ -75,13 +150,38 @@ export class ProtocolService {
       const sites = await this.siteService.findByIds(siteIds);
       await this.protocolRepository.assignSites(id, sites);
     }
-
-    return this.protocolRepository.findById(id);
+    let jobId: string | undefined;
+    if (file && tenantId) {
+      await this.protocolRepository.update(id, {
+        documentStatus: ProtocolDocumentStatus.PENDING,
+        isUploaded: false,
+      });
+      jobId = await this.documentQueueService.addDocumentJob({
+        protocolId: id,
+        filePath: file.path,
+        originalName: file.originalname,
+        fileName: file.filename,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+        siteIds: siteIds ?? protocol.sites?.map((s) => s.id) ?? [],
+        indicationId,
+        tenantId,
+      });
+    }
+    return {
+      protocol: await this.protocolRepository.findById(id),
+      message: file ? 'Protocol updated. Document processing queued.' : 'Protocol updated successfully.',
+      jobId,
+    };
   }
 
   async remove(id: string) {
     await this.findById(id);
     await this.protocolRepository.delete(id);
     return { message: 'Protocol Deleted Successfully' };
+  }
+  async getDocumentHistory(protocolId: string) {
+    await this.findById(protocolId); // throws if not found
+    return this.protocolDocumentMetaRepository.findAllByProtocolId(protocolId);
   }
 }

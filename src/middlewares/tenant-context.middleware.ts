@@ -31,10 +31,10 @@ export class TenantContextMiddleware implements NestMiddleware {
   }
   async use(req: TenantRequest, res: Response, next: NextFunction) {
     const tenantId = req.headers['x-tenant-id'] ?? req.subdomains?.[0];
-
     if (tenantId) {
       try {
         const tenant = await this.resolveTenant(tenantId.toString());
+        
         if (tenant && tenant.status === TenantStatus.ACTIVE) {
           req.tenant = tenant;
           req.tenantId = tenant.id;

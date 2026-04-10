@@ -1,21 +1,13 @@
 // src/database/audit.service.ts
 import { Injectable } from '@nestjs/common';
 import { Db } from 'mongodb';
-export interface IAuditLog {
-  action: string;
-  actorId: string;
-  actorEmail: string;
-  actorType: 'SUPER_ADMIN' | 'TENANT_USER';
-  targetId?: string;
-  payload: unknown;
-  ipAddress: string;
-  createdAt: Date;
-}
+import { ADMIN_LOGS_DOCUMENT_COLLECTION, IAuditLog } from '../../common/interfaces/collections/audit-log.interface';
+
 @Injectable()
 export class AuditService {
   async record(db: Db, data: Partial<IAuditLog>) {
     try {
-      const collection = db.collection<IAuditLog>('audit_logs');
+      const collection = db.collection<IAuditLog>(ADMIN_LOGS_DOCUMENT_COLLECTION);
 
       const logEntry: IAuditLog = {
         action: data.action!,
@@ -32,7 +24,7 @@ export class AuditService {
 
       // Optional: Ensure index on createdAt for performance/TTL
       await collection.createIndex({ createdAt: -1 });
-    } catch (error) {
+    } catch (error:any) {
       console.error('Audit Logging Error:', error.message);
     }
   }

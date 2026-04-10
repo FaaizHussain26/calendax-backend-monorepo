@@ -31,6 +31,12 @@ export class TenantRepository {
 
   async getByTenantId(id: string) {
     return await this.tenantRepository.findOne({
+      where: { id: id },
+ 
+    });
+  }
+  async getDetailedByTenantId(id: string) {
+    return await this.tenantRepository.findOne({
       select: ['id', 'name', 'slug', 'status', 'createdById', 'updatedById', 'dbName', 'permissionGroups',"createdAt","updatedAt"],
       where: { id: id },
       relations: ['permissionGroups', 'permissionGroups.permissions'],

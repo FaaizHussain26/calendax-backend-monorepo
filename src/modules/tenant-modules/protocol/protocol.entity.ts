@@ -14,7 +14,7 @@ import {
 import { IndicationEntity } from '../indication/indication.entity';
 import { SiteEntity } from '../site/site.entity';
 import { TenantStatus } from '../../../common/enums/tenant.enum';
-import { ProtocolStatus } from '../../../common/enums/protocol.enum';
+import { ProtocolDocumentStatus, ProtocolStatus } from '../../../common/enums/protocol.enum';
 @Entity('protocols')
 export class ProtocolEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -22,6 +22,8 @@ export class ProtocolEntity {
 
   @Column({ nullable: true })
   name: string;
+  @Column({ nullable: true })
+  slug: string;
 
   @Column({ nullable: true })
   document: string;
@@ -35,6 +37,15 @@ export class ProtocolEntity {
     default: ProtocolStatus.ORIGINAL,
   })
   status: ProtocolStatus;
+  @Column({
+    type: 'enum',
+    enum: ProtocolDocumentStatus,
+    default: ProtocolDocumentStatus.PENDING,
+  })
+  documentStatus: ProtocolDocumentStatus;
+
+  @Column({ default: false })
+  isUploaded: boolean;
 
   @Column({ nullable: true })
   indicationId: string;
