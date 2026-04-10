@@ -4,6 +4,7 @@ import { ILike, Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { findTenantDto, TenantResponseDto } from './tenant.dto';
 import { TenantEntity } from './tenant.entity';
+import { AdminPermissionGroupEntity } from '../permission-group/permission-group.entity';
 
 @Injectable()
 export class TenantRepository {
@@ -30,7 +31,9 @@ export class TenantRepository {
 
   async getByTenantId(id: string) {
     return await this.tenantRepository.findOne({
+      select: ['id', 'name', 'slug', 'status', 'createdById', 'updatedById', 'dbName', 'permissionGroups',"createdAt","updatedAt"],
       where: { id: id },
+      relations: ['permissionGroups', 'permissionGroups.permissions'],
     });
   }
   async findBySlug(slug: string) {

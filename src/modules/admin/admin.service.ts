@@ -149,16 +149,16 @@ export class AdminService {
   async getAdminPermissions(adminId: string): Promise<PageWithPermissions[]> {
     const admin = await this.adminRepository.findById(adminId);
     if (!admin) throw new NotFoundException('Admin not found');
-    return this.findAllPagesWithAdminPermissions(admin,false);
+    return this.findAllPagesWithAdminPermissions(admin, false);
   }
 
   async getMyPermissions(user: TokenUser): Promise<PageWithPermissions[]> {
-    return this.findAllPagesWithAdminPermissions(user,true);
+    return this.findAllPagesWithAdminPermissions(user, true);
   }
-  private async findAllPagesWithAdminPermissions(user: TokenUser,isUser:boolean): Promise<any[]> {
+  private async findAllPagesWithAdminPermissions(user: TokenUser, isUser: boolean): Promise<any[]> {
     const isSuperAdmin = user.role === AdminRoles.SUPER_ADMIN;
     const [pages, adminPermissions] = await Promise.all([
-      this.pageService.findAllPages({ all: true }),
+      this.pageService.findAllPages({ all: true, sortBy: 'index', sortOrder: 'ASC' }),
       isSuperAdmin ? Promise.resolve([]) : this.adminRepository.findPermissions(user.id),
     ]);
     if (!pages?.data?.length) {
@@ -183,7 +183,7 @@ export class AdminService {
           !isSuperAdmin &&
           (!permission || (!permission.read && !permission.write && !permission.update && !permission.delete))
         ) {
-          return isUser?null:{...page,permissions:{read:false,write:false,delete:false,update:false}};
+          return isUser ? null : { ...page, permissions: { read: false, write: false, delete: false, update: false } };
         }
         return {
           ...page,
