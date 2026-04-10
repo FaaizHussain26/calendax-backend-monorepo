@@ -13,6 +13,10 @@ export class TenantRepository {
     private readonly tenantRepository: Repository<TenantEntity>,
   ) {}
 
+  async count(): Promise<Number> {
+    return await this.tenantRepository.count();
+  }
+
   async getAllTenants(query: findTenantDto) {
     const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC', status } = query;
 

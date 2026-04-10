@@ -8,9 +8,10 @@ import { AdminPermissionEntity } from '../../modules/permission/permission.entit
 import { RootSeeder } from '../../seeders/root.seeder';
 import { AdminSeeder } from '../../seeders/admin.seeder';
 import { PermissionGroupSeeder } from '../../seeders/permission-group.seeder';
+import { PageEntity } from '../../modules/page/page.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AdminPermissionGroupEntity, AdminPermissionEntity, AdminEntity], 'master')],
+  imports: [TypeOrmModule.forFeature([AdminPermissionGroupEntity, AdminPermissionEntity, AdminEntity ,PageEntity], 'master')],
   providers: [RootSeeder, AdminSeeder, PermissionGroupSeeder],
   exports: [RootSeeder],
 })
