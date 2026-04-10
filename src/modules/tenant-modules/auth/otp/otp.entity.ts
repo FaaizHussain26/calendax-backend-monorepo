@@ -1,6 +1,6 @@
 // src/modules/tenant-modules/auth/otp/otp.entity.ts
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { OtpPurpose } from '../../../../enums/system.enum';
+import { OtpPurpose } from '../../../../common/enums/system.enum';
 
 @Entity('otps')
 export class OtpEntity {

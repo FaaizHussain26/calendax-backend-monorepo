@@ -1,7 +1,7 @@
 // src/modules/admin/admin.dto.ts
 import { Exclude, Expose } from 'class-transformer';
 import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
-import { AdminRoles } from '../../enums/admin.enum';
+import { AdminRoles } from '../../common/enums/admin.enum';
 
 export class AdminLoginDto {
   @IsEmail()

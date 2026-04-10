@@ -1,6 +1,6 @@
 // src/modules/tenant-modules/user/user.dto.ts
 import { IsArray, IsBoolean, IsEmail, IsEnum, IsOptional, IsString, IsUUID, Length } from 'class-validator';
-import { TenantUserRoles } from '../../../enums/tenant.enum';
+import { TenantUserRoles } from '../../../common/enums/tenant.enum';
 
 export class CreateUserDto {
   @IsString()

@@ -1,9 +1,9 @@
 // src/modules/tenant-modules/rbac/permission-group/permission-group.controller.ts
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../../common/jwt/jwt.provider';
+import { JwtAuthGuard } from '../../services/jwt/jwt.provider';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { PermissionsGuard } from '../../common/guards/permission.guard';
-import { AdminRoles } from '../../enums/admin.enum';
+import { AdminRoles } from '../../common/enums/admin.enum';
 import { Roles } from '../../common/decorators/roles.decorator';
 import {
   CreatePermissionDto,

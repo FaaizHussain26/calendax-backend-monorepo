@@ -9,11 +9,11 @@ import {
   SelfRegisterDto,
   AdminCreateUserDto,
 } from './auth.dto';
-import { JwtAuthGuard } from '../../../common/jwt/jwt.provider';
+import { JwtAuthGuard } from '../../../services/jwt/jwt.provider';
 import { AuthService } from './auth.service';
 import { PermissionsGuard } from '../../../common/guards/permission.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
-import { TenantUserRoles } from '../../../enums/tenant.enum';
+import { TenantUserRoles } from '../../../common/enums/tenant.enum';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 

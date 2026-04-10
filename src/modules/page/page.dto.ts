@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class PageResponseDto {
   id: string;
@@ -12,6 +12,12 @@ export class CreatePageDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+  @IsNumber()
+  @IsOptional()
+  index?: number;
+  @IsString()
+  @IsNotEmpty()
+  icon: string;
   @IsString()
   @IsOptional()
   href?: string;
@@ -24,4 +30,10 @@ export class UpdatePageDto {
   @IsString()
   @IsOptional()
   href?: string;
+  @IsString()
+  @IsOptional()
+  icon?: string;
+  @IsNumber()
+  @IsOptional()
+  index?: number;
 }

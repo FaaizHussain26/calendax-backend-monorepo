@@ -27,7 +27,7 @@ export class PageService {
     if (prev) throw new ConflictException('Page with this name already exists!');
     const payload = { ...dto, slug, href: dto.href ?? `/${slug}` };
     const createdEntity = await this.pageRepository.createPage(payload);
-    return plainToInstance(PageResponseDto, createdEntity);
+    return createdEntity
   }
 
   async update(id: string, payload: UpdatePageDto) {
@@ -35,9 +35,7 @@ export class PageService {
     entityNotFound(page, 'Page');
     await this.pageRepository.updatePage(id, payload);
     const updatedEntity = await this.pageRepository.findByPageId(id);
-    return plainToInstance(PageResponseDto, updatedEntity, {
-      excludeExtraneousValues: true,
-    });
+    return updatedEntity
   }
 
   async deletePage(id: string) {

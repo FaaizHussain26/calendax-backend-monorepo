@@ -2,7 +2,7 @@
 import { Inject, Injectable, Scope } from '@nestjs/common';
 import { LessThan, Repository } from 'typeorm';
 import { OtpEntity } from './otp.entity';
-import { OtpPurpose } from '../../../../enums/system.enum';
+import { OtpPurpose } from '../../../../common/enums/system.enum';
 
 @Injectable({ scope: Scope.REQUEST })
 export class OtpRepository {

@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PageEntity } from './page.entity';
-import { ILike, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { PageResponseDto } from './page.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-import { RedisService } from '../../common/redis/redis.service';
+import { RedisService } from '../../services/redis/redis.service';
 import { AdminPermissions } from '../admin/entities/admin-permissions.entity';
 
 @Injectable()
@@ -39,7 +39,9 @@ export class PageRepository {
       where: { slug: slug },
     });
   }
-
+async findByIds(ids: string[]): Promise<PageEntity[]> {
+  return this.pageRepository.find({ where: { id: In(ids) } });
+}
   async createPage(payload: Partial<PageEntity>) {
     const createdEntity = this.pageRepository.create(payload);
     return await this.pageRepository.save(createdEntity);

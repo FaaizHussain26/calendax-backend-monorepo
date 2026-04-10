@@ -25,6 +25,7 @@ export class AdminPermissionGroupService {
       name: dto.name,
       slug: slug,
       href: dto.href,
+      icon:dto.icon,
       description: dto.description,
     });
 

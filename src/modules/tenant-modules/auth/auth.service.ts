@@ -10,18 +10,18 @@ import {
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { AdminCreateUserDto, ChangePasswordDto, LoginDto, ResetPasswordDto, SelfRegisterDto } from './auth.dto';
-import { OtpPurpose } from '../../../enums/system.enum';
+import { OtpPurpose } from '../../../common/enums/system.enum';
 import { UserEntity } from '../user/user.entity';
 import { HelperFunctions } from '../../../common/utils/functions';
 import { UsersRepository } from '../user/user.repository';
 import { OtpService } from './otp/otp.service';
 import { PermissionEntity } from '../rbac/permission/permission.entity';
-import { JwtHelper } from '../../../common/jwt/jwt.provider';
-import { RedisService } from '../../../common/redis/redis.service';
+import { JwtHelper } from '../../../services/jwt/jwt.provider';
+import { RedisService } from '../../../services/redis/redis.service';
 import { JwtService } from '@nestjs/jwt';
 import { PermissionRepository } from '../rbac/permission/permission.repository';
 import { RoleRepository } from '../rbac/role/role.repository';
-import { RedisHelper } from '../../../common/redis/redis.helper';
+import { RedisHelper } from '../../../services/redis/redis.helper';
 
 @Injectable()
 export class AuthService {

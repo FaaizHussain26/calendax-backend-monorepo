@@ -3,6 +3,8 @@ import { Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import { ProtocolEntity } from './protocol.entity';
 import { SiteEntity } from '../site/site.entity';
+import { ProtocolStatus } from '../../../common/enums/protocol.enum';
+import { ListAllProtocolQueryDto } from './protocol.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProtocolRepository {
@@ -11,11 +13,18 @@ export class ProtocolRepository {
     private readonly repo: Repository<ProtocolEntity>,
   ) {}
 
-  async findAll(query: { search?: string; page?: number; limit?: number; all?: boolean }) {
-    const { search, page = 1, limit = 10, all = false } = query;
-
+  async findAll(query: ListAllProtocolQueryDto) {
+    const { search, page = 1, limit = 10, all = false, status } = query;
+    const baseWhere = {
+      ...(status && { status }),
+    };
     const [data, total] = await this.repo.findAndCount({
-      where: search ? [{ name: ILike(`%${search}%`) }, { protocolNumber: ILike(`%${search}%`) }] : {},
+      where: search
+        ? [
+            { ...baseWhere, name: ILike(`%${search}%`) },
+            { ...baseWhere, protocolNumber: ILike(`%${search}%`) },
+          ]
+        : baseWhere,
       relations: { indication: true, sites: true },
       order: { createdAt: 'DESC' },
       ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
@@ -25,6 +34,8 @@ export class ProtocolRepository {
   }
 
   async findById(id: string): Promise<ProtocolEntity | null> {
+    console.log("id:",id);
+    
     return this.repo.findOne({
       where: { id },
       relations: { indication: true, sites: true },

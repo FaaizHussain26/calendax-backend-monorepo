@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { plainToInstance } from 'class-transformer';
-import { AdminRoles } from '../../enums/admin.enum';
+import { AdminRoles } from '../../common/enums/admin.enum';
 import { AdminRepository } from './admin.repository';
 import {
   AdminResponseDto,
@@ -17,8 +17,8 @@ import {
   RemovePagePermissionDto,
   UpdateAdminDto,
 } from './admin.dto';
-import { JwtHelper } from '../../common/jwt/jwt.provider';
-import { JwtPayload, TokenUser } from '../../common/interfaces/request.interface';
+import { JwtHelper } from '../../services/jwt/jwt.provider';
+import { TokenUser } from '../../common/interfaces/request.interface';
 import { PageService } from '../page/page.service';
 import { PageWithPermissions } from '../../common/interfaces/page-permissions.interface';
 import { PaginationDto } from '../../common/dto/pagination.dto';
@@ -32,7 +32,6 @@ export class AdminService {
   ) {}
 
   async logIn(email: string, password: string) {
-    // ✅ use findByEmailWithPassword — password has select:false on entity
     const admin = await this.adminRepository.findByEmailWithPassword(email);
     if (!admin) throw new NotFoundException('Admin not found');
     if (!admin.isActive) throw new UnauthorizedException('Account is inactive');
@@ -40,12 +39,12 @@ export class AdminService {
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) throw new UnauthorizedException('Invalid credentials');
 
-    // ✅ fetch permissions for ADMIN role — SUPER_ADMIN gets all
     let permissions: string[] = [];
     if (admin.role === AdminRoles.ADMIN) {
       const adminPermissions = await this.adminRepository.findPermissions(admin.id);
       // convert page-based permissions to flat permission keys
       permissions = adminPermissions.flatMap((p) => {
+        if (!p.page?.slug) return [];
         const keys: string[] = [];
         if (p.read) keys.push(`${p.page.slug}.read`);
         if (p.write) keys.push(`${p.page.slug}.write`);
@@ -54,15 +53,17 @@ export class AdminService {
         return keys;
       });
     }
-    // ✅ pass permissions to issueToken — cached in Redis
-    return this.jwtHelper.issueToken(
-      {
-        id: admin.id,
-        role: admin.role,
-        isActive: admin.isActive,
-      },
-      permissions,
-    );
+    return {
+      user: { id: admin.id, name: admin.name, email: admin.email, role: admin.role },
+      tokens: await this.jwtHelper.issueToken(
+        {
+          id: admin.id,
+          role: admin.role,
+          isActive: admin.isActive,
+        },
+        permissions,
+      ),
+    };
   }
 
   async getAllAdmins(query: PaginationDto, userId: string) {
@@ -145,28 +146,55 @@ export class AdminService {
     return { message: 'Permission removed successfully' };
   }
 
-  async getAdminPermissions(adminId: string) {
+  async getAdminPermissions(adminId: string): Promise<PageWithPermissions[]> {
     const admin = await this.adminRepository.findById(adminId);
     if (!admin) throw new NotFoundException('Admin not found');
-    return this.findAllPagesWithAdminPermissions(adminId);
+    return this.findAllPagesWithAdminPermissions(admin,false);
   }
-  async findAllPagesWithAdminPermissions(user): Promise<PageWithPermissions[]> {
+
+  async getMyPermissions(user: TokenUser): Promise<PageWithPermissions[]> {
+    return this.findAllPagesWithAdminPermissions(user,true);
+  }
+  private async findAllPagesWithAdminPermissions(user: TokenUser,isUser:boolean): Promise<any[]> {
+    const isSuperAdmin = user.role === AdminRoles.SUPER_ADMIN;
     const [pages, adminPermissions] = await Promise.all([
       this.pageService.findAllPages({ all: true }),
-      this.adminRepository.findPermissions(user.id),
+      isSuperAdmin ? Promise.resolve([]) : this.adminRepository.findPermissions(user.id),
     ]);
-
-    return pages?.data?.map((page) => {
-      const permission = adminPermissions.find((p) => p.pageId === page.id);
-      return {
-        ...page,
-        permissions: {
-          read: permission?.read ?? false,
-          write: permission?.write ?? false,
-          update: permission?.update ?? false,
-          delete: permission?.delete ?? false,
-        },
-      };
-    });
+    if (!pages?.data?.length) {
+      if (isSuperAdmin) {
+        return [
+          {
+            id: '',
+            name: 'Pages',
+            icon: '',
+            href: '/pages',
+            slug: 'pages',
+            permissions: { read: true, write: true, update: true, delete: true },
+          } as PageWithPermissions,
+        ];
+      }
+      return [];
+    }
+    return pages?.data
+      ?.map((page) => {
+        const permission = adminPermissions.find((p) => p.pageId === page.id);
+        if (
+          !isSuperAdmin &&
+          (!permission || (!permission.read && !permission.write && !permission.update && !permission.delete))
+        ) {
+          return isUser?null:{...page,permissions:{read:false,write:false,delete:false,update:false}};
+        }
+        return {
+          ...page,
+          permissions: {
+            read: isSuperAdmin || (permission?.read ?? false),
+            write: isSuperAdmin || (permission?.write ?? false),
+            update: isSuperAdmin || (permission?.update ?? false),
+            delete: isSuperAdmin || (permission?.delete ?? false),
+          },
+        };
+      })
+      .filter((page) => Boolean(page));
   }
 }

@@ -3,14 +3,14 @@ import { BadRequestException, Inject, Injectable, Scope } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
 import { randomUUID } from 'crypto';
-import { OtpPurpose } from '../../../../enums/system.enum';
+import { OtpPurpose } from '../../../../common/enums/system.enum';
 import { OtpRepository } from './otp.repository';
 import { AuthService } from '../auth.service';
 import { UsersService } from '../../user/user.service';
 import { UsersRepository } from '../../user/user.repository';
 import { ConfigService } from '@nestjs/config';
 import { HelperFunctions } from '../../../../common/utils/functions';
-import { RedisHelper } from '../../../../common/redis/redis.helper';
+import { RedisHelper } from '../../../../services/redis/redis.helper';
 
 @Injectable()
 export class OtpService {

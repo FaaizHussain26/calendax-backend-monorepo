@@ -8,12 +8,12 @@ import { ConfigService } from '@nestjs/config';
 
 import { TokenBlacklistService } from './token-blacklist';
 import { RedisService } from '../redis/redis.service';
-import { AdminRoles } from '../../enums/admin.enum';
+import { AdminRoles } from '../../common/enums/admin.enum';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-import { HelperFunctions } from '../utils/functions';
+import { IS_PUBLIC_KEY } from '../../common/decorators/public.decorator';
+import { HelperFunctions } from '../../common/utils/functions';
 import { SignOptions } from 'jsonwebtoken';
-import { CachedPermission, JwtPayload, SessionData, TokenUser } from '../interfaces/request.interface';
+import { CachedPermission, JwtPayload, SessionData, TokenUser } from '../../common/interfaces/request.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -65,7 +65,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         permissions = parsed.map((p) => (typeof p === 'string' ? p : p.key));
       }
     }
-    console.log('user looged in attach token:', user.id, user.role, user.userType);
     return {
       id: user.id,
       role: user.role,
@@ -131,7 +130,7 @@ export class JwtHelper {
       `refresh:${refreshJti}`,
       JSON.stringify({
         ...sessionData,
-        accessJti: jti, // link to access token
+        accessJti: jti, 
       }),
       'EX',
       refreshRedisExpiresIn,

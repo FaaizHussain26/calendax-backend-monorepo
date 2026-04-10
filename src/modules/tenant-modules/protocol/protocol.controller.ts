@@ -1,15 +1,19 @@
 // protocol.controller.ts
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UploadedFile, UseGuards } from '@nestjs/common';
 import { ProtocolService } from './protocol.service';
-import { CreateProtocolDto, UpdateProtocolDto } from './protocol.dto';
-import { PaginationDto } from '../../../common/dto/pagination.dto';
+import { CreateProtocolDto, ListAllProtocolQueryDto, UpdateProtocolDto } from './protocol.dto';
+import { UploadFile } from '../../../common/decorators/upload.decorator';
+import { PermissionsGuard } from '../../../common/guards/permission.guard';
+import { TenantGuard } from '../../../common/guards/tenant.guard';
+import { JwtAuthGuard } from '../../../services/jwt/jwt.provider';
 
+@UseGuards(JwtAuthGuard, TenantGuard, PermissionsGuard)
 @Controller('protocols')
 export class ProtocolController {
   constructor(private readonly protocolService: ProtocolService) {}
 
   @Get()
-  findAll(@Query() query: PaginationDto) {
+  findAll(@Query() query: ListAllProtocolQueryDto) {
     return this.protocolService.findAll(query);
   }
 
@@ -19,8 +23,14 @@ export class ProtocolController {
   }
 
   @Post()
-  create(@Body() dto: CreateProtocolDto) {
-    return this.protocolService.create(dto);
+  @UploadFile({
+  destination: 'uploads/protocols',
+  allowedTypes: ['application/pdf'],
+  maxSizeMB: 10,
+  fieldName: 'document',
+})
+  create(@Body() dto: CreateProtocolDto,@UploadedFile() file: Express.Multer.File,) {
+    return this.protocolService.create(dto,file);
   }
 
   @Patch(':id')

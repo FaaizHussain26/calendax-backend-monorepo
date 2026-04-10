@@ -6,7 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminEntity } from '../admin/entities/admin.entity';
 import { TenantEntity } from './tenant.entity';
 import { TenantConnectionManager } from '../../database/tenant/tenant-connection.manager';
-import { JwtCommonModule } from '../../common/jwt/jwt.module';
+import { JwtCommonModule } from '../../services/jwt/jwt.module';
 import { AdminPermissionGroupModule } from '../permission-group/permission-group.module';
 import { MongoAdminModule } from '../../database/master/mongo-admin.module';
 

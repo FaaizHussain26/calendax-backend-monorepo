@@ -1,7 +1,7 @@
 // src/modules/tenant-modules/rbac/role/role.controller.ts
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { RoleService } from './role.service';
-import { JwtAuthGuard } from '../../../../common/jwt/jwt.provider';
+import { JwtAuthGuard } from '../../../../services/jwt/jwt.provider';
 import { TenantGuard } from '../../../../common/guards/tenant.guard';
 import { AssignPermissionsDto, CreateRoleDto, UpdateRoleDto } from './role.dto';
 import { PermissionsGuard } from '../../../../common/guards/permission.guard';

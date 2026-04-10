@@ -11,7 +11,7 @@ import {
 import { AdminEntity } from './admin.entity';
 import { PageEntity } from '../../page/page.entity';
 @Entity('admin_permissions')
-@Unique(['admin', 'page'])
+@Unique(['adminId', 'pageId'])
 export class AdminPermissions {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -22,7 +22,7 @@ export class AdminPermissions {
   @ManyToOne(() => AdminEntity, (admin) => admin.permissions, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'adminId' })
+  @JoinColumn({  })
   admin: AdminEntity;
 
   @Column({ type: 'uuid' })
@@ -30,9 +30,9 @@ export class AdminPermissions {
 
   @ManyToOne(() => PageEntity, {
     onDelete: 'CASCADE',
-    eager: true,
+    eager: false,
   })
-  @JoinColumn({ name: 'pageId' })
+  @JoinColumn({ })
   page: PageEntity;
 
   @Column({ type: 'boolean', default: false })

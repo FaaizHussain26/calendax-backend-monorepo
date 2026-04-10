@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import { AdminPermissions } from './admin-permissions.entity';
-import { AdminRoles } from '../../../enums/admin.enum';
+import { AdminRoles } from '../../../common/enums/admin.enum';
 
 @Entity('admins')
 export class AdminEntity {
@@ -28,7 +28,7 @@ export class AdminEntity {
   @OneToMany(() => AdminPermissions, (perm) => perm.admin, {
     cascade: true,
   })
-  permissions: AdminPermissions;
+  permissions: AdminPermissions[];
 
   @Column({ default: true })
   isActive: boolean;

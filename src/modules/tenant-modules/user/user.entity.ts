@@ -11,7 +11,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { TenantUserRoles } from '../../../enums/tenant.enum';
+import { TenantUserRoles } from '../../../common/enums/tenant.enum';
 import { PermissionEntity } from '../rbac/permission/permission.entity';
 import { RoleEntity } from '../rbac/role/role.entity';
 import { SiteEntity } from '../site/site.entity';
@@ -62,22 +62,22 @@ export class UserEntity {
     onDelete: 'SET NULL',
     nullable: true,
   })
-  @JoinColumn({ name: 'roleId' })
+  @JoinColumn({ })
   role: RoleEntity;
 
   @ManyToMany(() => PermissionEntity)
   @JoinTable({
     name: 'user_direct_permissions',
-    joinColumn: { name: 'userId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'permissionId', referencedColumnName: 'id' },
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
   })
   permissions: PermissionEntity[];
 
   @ManyToMany(() => SiteEntity, (site) => site.users)
   @JoinTable({
     name: 'user_sites',
-    joinColumn: { name: 'userId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'siteId', referencedColumnName: 'id' },
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'site_id', referencedColumnName: 'id' },
   })
   sites: SiteEntity[];
 
