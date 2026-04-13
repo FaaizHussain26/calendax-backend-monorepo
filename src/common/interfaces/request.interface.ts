@@ -8,7 +8,7 @@ interface TenantConnection {
 }
 
 export interface TenantRequest extends Request {
-  tenantConnection?: TenantConnection;
+  tenantConnection: TenantConnection;
   tenant: TenantEntity;
   tenantId: string;
 }

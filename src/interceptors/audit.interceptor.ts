@@ -3,6 +3,7 @@ import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nes
 import { Observable, tap } from 'rxjs';
 import { AuditService } from '../database/audit-logs/audit.service';
 import { MongoAdminService } from '../database/master/mongo-admin.service';
+import { ADMIN_SYSTEM_LOGS_DB_NAME } from '../common/interfaces/collections/audit-log.interface';
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
@@ -29,7 +30,7 @@ export class AuditInterceptor implements NestInterceptor {
             targetDb = tenantConnection.mongo;
             actorType = 'TENANT_USER';
           } else {
-            targetDb = this.mongoAdmin.clientInstance.db('system_admin_logs');
+            targetDb = this.mongoAdmin.clientInstance.db(ADMIN_SYSTEM_LOGS_DB_NAME);
             actorType = 'SUPER_ADMIN';
           }
           const logBody = { ...req.body };

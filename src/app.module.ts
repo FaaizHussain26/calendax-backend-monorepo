@@ -23,6 +23,8 @@ import { RedisModule } from './services/redis/redis.module';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { FileUploadModule } from './modules/file-upload/file-upload.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { BullModule } from '@nestjs/bullmq';
+import { QueueModule } from './services/queues/queue.module';
 
 @Module({
   imports: [
@@ -62,10 +64,12 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
           password: config.get<string>('db.postgres.password'),
           database: config.get<string>('db.postgres.db'),
           autoLoadEntities: true,
-          synchronize: true,logging: true,
+          synchronize: true,
+          logging: true,
         };
       },
     }),
+    QueueModule,
     RedisModule,
     AuditModule,
     MongoAdminModule,
@@ -94,6 +98,16 @@ export class AppModule {
     // consumer.apply(DecryptPayloadMiddleware).forRoutes('patients', 'tenant');
     consumer
       .apply(TenantContextMiddleware)
-      .forRoutes('auth', 'users', 'permission-groups', 'permissions', 'roles', 'patients', 'sites', 'indication','protocols');
+      .forRoutes(
+        'auth','otp',
+        'users',
+        'permission-groups',
+        'permissions',
+        'roles',
+        'patients',
+        'sites',
+        'indication',
+        'protocols',
+      );
   }
 }
