@@ -22,6 +22,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { RedisModule } from './services/redis/redis.module';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { FileUploadModule } from './modules/file-upload/file-upload.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { BullModule } from '@nestjs/bullmq';
 import { QueueModule } from './services/queues/queue.module';
 
@@ -81,6 +82,7 @@ import { QueueModule } from './services/queues/queue.module';
     TenantModulesModule,
     SeederModule,
     FileUploadModule,
+    DashboardModule
   ],
   controllers: [AppController],
   providers: [

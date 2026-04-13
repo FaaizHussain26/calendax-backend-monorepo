@@ -12,6 +12,11 @@ export class AdminPermissionRepository {
     private readonly repo: Repository<AdminPermissionEntity>,
   ) {}
 
+  // ─── Count ───────────────────────────────────────────────────────────────
+  async count(): Promise<Number> {
+    return await this.repo.count();
+  }
+
   // ─── Create ───────────────────────────────────────────────────────────────
 
   async create(payload: Partial<AdminPermissionEntity>): Promise<AdminPermissionEntity> {

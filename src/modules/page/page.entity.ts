@@ -19,7 +19,7 @@ export class PageEntity {
 
   @Column({ type: 'varchar', length: 255 })
   name: string;
-  @Column({ type: 'varchar', length: 255,nullable:true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   icon: string;
 
   @Column({ type: 'varchar', length: 255, unique: true })
@@ -28,7 +28,7 @@ export class PageEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   href: string;
 
-  @Column({nullable:false})
+  @Column({ nullable: false, unique: true })
   @Generated('increment')
   index: number;
 
@@ -36,14 +36,14 @@ export class PageEntity {
   createdById: string;
 
   @ManyToOne(() => AdminEntity, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({  })
+  @JoinColumn({})
   createdBy: AdminEntity;
 
   @Column({ type: 'uuid', nullable: true })
   updatedById: string;
 
   @ManyToOne(() => AdminEntity, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ })
+  @JoinColumn({})
   updatedBy: AdminEntity;
 
   @CreateDateColumn()
