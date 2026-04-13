@@ -65,3 +65,18 @@ export class ListQuestionsQueryDto extends PaginationDto {
   @IsOptional()
   isApproved?: boolean;
 }
+export class GenerateQuestionDto {
+  @IsUUID()
+  protocolId: string;
+
+  @IsUUID()
+  documentId: string;
+
+  @IsString()
+  @IsOptional()
+  indication?: string;
+
+  @IsString()
+  @IsOptional()
+  additionalContext?: string;
+}

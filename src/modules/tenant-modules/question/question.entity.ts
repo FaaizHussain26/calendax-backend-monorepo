@@ -27,7 +27,7 @@ export class QuestionEntity {
   protocol: ProtocolEntity;
 
   @Column()
-  documentId: string; // 👈 required — links to ProtocolDocumentMetaEntity
+  documentId: string; 
 
   @ManyToOne(() => ProtocolDocumentMetaEntity, { onDelete: 'CASCADE' })
   @JoinColumn()

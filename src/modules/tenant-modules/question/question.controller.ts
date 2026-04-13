@@ -1,9 +1,4 @@
-import {
-  Controller, Get, Post, Patch,
-  Delete, Param, Body, Query,
-  ParseUUIDPipe,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, ParseUUIDPipe, Req } from '@nestjs/common';
 import { QuestionService } from './question.service';
 import {
   CreateQuestionDto,
@@ -38,11 +33,8 @@ export class QuestionController {
     return this.questionService.create(dto);
   }
 
-@Post('generate')
-  async generate(
-    @Body() dto: GenerateQuestionDto,
-    @Req() req: TenantRequest,
-  ) {
+  @Post('generate')
+  async generate(@Body() dto: GenerateQuestionDto, @Req() req: TenantRequest) {
     return this.questionService.generateQuestions(
       dto.protocolId,
       dto.documentId,
@@ -53,10 +45,7 @@ export class QuestionController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateQuestionDto,
-  ) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateQuestionDto) {
     return this.questionService.update(id, dto);
   }
 

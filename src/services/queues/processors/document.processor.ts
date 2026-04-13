@@ -110,7 +110,7 @@ console.log("meta inserting",);
     await protocolRepo.update(protocolId, {
       documentStatus: ProtocolDocumentStatus.COMPLETED,
       isUploaded: true,
-      document: filePath,
+      documentId: newMeta.id,
     });
 
     await job.updateProgress(100);
