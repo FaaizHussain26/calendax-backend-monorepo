@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm';
+import { FindOptionsSelect, ILike, Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { findTenantDto, TenantResponseDto } from './tenant.dto';
 import { TenantEntity } from './tenant.entity';
@@ -36,21 +36,31 @@ export class TenantRepository {
   async getByTenantId(id: string) {
     return await this.tenantRepository.findOne({
       where: { id: id },
- 
     });
   }
   async getDetailedByTenantId(id: string) {
     return await this.tenantRepository.findOne({
-      select: ['id', 'name', 'slug', 'status', 'createdById', 'updatedById', 'dbName', 'permissionGroups',"createdAt","updatedAt"],
+      select: [
+        'id',
+        'name',
+        'slug',
+        'status',
+        'createdById',
+        'updatedById',
+        'dbName',
+        'permissionGroups',
+        'createdAt',
+        'updatedAt',
+      ],
       where: { id: id },
       relations: ['permissionGroups', 'permissionGroups.permissions'],
     });
   }
 
-
-  async findBySlug(slug: string) {
+  async findBySlug(slug: string, select?: string | string[]) {
+    const selectOptions = select ? (Array.isArray(select) ? select : [select]) : undefined;
     return await this.tenantRepository.findOne({
-      select:['id'],
+      select: selectOptions as FindOptionsSelect<TenantEntity>,
       where: { slug: slug },
     });
   }

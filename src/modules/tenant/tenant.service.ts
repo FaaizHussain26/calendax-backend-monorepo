@@ -48,7 +48,7 @@ export class TenantService {
   }
 
   async getTenantBySlug(slug: string) {
-    const tenant = await this.tenantRepository.findBySlug(slug);
+    const tenant = await this.tenantRepository.findBySlug(slug,"id");
     entityNotFound(tenant, 'Tenant');
     return tenant;
   }
