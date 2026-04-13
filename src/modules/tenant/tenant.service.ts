@@ -47,6 +47,12 @@ export class TenantService {
     return tenant;
   }
 
+  async getTenantBySlug(slug: string) {
+    const tenant = await this.tenantRepository.findBySlug(slug);
+    entityNotFound(tenant, 'Tenant');
+    return tenant;
+  }
+
   async createTenant(dto: CreateTenantDto) {
     const slug = HelperFunctions.generateSlug(dto.name);
     const dbName = `tenant_${slug}`;
@@ -94,7 +100,7 @@ export class TenantService {
       return tenant;
     } catch (error) {
       // 5. Rollback everything if anything fails
-      console.log("error crating tenant:",error)
+      console.log('error crating tenant:', error);
       await this.handleProvisioningFailure(tenant, dbName, slug, error);
       throw new InternalServerErrorException('Tenant provisioning failed. Changes have been rolled back.');
     }

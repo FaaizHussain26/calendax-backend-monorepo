@@ -46,8 +46,11 @@ export class TenantRepository {
       relations: ['permissionGroups', 'permissionGroups.permissions'],
     });
   }
+
+
   async findBySlug(slug: string) {
     return await this.tenantRepository.findOne({
+      select:['id'],
       where: { slug: slug },
     });
   }
