@@ -21,6 +21,11 @@ export class TenantController {
   async gettenantsById(@Param('id', ParseUUIDPipe) id: string) {
     return await this.tenantService.getTenantById(id);
   }
+
+  @Get('/slug/:slug')
+  async gettenantsBySlug(@Param('slug') slug: string) {
+    return await this.tenantService.getTenantBySlug(slug);
+  }
   @Post('/')
   async createTenant(@Body() payload: CreateTenantDto) {
     return await this.tenantService.createTenant(payload);
