@@ -12,9 +12,6 @@ export class CreatePageDto {
   @IsString()
   @IsNotEmpty()
   name: string;
-  @IsNumber()
-  @IsOptional()
-  index?: number;
   @IsString()
   @IsNotEmpty()
   icon: string;
@@ -36,4 +33,11 @@ export class UpdatePageDto {
   @IsNumber()
   @IsOptional()
   index?: number;
+}
+
+export class UpdatePageIndexDto {
+  @IsNumber()
+  currentIndex: number;
+  @IsNumber()
+  newIndex: number;
 }

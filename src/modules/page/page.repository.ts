@@ -14,6 +14,11 @@ export class PageRepository {
     @InjectRepository(PageEntity, 'master')
     private readonly pageRepository: Repository<PageEntity>,
   ) {}
+
+  async count(): Promise<Number> {
+    return await this.pageRepository.count();
+  }
+
   async find() {
     return await this.pageRepository.find();
   }
@@ -39,9 +44,9 @@ export class PageRepository {
       where: { slug: slug },
     });
   }
-async findByIds(ids: string[]): Promise<PageEntity[]> {
-  return this.pageRepository.find({ where: { id: In(ids) } });
-}
+  async findByIds(ids: string[]): Promise<PageEntity[]> {
+    return this.pageRepository.find({ where: { id: In(ids) } });
+  }
   async createPage(payload: Partial<PageEntity>) {
     const createdEntity = this.pageRepository.create(payload);
     return await this.pageRepository.save(createdEntity);
@@ -52,6 +57,13 @@ async findByIds(ids: string[]): Promise<PageEntity[]> {
     return updatedEntity;
   }
 
+  async updateindex(index: number, payload: Partial<PageEntity>) {
+    await this.pageRepository.update({index:index}, payload);
+  }
+
+  async maxIndex() {
+    return await this.pageRepository.maximum('index');
+  }
   async delete(id: string) {
     return await this.pageRepository.delete(id);
   }

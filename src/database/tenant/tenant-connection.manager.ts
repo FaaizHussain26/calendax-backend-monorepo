@@ -14,6 +14,8 @@ import { Db, MongoClient } from 'mongodb';
 import { SiteEntity } from '../../modules/tenant-modules/site/site.entity';
 import { ProtocolEntity } from '../../modules/tenant-modules/protocol/protocol.entity';
 import { IndicationEntity } from '../../modules/tenant-modules/indication/indication.entity';
+import { ProtocolDocumentMetaEntity } from '../../modules/tenant-modules/protocol/document/document-meta.entity';
+import { QuestionEntity } from '../../modules/tenant-modules/question/question.entity';
 export type TenantConnection = {
   sql: DataSource;
   mongo: Db;
@@ -59,6 +61,7 @@ export class TenantConnectionManager implements OnModuleDestroy {
         SiteEntity,
         ProtocolEntity,
         IndicationEntity,
+        ProtocolDocumentMetaEntity,QuestionEntity
       ],
 
       migrations: [

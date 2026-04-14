@@ -16,6 +16,6 @@ const controllers = [AdminController];
   imports: [TypeOrmModule.forFeature([AdminEntity, AdminPermissions], 'master'), JwtCommonModule, PageModule],
   controllers,
   providers: [...services, ...repositories],
-  exports: [],
+  exports: [AdminRepository],
 })
 export class AdminModule {}

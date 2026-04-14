@@ -8,6 +8,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { PermissionsGuard } from '../../common/guards/permission.guard';
 import { Permission } from '../../common/decorators/permission.decorator';
 import { AdminPage } from '../../common/enums/admin.enum';
+import { Public } from '../../common/decorators/public.decorator';
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(AllRoles.SUPER_ADMIN, AllRoles.ADMIN)
 @Controller('/tenant')
@@ -20,6 +21,11 @@ export class TenantController {
   @Get('/:id')
   async gettenantsById(@Param('id', ParseUUIDPipe) id: string) {
     return await this.tenantService.getTenantById(id);
+  }
+@Public()
+  @Get('/slug/:slug')
+  async gettenantsBySlug(@Param('slug') slug: string) {
+    return await this.tenantService.getTenantBySlug(slug);
   }
   @Post('/')
   async createTenant(@Body() payload: CreateTenantDto) {

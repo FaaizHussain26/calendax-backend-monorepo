@@ -25,7 +25,7 @@ export class ProtocolRepository {
             { ...baseWhere, protocolNumber: ILike(`%${search}%`) },
           ]
         : baseWhere,
-      relations: { indication: true, sites: true },
+      relations: { indication: true, sites: true,documents:true },
       order: { createdAt: 'DESC' },
       ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
     });
@@ -34,11 +34,11 @@ export class ProtocolRepository {
   }
 
   async findById(id: string): Promise<ProtocolEntity | null> {
-    console.log("id:",id);
-    
+    console.log('id:', id);
+
     return this.repo.findOne({
       where: { id },
-      relations: { indication: true, sites: true },
+      relations: { indication: true, sites: true, documents: true },
     });
   }
 

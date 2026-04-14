@@ -19,6 +19,10 @@ export class AdminRepository {
     private readonly permissionRepo: Repository<AdminPermissions>,
     private readonly pageRepository: PageRepository,
   ) {}
+ // ─── count ────────────────────────────────────────────────────────────────
+    async count(): Promise<Number> {
+    return await this.adminRepo.count();
+  }
 
   // ─── Admin ────────────────────────────────────────────────────────────────
 

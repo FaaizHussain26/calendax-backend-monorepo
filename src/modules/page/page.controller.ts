@@ -12,7 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PageService } from './page.service';
-import { CreatePageDto, UpdatePageDto } from './page.dto';
+import { CreatePageDto, UpdatePageDto, UpdatePageIndexDto } from './page.dto';
 import { JwtAuthGuard } from '../../services/jwt/jwt.provider';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { PermissionsGuard } from '../../common/guards/permission.guard';
@@ -44,6 +44,11 @@ export class PageController {
   async updatePage(@Param('id', ParseUUIDPipe) id: string, @Body() payload: UpdatePageDto) {
     return await this.pageService.update(id, payload);
   }
+  @Patch('/index/:id')
+  async updatePageByIndex(@Param('id',ParseUUIDPipe) id: string, @Body() payload: UpdatePageIndexDto) {
+    return await this.pageService.updatePageByIndex(id, payload);
+  }
+
   @Delete('/:id')
   async deletePage(@Param('id', ParseUUIDPipe) id: string) {
     return await this.pageService.deletePage(id);
