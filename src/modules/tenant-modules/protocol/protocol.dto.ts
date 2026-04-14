@@ -33,3 +33,7 @@ export class ListAllProtocolQueryDto extends PaginationDto {
   @IsEnum(ProtocolStatus)
   status?: ProtocolStatus;
 }
+
+export class ListDocumentsByProtocolIdDto extends PaginationDto{
+  
+}

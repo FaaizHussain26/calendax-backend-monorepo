@@ -65,7 +65,7 @@ import { QueueModule } from './services/queues/queue.module';
           database: config.get<string>('db.postgres.db'),
           autoLoadEntities: true,
           synchronize: true,
-          logging: true,
+          // logging: true,
         };
       },
     }),
@@ -107,7 +107,7 @@ export class AppModule {
         'patients',
         'sites',
         'indication',
-        'protocols',
+        'protocols',"questions"
       );
   }
 }

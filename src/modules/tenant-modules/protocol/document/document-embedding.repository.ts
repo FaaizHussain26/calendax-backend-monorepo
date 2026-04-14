@@ -10,6 +10,7 @@ export class ProtocolDocumentRepository extends BaseMongoRepository<IProtocolDoc
   }
 
   async insertChunks(chunks: DocumentChunk[]): Promise<void> {
+    console.log("inserting chunks",this.mongo.databaseName,chunks.length)
     await this.insertMany(
       chunks.map((chunk) => ({
         text: chunk.text,

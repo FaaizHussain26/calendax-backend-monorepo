@@ -15,6 +15,7 @@ import { IndicationEntity } from '../indication/indication.entity';
 import { SiteEntity } from '../site/site.entity';
 import { TenantStatus } from '../../../common/enums/tenant.enum';
 import { ProtocolDocumentStatus, ProtocolStatus } from '../../../common/enums/protocol.enum';
+import { ProtocolDocumentMetaEntity } from './document/document-meta.entity';
 @Entity('protocols')
 export class ProtocolEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -26,7 +27,14 @@ export class ProtocolEntity {
   slug: string;
 
   @Column({ nullable: true })
-  document: string;
+  documentId: string;
+
+  @OneToMany(() => ProtocolDocumentMetaEntity, (doc) => doc.protocol)
+  documents: ProtocolDocumentMetaEntity[]; // all docs
+
+  get currentDocument(): ProtocolDocumentMetaEntity | undefined {
+    return this.documents?.find((d) => d.isCurrent);
+  }
 
   @Column({ nullable: false, unique: true })
   protocolNumber: string;

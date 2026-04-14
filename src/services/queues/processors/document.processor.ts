@@ -42,7 +42,7 @@ export class DocumentProcessor extends WorkerHost {
     const { protocolId, filePath, siteIds, indicationId, tenantId, originalName, fileName, mimeType, fileSize } =
       job.data;
 
-    this.logger.log(`Processing document for protocol: ${protocolId} attempt: ${job.attemptsMade + 1}`);
+    this.logger.log(`Processing document for protocol: ${protocolId} fot tenant:${tenantId} attempt: ${job.attemptsMade + 1}`);
 
     // 1. get tenant connection
     const tenant = await this.tenantRepository.getByTenantId(tenantId);
@@ -110,7 +110,7 @@ export class DocumentProcessor extends WorkerHost {
     await protocolRepo.update(protocolId, {
       documentStatus: ProtocolDocumentStatus.COMPLETED,
       isUploaded: true,
-      document: newMeta.id,
+      documentId: newMeta.id,
     });
 
     await job.updateProgress(100);

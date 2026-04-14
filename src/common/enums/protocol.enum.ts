@@ -1,5 +1,10 @@
-export enum ProtocolStatus{
-    ORIGINAL='ORIGINAL',COMPLETED='COMPLETED',CANCELLED='CANCELLED',REMOVED='REMOVED'
+
+export enum ProtocolStatus {
+  ORIGINAL = 'original',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+  REMOVED = 'removed',
+  UPDATED = 'updated',
 }
 export enum ProtocolDocumentStatus {
   PENDING = 'pending',

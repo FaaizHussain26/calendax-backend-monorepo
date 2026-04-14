@@ -20,7 +20,7 @@ export class ProtocolDocumentMetaRepository {
   async findAllByProtocolId(protocolId: string): Promise<ProtocolDocumentMetaEntity[]> {
     return this.repo.find({
       where: { protocolId },
-      order: { version: 'DESC' }, // 👈 latest first
+      order: { version: 'DESC' },
     });
   }
 
