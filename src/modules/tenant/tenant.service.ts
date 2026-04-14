@@ -136,7 +136,6 @@ export class TenantService {
         console.log('tenant group created:', group.name);
       }
       const groupPerms = group.permissions ?? [];
-      console.log('group perms are', group);
       // upsert permissions
       for (const permission of groupPerms) {
         let tenantPerm = await permRepo.findOne({
