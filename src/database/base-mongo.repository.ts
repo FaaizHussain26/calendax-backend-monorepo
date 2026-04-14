@@ -33,6 +33,7 @@ export abstract class BaseMongoRepository<T extends BaseMongoDocument> {
 
  async insertMany(docs: Omit<T, '_id'>[]): Promise<InsertManyResult> {
     if (!docs.length) throw new Error('No documents to insert');
+    console.log("collections:",this.collectionName,docs.length)
     return this.collection.insertMany(
       docs.map((doc) => ({
         ...doc,

@@ -48,7 +48,7 @@ export class TenantService {
   }
 
   async getTenantBySlug(slug: string) {
-    const tenant = await this.tenantRepository.findBySlug(slug,"id");
+    const tenant = await this.tenantRepository.findBySlug(slug, 'id');
     entityNotFound(tenant, 'Tenant');
     return tenant;
   }
@@ -239,16 +239,26 @@ export class TenantService {
     await masterConn.query(`CREATE DATABASE "${dbName}"`);
     await masterConn.query(`CREATE USER "${dbUser}" WITH PASSWORD '${dbPassword}'`);
     await masterConn.query(`GRANT ALL PRIVILEGES ON DATABASE "${dbName}" TO "${dbUser}"`);
-
+    const dbUrl = this.configService.get<string>('db.postgres.url');
+    const isProd = this.configService.get<string>('environment') === 'production';
     // Connect to tenant DB as superuser to grant schema permissions
-    const tenantAdminConn = new DataSource({
-      type: 'postgres',
-      host: this.configService.get<string>('DB_HOST'),
-      port: this.configService.get<number>('DB_PORT') ?? 5432,
-      username: this.configService.get<string>('DB_USER'),
-      password: this.configService.get<string>('DB_PASSWORD'),
-      database: dbName,
-    });
+    const tenantAdminConn = new DataSource(
+      isProd && dbUrl
+        ? {
+            type: 'postgres',
+            url: dbUrl.replace(/\/[^/]+$/, `/${dbName}`),
+
+            ssl: { rejectUnauthorized: false },
+          }
+        : {
+            type: 'postgres',
+            host: this.configService.get<string>('db.postgres.host'),
+            port: this.configService.get<number>('db.postgres.port'),
+            username: this.configService.get<string>('db.postgres.user'),
+            password: this.configService.get<string>('db.postgres.password'),
+            database: dbName,
+          },
+    );
 
     await tenantAdminConn.initialize();
     await tenantAdminConn.query(`GRANT ALL ON SCHEMA public TO "${dbUser}"`);
