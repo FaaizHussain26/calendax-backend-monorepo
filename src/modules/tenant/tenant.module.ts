@@ -14,6 +14,6 @@ import { MongoAdminModule } from '../../database/master/mongo-admin.module';
   imports: [TypeOrmModule.forFeature([TenantEntity], 'master'), AdminPermissionGroupModule, MongoAdminModule],
   controllers: [TenantController],
   providers: [TenantService, TenantRepository, TenantConnectionManager],
-  exports: [TenantRepository, TenantConnectionManager],
+  exports: [TenantRepository, TenantConnectionManager,TenantService],
 })
 export class TenantModule {}
