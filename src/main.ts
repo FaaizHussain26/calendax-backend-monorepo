@@ -12,7 +12,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.use(
-    helmet({
+    helmet({ 
       contentSecurityPolicy: process.env.NODE_ENV === 'production',
       hsts: {
         maxAge: 31536000, // 1 year

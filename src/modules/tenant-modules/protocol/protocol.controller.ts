@@ -55,7 +55,7 @@ export class ProtocolController {
     fieldName: 'document',
   })
   update(@Param('id') id: string, @Body() dto: UpdateProtocolDto,@UploadedFile() file: Express.Multer.File, @Req() req: TenantRequest) {
-    return this.protocolService.update(id, dto,file,req.tenantId);
+    return this.protocolService.update(id, dto,file,req.tenantId!);
   }
 
   @Delete(':id')
