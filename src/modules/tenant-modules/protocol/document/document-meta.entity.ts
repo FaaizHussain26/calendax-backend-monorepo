@@ -17,10 +17,11 @@ export class ProtocolDocumentMetaEntity {
   @Column()
   protocolId: string;
 
-  @ManyToOne(() => ProtocolEntity, { onDelete: 'CASCADE' })
-  @JoinColumn()
-  protocol: ProtocolEntity;
-
+@ManyToOne(() => ProtocolEntity, (protocol) => protocol.documents, {
+  onDelete: 'CASCADE',
+})
+@JoinColumn()
+protocol: ProtocolEntity;
   @Column()
   originalName: string;
 
@@ -61,7 +62,7 @@ export class ProtocolDocumentMetaEntity {
 
   @Column({ nullable: true })
   replacedById: string;
-  
+
   @CreateDateColumn()
   createdAt: Date;
 

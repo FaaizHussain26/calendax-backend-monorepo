@@ -14,7 +14,7 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { ProtocolService } from './protocol.service';
-import { CreateProtocolDto, ListAllProtocolQueryDto, UpdateProtocolDto } from './protocol.dto';
+import { CreateProtocolDto, ListAllProtocolQueryDto, ListDocumentsByProtocolIdDto, UpdateProtocolDto } from './protocol.dto';
 import { UploadFile } from '../../../common/decorators/upload.decorator';
 import { PermissionsGuard } from '../../../common/guards/permission.guard';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
@@ -63,7 +63,7 @@ export class ProtocolController {
     return this.protocolService.remove(id);
   }
   @Get(':id/documents')
-  getDocumentHistory(@Param('id', ParseUUIDPipe) id: string) {
+  getDocumentHistory(@Param('id', ParseUUIDPipe) id: string,@Query() query:ListDocumentsByProtocolIdDto) {
     return this.protocolService.getDocumentHistory(id);
   }
 }

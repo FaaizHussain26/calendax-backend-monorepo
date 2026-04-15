@@ -12,7 +12,7 @@ import { ProtocolDocumentRepository } from './document/document-embedding.reposi
 import { Db } from 'mongodb';
 import { DocumentChunk } from '../../../common/interfaces/document.interface';
 import { ProtocolDocumentMetaRepository } from './document/document-meta.repository';
-import { ProtocolDocumentStatus } from '../../../common/enums/protocol.enum';
+import { ProtocolDocumentStatus, ProtocolStatus } from '../../../common/enums/protocol.enum';
 import { DocumentQueueService } from '../../../services/queues/services/document-queue.service';
 
 @Injectable()
@@ -85,7 +85,7 @@ export class ProtocolService {
     dto: CreateProtocolDto,
     file: Express.Multer.File,
     tenantId: string,
-  ): Promise<{ protocol: ProtocolEntity | null; message: string; jobId: string }> {
+  ): Promise<{ protocol: ProtocolEntity | null; message: string; data: {jobId:string,id:string} }> {
     const { siteIds, indicationId, ...protocolData } = dto;
     console.log('file is:', file);
     const existing = await this.protocolRepository.findOneByCondition({
@@ -125,7 +125,7 @@ export class ProtocolService {
     return {
       protocol: await this.protocolRepository.findById(protocol.id),
       message: 'Protocol created. Document processing queued.',
-      jobId,
+      data:{jobId,id:protocol.id},
     };
   }
 
@@ -155,6 +155,7 @@ export class ProtocolService {
       await this.protocolRepository.update(id, {
         documentStatus: ProtocolDocumentStatus.PENDING,
         isUploaded: false,
+        status:ProtocolStatus.UPDATED
       });
       jobId = await this.documentQueueService.addDocumentJob({
         protocolId: id,
@@ -181,7 +182,7 @@ export class ProtocolService {
     return { message: 'Protocol Deleted Successfully' };
   }
   async getDocumentHistory(protocolId: string) {
-    await this.findById(protocolId); // throws if not found
+    await this.findById(protocolId);
     return this.protocolDocumentMetaRepository.findAllByProtocolId(protocolId);
   }
 }

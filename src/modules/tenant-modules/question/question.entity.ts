@@ -49,8 +49,6 @@ export class QuestionEntity {
   })
   status: QuestionStatus;
 
-  @Column({ type: 'text', nullable: true })
-  answer: string; 
 
   @Column({ default: false })
   isApproved: boolean;
