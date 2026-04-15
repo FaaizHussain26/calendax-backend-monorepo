@@ -37,7 +37,6 @@ export class QuestionController {
   async generate(@Body() dto: GenerateQuestionDto, @Req() req: TenantRequest) {
     return this.questionService.generateQuestions(
       dto.protocolId,
-      dto.documentId,
       req.tenantConnection.mongo!,
       dto.indication,
       dto.additionalContext,
