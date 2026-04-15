@@ -48,17 +48,22 @@ export class TenantEntity {
   createdById: string;
 
   @ManyToOne(() => AdminEntity, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({  })
+  @JoinColumn({})
   createdBy: AdminEntity;
 
   @Column({ type: 'uuid', nullable: true })
   updatedById: string;
 
   @ManyToOne(() => AdminEntity, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({  })
+  @JoinColumn({})
   updatedBy: AdminEntity;
 
   // -------- Tenant DB credentials (for connection manager) --------
+  @Column({ type: 'varchar', length: 255, nullable: false, default: 'unspecified' })
+  adminEmail: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: false, default: 'unspecified' })
+  adminPassword: string;
 
   @Column({ type: 'varchar', length: 255, transformer: EncryptionTransformer })
   dbName: string;
