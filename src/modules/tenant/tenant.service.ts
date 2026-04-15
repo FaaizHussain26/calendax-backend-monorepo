@@ -91,8 +91,12 @@ export class TenantService {
         status: TenantStatus.PROVISIONING,
         permissionGroups: requestedGroups,
       });
+      console.log('db provisioning done, now getting connection');
       const connection = await this.connectionManager.getConnection(tenant);
+      console.log('got connection now running migrations');
       await connection.sql.runMigrations();
+      console.log('migrated now seeding tenant db');
+
       await this.seedTenantDatabase(connection.sql, dto, requestedGroups);
       await this.tenantRepository.updateTenant(tenant.id, {
         status: TenantStatus.ACTIVE,
@@ -241,12 +245,16 @@ export class TenantService {
     await masterConn.query(`GRANT ALL PRIVILEGES ON DATABASE "${dbName}" TO "${dbUser}"`);
     const dbUrl = this.configService.get<string>('db.postgres.url');
     const isProd = this.configService.get<string>('environment') === 'production';
+    const replacedUrl = dbUrl?.replace(/\/[^/]+$/, `/${dbName}`);
+    console.log('isProd:', isProd);
+    console.log('dbUrl exists:', !!dbUrl);
+    console.log('replaced url:', dbUrl?.replace(/\/[^/]+$/, `/${dbName}`));
     // Connect to tenant DB as superuser to grant schema permissions
     const tenantAdminConn = new DataSource(
-      isProd && dbUrl
+      dbUrl
         ? {
             type: 'postgres',
-            url: dbUrl.replace(/\/[^/]+$/, `/${dbName}`),
+            url: replacedUrl,
 
             ssl: { rejectUnauthorized: false },
           }

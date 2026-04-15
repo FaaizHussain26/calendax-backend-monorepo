@@ -69,8 +69,6 @@ export class TenantRepository {
   }
 
   async updateTenant(id: string, payload: Partial<TenantEntity>) {
-    console.log('update tenant dto:', id, payload);
-
     const updatedEntity = this.tenantRepository.update(id, payload);
     return updatedEntity;
   }

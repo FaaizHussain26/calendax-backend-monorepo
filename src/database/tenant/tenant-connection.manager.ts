@@ -43,14 +43,23 @@ export class TenantConnectionManager implements OnModuleDestroy {
 
     const cached = this.cache.get(tenant.id);
     if (cached) return cached;
-
+    console.log("creating tenant connection",tenant.dbName)
+    const dbUrl = this.configService.get<string>('db.postgres.url');
     const dataSource = new DataSource({
       type: 'postgres',
-      host: tenant.dbHost,
-      port: tenant.dbPort,
-      username: tenant.dbUser,
-      password: tenant.dbPassword,
-      database: tenant.dbName,
+      ...(dbUrl
+        ? {
+            url: dbUrl?.replace(/\/[^/]+$/, `/${tenant.dbName}`),
+
+            ssl: { rejectUnauthorized: false },
+          }
+        : {
+            host: tenant.dbHost,
+            port: tenant.dbPort,
+            username: tenant.dbUser,
+            password: tenant.dbPassword,
+            database: tenant.dbName,
+          }),
       synchronize: this.configService.get('environment') !== 'production',
       entities: [
         PermissionGroupEntity,
@@ -61,7 +70,8 @@ export class TenantConnectionManager implements OnModuleDestroy {
         SiteEntity,
         ProtocolEntity,
         IndicationEntity,
-        ProtocolDocumentMetaEntity,QuestionEntity
+        ProtocolDocumentMetaEntity,
+        QuestionEntity,
       ],
 
       migrations: [
@@ -72,7 +82,7 @@ export class TenantConnectionManager implements OnModuleDestroy {
         max: 5,
         min: 1,
         idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 2000,
+        connectionTimeoutMillis: 10000,
       },
     });
     if (!tenant.mongoUri) {
@@ -89,46 +99,7 @@ export class TenantConnectionManager implements OnModuleDestroy {
     this.cache.set(tenant.id, connectionContext);
     return connectionContext;
   }
-  async getContext(tenant: TenantEntity): Promise<TenantConnection> {
-    const cached = this.cache.get(tenant.id);
-    if (cached) return cached;
 
-    // Initialize both in parallel for speed
-    const sqlAttr: DataSourceOptions = {
-      type: 'postgres',
-      host: tenant.dbHost,
-      port: tenant.dbPort,
-      username: tenant.dbUser,
-      password: tenant.dbPassword,
-      database: tenant.dbName,
-      synchronize: this.configService.get('environment') !== 'production',
-      entities: [PermissionGroupEntity, PermissionEntity, RoleEntity, UserEntity, OtpEntity],
-
-      // migrations: [
-      //   __dirname + '/../../modules/tenant-modules/migrations/**/*{.ts,.js}', // ← add this
-      // ],
-      migrationsRun: false,
-      extra: {
-        max: 5,
-        min: 1,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 2000,
-      },
-    };
-    const dataSource = new DataSource(sqlAttr);
-    const mongoClient = new MongoClient(tenant.mongoUri!);
-
-    await Promise.all([dataSource.initialize(), mongoClient.connect()]);
-
-    const context: TenantConnection = {
-      sql: dataSource,
-      mongo: mongoClient.db(),
-      mongoClient: mongoClient,
-    };
-
-    this.cache.set(tenant.id, context);
-    return context;
-  }
   async closeConnection(tenantId: string) {
     const conn = this.cache.get(tenantId);
     if (conn) {

@@ -10,7 +10,6 @@ export class ProtocolDocumentRepository extends BaseMongoRepository<IProtocolDoc
   }
 
   async insertChunks(chunks: DocumentChunk[]): Promise<void> {
-    console.log("inserting chunks",this.mongo.databaseName,chunks.length)
     await this.insertMany(
       chunks.map((chunk) => ({
         text: chunk.text,
@@ -28,7 +27,7 @@ export class ProtocolDocumentRepository extends BaseMongoRepository<IProtocolDoc
     return this.findMany({ protocol_id: protocolId });
   }
 
-  async deleteByProtocolId(protocolId: string): Promise<void> {
-    await this.deleteMany({ protocol_id: protocolId });
+  async deleteByProtocolIdAndFileId(protocolId: string,fileId:string): Promise<void> {
+    await this.deleteMany({ protocol_id: protocolId,file_id:fileId });
   }
 }
