@@ -39,7 +39,7 @@ export class TenantProcessor extends WorkerHost {
   }
 
   async process(job: Job<TenantJobData>): Promise<void> {
-    const { tenantId, dto,permissionGroup, dbName, slug, dbPassword } = job.data;
+    const { tenantId, dto, permissionGroup, dbName, slug, dbPassword } = job.data;
     let tenant: TenantEntity | null = null;
 
     tenant = await this.tenantRepository.getByTenantId(tenantId);
@@ -97,16 +97,29 @@ export class TenantProcessor extends WorkerHost {
     await masterConn.query(`CREATE DATABASE "${dbName}"`);
     await masterConn.query(`CREATE USER "${dbUser}" WITH PASSWORD '${dbPassword}'`);
     await masterConn.query(`GRANT ALL PRIVILEGES ON DATABASE "${dbName}" TO "${dbUser}"`);
-
+    const dbUrl = this.configService.get<string>('db.postgres.url');
+    const isProd = this.configService.get<string>('environment') === 'production';
+    const replacedUrl = dbUrl?.replace(/\/[^/]+$/, `/${dbName}`);
+    console.log('isProd:', isProd);
+    console.log('dbUrl exists:', !!dbUrl);
+    console.log('replaced url:', dbUrl?.replace(/\/[^/]+$/, `/${dbName}`));
     // Connect to tenant DB as superuser to grant schema permissions
-    const tenantAdminConn = new DataSource({
-      type: 'postgres',
-      host: this.configService.get<string>('DB_HOST'),
-      port: this.configService.get<number>('DB_PORT') ?? 5432,
-      username: this.configService.get<string>('DB_USER'),
-      password: this.configService.get<string>('DB_PASSWORD'),
-      database: dbName,
-    });
+    const tenantAdminConn = new DataSource(
+      dbUrl
+        ? {
+            type: 'postgres',
+            url: replacedUrl,
+            ssl: { rejectUnauthorized: false },
+          }
+        : {
+            type: 'postgres',
+            host: this.configService.get<string>('DB_HOST'),
+            port: this.configService.get<number>('DB_PORT') ?? 5432,
+            username: this.configService.get<string>('DB_USER'),
+            password: this.configService.get<string>('DB_PASSWORD'),
+            database: dbName,
+          },
+    );
 
     await tenantAdminConn.initialize();
     await tenantAdminConn.query(`GRANT ALL ON SCHEMA public TO "${dbUser}"`);

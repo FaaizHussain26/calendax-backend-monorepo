@@ -25,44 +25,7 @@ export class ProtocolService {
     private readonly protocolDocumentMetaRepository: ProtocolDocumentMetaRepository,
     private readonly documentQueueService: DocumentQueueService,
   ) {}
-  private async processDocumentAsync(
-    file: Express.Multer.File,
-    mongo: Db,
-    protocolId: string,
-    siteIds: string[],
-    indicationId?: string,
-  ) {
-    const { chunks, totalPages, totalChunks } = await this.documentProcessor.processDocument(file, {
-      protocolId,
-      protocolNumber: protocolId,
-      siteIds,
-      indicationId,
-    });
-    const currentDoc = await this.protocolDocumentMetaRepository.findCurrentByProtocolId(protocolId);
-    const nextVersion = (currentDoc?.version ?? 0) + 1;
 
-    const repo = new ProtocolDocumentRepository(mongo);
-    await repo.insertChunks(chunks);
-
-    const newMeta = await this.protocolDocumentMetaRepository.create({
-      protocolId,
-      originalName: file.originalname,
-      fileName: file.filename,
-      filePath: file.path,
-      mimeType: file.mimetype,
-      fileSize: file.size,
-      totalPages,
-      totalChunks,
-      isProcessed: true,
-      version: nextVersion,
-      isCurrent: true,
-    });
-
-    if (currentDoc) {
-      await this.protocolDocumentMetaRepository.markAsReplaced(currentDoc.id, newMeta.id);
-      await repo.deleteByProtocolId(protocolId);
-    }
-  }
   async findAll(query: ListAllProtocolQueryDto) {
     return this.protocolRepository.findAll(query);
   }
@@ -158,7 +121,7 @@ export class ProtocolService {
         status:ProtocolStatus.UPDATED
       });
       jobId = await this.documentQueueService.addDocumentJob({
-        protocolId: id,
+        protocolId: protocol.id,
         filePath: file.path,
         originalName: file.originalname,
         fileName: file.filename,
@@ -168,6 +131,7 @@ export class ProtocolService {
         indicationId,
         tenantId,
       });
+   
     }
     return {
       protocol: await this.protocolRepository.findById(id),

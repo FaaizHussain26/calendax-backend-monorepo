@@ -55,8 +55,8 @@ export class QuestionService {
     indication?: string,
     additionalContext?: string,
   ): Promise<{ question: string; summary: string; entity: QuestionEntity | null }> {
-    await this.validateProtocolAndDocument(protocolId,documentId)
-    return this.generate(protocolId,documentId,mongo,indication,additionalContext);
+    await this.validateProtocolAndDocument(protocolId, documentId);
+    return this.generate(protocolId, documentId, mongo, indication, additionalContext);
   }
 
   async update(id: string, dto: UpdateQuestionDto): Promise<QuestionEntity> {
@@ -91,10 +91,16 @@ export class QuestionService {
     indication?: string,
     additionalContext?: string,
   ): Promise<{ question: string; summary: string; entity: QuestionEntity }> {
+    const currentDoc = await this.protocolDocumentMetaRepository.findCurrentByProtocolId(protocolId);
+    if (!currentDoc?.id) {
+      throw new NotFoundException('A current active doc not found for protocol');
+    }
+    if (!currentDoc?.isProcessed)
+      throw new Error('Document is being processed cannot generate questions now. Try agian after sometime');
     // 1. check if approved question exists — cannot regenerate
     const existing = await this.questionRepository.findOneByCondition({
       protocolId,
-      documentId,
+      documentId:currentDoc.id,
       status: QuestionStatus.APPROVED,
     });
     if (existing) {
@@ -139,7 +145,7 @@ export class QuestionService {
     // 6. upsert — update existing pending or create new
     const pendingQuestion = await this.questionRepository.findOneByCondition({
       protocolId,
-      documentId,
+      documentId:currentDoc.id,
       status: QuestionStatus.PENDING,
     });
 
@@ -157,7 +163,7 @@ export class QuestionService {
       // create new
       entity = await this.questionRepository.create({
         protocolId,
-        documentId,
+        documentId:currentDoc.id,
         question,
         summary,
         indication,

@@ -74,12 +74,12 @@ export class DocumentProcessor extends WorkerHost {
     await job.updateProgress(60);
 
     // 3. store chunks in MongoDB
-    console.log('inserting chunks');
+    console.log('inserting chunks',job.id);
 
     await protocolDocumentRepo.insertChunks(chunks);
 
     await job.updateProgress(75);
-    console.log('meta inserting');
+    console.log('meta inserting',job.id);
 
     // 4. update protocol status
     const currentMeta = await protocolDocumentMetaRepo.findCurrentByProtocolId(protocolId);
@@ -101,7 +101,7 @@ export class DocumentProcessor extends WorkerHost {
 
     if (currentMeta) {
       await protocolDocumentMetaRepo.markAsReplaced(currentMeta.id, newMeta.id);
-      await protocolDocumentRepo.deleteByProtocolId(protocolId); // remove old chunks
+      await protocolDocumentRepo.deleteByProtocolIdAndFileId(protocolId,currentMeta.id); // remove old chunks
     }
 
     await job.updateProgress(90);
