@@ -5,6 +5,7 @@ export const QUEUES = {
   EMAIL: 'email',          
   REPORT: 'report',        
   NOTIFICATION: 'notification',
+  TENANT:'tenet-processing'
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

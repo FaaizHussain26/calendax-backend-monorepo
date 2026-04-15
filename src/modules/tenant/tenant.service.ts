@@ -23,8 +23,9 @@ import { PermissionGroupEntity } from '../tenant-modules/rbac/permission-group/p
 import { PermissionEntity } from '../tenant-modules/rbac/permission/permission.entity';
 import { RoleEntity } from '../tenant-modules/rbac/role/role.entity';
 import { UserEntity } from '../tenant-modules/user/user.entity';
-import * as bcrypt from 'bcrypt';
+
 import { MongoAdminService } from '../../database/master/mongo-admin.service';
+import { TenantQueueService } from '../../services/queues/services/tenant-queue.service';
 @Injectable()
 export class TenantService {
   constructor(
@@ -35,6 +36,7 @@ export class TenantService {
     private readonly configService: ConfigService,
     private readonly adminPermissionGroupRepository: AdminPermissionGroupRepository,
     private readonly mongoAdmin: MongoAdminService,
+    private readonly tenantQueueService: TenantQueueService,
   ) {}
 
   async getAllTenants(query: findTenantDto) {
@@ -76,158 +78,36 @@ export class TenantService {
       throw new BadRequestException('Select at least one permission group or enable allPermissions');
     }
 
-    try {
-      await this.provisionDatabase(dbName, slug, dbPassword);
-      const mongoUri = await this.provisionMongoDatabase(dbName);
-      tenant = await this.tenantRepository.createTenant({
-        ...dto,
-        slug,
-        dbHost: this.configService.get<string>('tenant.db.host'),
-        dbPort: this.configService.get<number>('tenant.db.port') ?? 5432,
-        dbUser: slug,
-        dbPassword,
-        dbName,
-        mongoUri,
-        status: TenantStatus.PROVISIONING,
-        permissionGroups: requestedGroups,
-      });
-      console.log('db provisioning done, now getting connection');
-      const connection = await this.connectionManager.getConnection(tenant);
-      console.log('got connection now running migrations');
-      await connection.sql.runMigrations();
-      console.log('migrated now seeding tenant db');
+    tenant = await this.tenantRepository.createTenant({
+      ...dto,
+      slug,
+      dbHost: this.configService.get<string>('tenant.db.host'),
+      dbPort: this.configService.get<number>('tenant.db.port') ?? 5432,
+      dbUser: slug,
+      dbPassword,
+      dbName,
+      mongoUri: 'mongoUri',
+      status: TenantStatus.PROVISIONING,
+      permissionGroups: requestedGroups,
+    });
+    const jobId = await this.tenantQueueService.addTenantJob({
+      tenantId: tenant.id,
+      dto,
+      permissionGroup:requestedGroups,
+      dbName,
+      slug,
+      dbPassword,
+    });
 
-      await this.seedTenantDatabase(connection.sql, dto, requestedGroups);
-      await this.tenantRepository.updateTenant(tenant.id, {
-        status: TenantStatus.ACTIVE,
-      });
-      return tenant;
-    } catch (error) {
-      // 5. Rollback everything if anything fails
-      console.log('error crating tenant:', error);
-      await this.handleProvisioningFailure(tenant, dbName, slug, error);
-      throw new InternalServerErrorException('Tenant provisioning failed. Changes have been rolled back.');
-    }
+    console.log('checking', jobId);
+    return {
+      tenant: await this.tenantRepository.getByTenantId(tenant.id),
+      message: 'Tenant created. Tenant processing queued.',
+      jobId,
+    };
   }
-  private async seedTenantDatabase(
-    connection: DataSource,
-    dto: CreateTenantDto,
-    permissionGroups: AdminPermissionGroupEntity[],
-  ) {
-    const permGroupRepo = connection.getRepository(PermissionGroupEntity);
-    const permRepo = connection.getRepository(PermissionEntity);
-    const roleRepo = connection.getRepository(RoleEntity);
-    const userRepo = connection.getRepository(UserEntity);
 
-    // 1. seed permission groups + permissions into tenant DB
-    const seededPermissions: PermissionEntity[] = [];
-
-    for (const group of permissionGroups) {
-      // upsert group
-      let tenantGroup = await permGroupRepo.findOne({
-        where: { slug: group.slug },
-      });
-
-      if (!tenantGroup) {
-        tenantGroup = await permGroupRepo.save(
-          permGroupRepo.create({
-            name: group.name,
-            slug: group.slug,
-            href: group.href,
-            description: group.description,
-          }),
-        );
-        console.log('tenant group created:', group.name);
-      }
-      const groupPerms = group.permissions ?? [];
-      // upsert permissions
-      for (const permission of groupPerms) {
-        let tenantPerm = await permRepo.findOne({
-          where: { key: permission.key },
-        });
-
-        if (!tenantPerm) {
-          tenantPerm = await permRepo.save(
-            permRepo.create({
-              key: permission.key,
-              name: permission.name,
-              description: permission.description,
-              groupId: tenantGroup.id,
-            }),
-          );
-        }
-
-        seededPermissions.push(tenantPerm);
-      }
-    }
-
-    // 2. create Admin role with ALL seeded permissions
-    const adminRole = await roleRepo.save(
-      roleRepo.create({
-        name: 'Admin',
-        isDefault: false,
-        permissions: seededPermissions,
-      }),
-    );
-
-    // 3. create Staff role with read-only permissions
-    const readPermissions = seededPermissions.filter((p) => p.key.endsWith('.read'));
-    await roleRepo.save(
-      roleRepo.create({
-        name: 'Staff',
-        isDefault: true, // ✅ auto assigned to new users
-        permissions: readPermissions,
-      }),
-    );
-
-    // 4. create tenant admin user
-    const rawPassword = dto.adminPassword ?? this.configService.get<string>('defaultPassword');
-    const hashedPassword = await bcrypt.hash(rawPassword, 10);
-
-    await userRepo.save(
-      userRepo.create({
-        firstName: dto.adminFirstName ?? 'Tenant',
-        lastName: dto.adminLastName ?? 'Admin',
-        email: dto.adminEmail,
-        password: hashedPassword,
-        userType: TenantUserRoles.TENANT_ADMIN,
-        roleId: adminRole.id,
-        isActive: true,
-      }),
-    );
-
-    // 5. send welcome email with credentials
-    // await this.emailService.sendWelcome({
-    //   toEmail: dto.adminEmail,
-    //   subject: 'Your tenant account has been created',
-    //   data: {
-    //     name: `${dto.adminFirstName ?? 'Tenant'} ${dto.adminLastName ?? 'Admin'}`,
-    //     email: dto.adminEmail,
-    //     tempPassword: rawPassword,
-    //   },
-    // });
-
-    console.log(`✅ Tenant DB seeded for: ${dto.adminEmail}`);
-  }
-  private async handleProvisioningFailure(tenant: TenantEntity | null, dbName: string, dbUser: string, error: unknown) {
-    console.log('Provisioning failed, rolling back...', error);
-
-    try {
-      if (tenant?.id) {
-        await this.tenantRepository.updateTenant(tenant.id, {
-          status: TenantStatus.FAILED,
-        });
-        await this.connectionManager.closeConnection(tenant.id);
-      }
-
-      await this.deprovisionDatabase(dbName, dbUser);
-      await this.deprovisionMongoDatabase(dbName);
-    } catch (rollbackError) {
-      // Log rollback failure but don't throw — original error takes priority
-      console.log('Rollback also failed:', rollbackError);
-    }
-  }
-  private async deprovisionMongoDatabase(dbName: string) {
+  public async deprovisionMongoDatabase(dbName: string) {
     try {
       // Simply drop the database using the master client
       await this.mongoAdmin.clientInstance.db(dbName).dropDatabase();
@@ -238,79 +118,17 @@ export class TenantService {
       console.warn(`Mongo cleanup warning: ${err.message}`);
     }
   }
-  private async provisionDatabase(dbName: string, dbUser: string, dbPassword: string) {
-    const masterConn = this.masterDataSource;
-    await masterConn.query(`CREATE DATABASE "${dbName}"`);
-    await masterConn.query(`CREATE USER "${dbUser}" WITH PASSWORD '${dbPassword}'`);
-    await masterConn.query(`GRANT ALL PRIVILEGES ON DATABASE "${dbName}" TO "${dbUser}"`);
-    const dbUrl = this.configService.get<string>('db.postgres.url');
-    const isProd = this.configService.get<string>('environment') === 'production';
-    const replacedUrl = dbUrl?.replace(/\/[^/]+$/, `/${dbName}`);
-    console.log('isProd:', isProd);
-    console.log('dbUrl exists:', !!dbUrl);
-    console.log('replaced url:', dbUrl?.replace(/\/[^/]+$/, `/${dbName}`));
-    // Connect to tenant DB as superuser to grant schema permissions
-    const tenantAdminConn = new DataSource(
-      dbUrl
-        ? {
-            type: 'postgres',
-            url: replacedUrl,
 
-            ssl: { rejectUnauthorized: false },
-          }
-        : {
-            type: 'postgres',
-            host: this.configService.get<string>('db.postgres.host'),
-            port: this.configService.get<number>('db.postgres.port'),
-            username: this.configService.get<string>('db.postgres.user'),
-            password: this.configService.get<string>('db.postgres.password'),
-            database: dbName,
-          },
-    );
-
-    await tenantAdminConn.initialize();
-    await tenantAdminConn.query(`GRANT ALL ON SCHEMA public TO "${dbUser}"`);
-    await tenantAdminConn.query(`GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "${dbUser}"`);
-    await tenantAdminConn.query(`GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "${dbUser}"`);
-    await tenantAdminConn.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO "${dbUser}"`);
-    await tenantAdminConn.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO "${dbUser}"`);
-    await tenantAdminConn.destroy();
-  }
-  private async provisionMongoDatabase(dbName: string) {
-    try {
-      // 1. Get the "Admin" client instance (the one using your master string)
-      const client = this.mongoAdmin.clientInstance;
-
-      // 2. Access the new tenant-specific database
-      const tenantDb = client.db(dbName);
-
-      // 3. Force the database into existence by creating a collection
-      await tenantDb.createCollection('_init');
-
-      // 4. Construct the tenant-specific URI using your master credentials
-      // We just swap the database name at the end of the string
-      const user = this.configService.get<string>('db.mongodb.user');
-      const pass = this.configService.get<string>('db.mongodb.password');
-      const host = this.configService.get<string>('db.mongodb.host'); // cluster0.5o5gbw1.mongodb.net
-
-      // Note: No authSource=dbName here because we are using the Master User
-      return `mongodb+srv://${user}:${pass}@${host}/${dbName}?retryWrites=true&w=majority`;
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-
-      throw new Error(`Mongo Provisioning Failed: ${err?.message}`);
-    }
-  }
-  private async deprovisionDatabase(dbName: string, dbUser: string) {
+  public async deprovisionDatabase(dbName: string, dbUser: string) {
     const masterConn = this.masterDataSource;
 
     // Terminate active connections before dropping
     await masterConn.query(`
-    SELECT pg_terminate_backend(pg_stat_activity.pid)
-    FROM pg_stat_activity
-    WHERE pg_stat_activity.datname = '${dbName}'
-    AND pid <> pg_backend_pid()
-  `);
+      SELECT pg_terminate_backend(pg_stat_activity.pid)
+      FROM pg_stat_activity
+      WHERE pg_stat_activity.datname = '${dbName}'
+      AND pid <> pg_backend_pid()
+    `);
 
     await masterConn.query(`DROP DATABASE IF EXISTS "${dbName}"`);
     await masterConn.query(`DROP USER IF EXISTS "${dbUser}"`);

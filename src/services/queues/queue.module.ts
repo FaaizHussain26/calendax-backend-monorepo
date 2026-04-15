@@ -6,10 +6,15 @@ import { TenantModule } from '../../modules/tenant/tenant.module';
 import { DocumentQueueService } from './services/document-queue.service';
 import { DocumentProcessor } from './processors/document.processor';
 import { DocumentProcessorService } from '../doc/document-processor.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { TenantEntity } from '../../modules/tenant/tenant.entity';
+import { TenantQueueService } from './services/tenant-queue.service';
+import { TenantProcessor } from './processors/tenant.processor';
 
-@Global() 
+@Global()
 @Module({
   imports: [
+    TypeOrmModule.forFeature([TenantEntity], 'master'),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -27,17 +32,11 @@ import { DocumentProcessorService } from '../doc/document-processor.service';
         },
       }),
     }),
-     registerQueue(QUEUES.DOCUMENT),
-     TenantModule
+    registerQueue(QUEUES.DOCUMENT),
+    registerQueue(QUEUES.TENANT),
+    TenantModule,
   ],
-  providers: [
-    DocumentQueueService,  
-    DocumentProcessor,    
-    DocumentProcessorService,
-  ],
-  exports: [
-    BullModule,
-    DocumentQueueService, 
-  ],
+  providers: [TenantQueueService, TenantProcessor,DocumentQueueService, DocumentProcessor, DocumentProcessorService],
+  exports: [BullModule, DocumentQueueService,TenantQueueService],
 })
 export class QueueModule {}
