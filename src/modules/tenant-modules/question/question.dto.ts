@@ -69,9 +69,6 @@ export class GenerateQuestionDto {
   @IsUUID()
   protocolId: string;
 
-  @IsUUID()
-  documentId: string;
-
   @IsString()
   @IsOptional()
   indication?: string;

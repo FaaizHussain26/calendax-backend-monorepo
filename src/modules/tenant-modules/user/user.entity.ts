@@ -62,7 +62,7 @@ export class UserEntity {
     onDelete: 'SET NULL',
     nullable: true,
   })
-  @JoinColumn({ })
+  @JoinColumn()
   role: RoleEntity;
 
   @ManyToMany(() => PermissionEntity)

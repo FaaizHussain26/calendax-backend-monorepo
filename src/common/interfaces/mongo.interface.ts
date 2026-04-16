@@ -10,3 +10,8 @@ export interface MongoInsertResult {
   insertedCount: number;
   acknowledged: boolean;
 }
+
+export interface SearchIndex {
+  name: string;
+  status: 'READY' | 'PENDING' | 'BUILDING' | 'FAILED' | 'DELETING';
+}

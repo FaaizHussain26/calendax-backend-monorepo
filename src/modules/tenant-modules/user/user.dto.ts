@@ -1,6 +1,7 @@
 // src/modules/tenant-modules/user/user.dto.ts
 import { IsArray, IsBoolean, IsEmail, IsEnum, IsOptional, IsString, IsUUID, Length } from 'class-validator';
 import { TenantUserRoles } from '../../../common/enums/tenant.enum';
+import { PaginationDto } from '../../../common/dto/pagination.dto';
 
 export class CreateUserDto {
   @IsString()
@@ -81,7 +82,7 @@ export class UpdateUserDto {
   isActive?: boolean;
 }
 
-export class UserQueryDto {
+export class UserQueryDto  extends PaginationDto{
   @IsEnum(TenantUserRoles)
   @IsOptional()
   userType?: TenantUserRoles;
@@ -90,13 +91,4 @@ export class UserQueryDto {
   @IsOptional()
   isActive?: boolean;
 
-  @IsString()
-  @IsOptional()
-  search?: string;
-
-  @IsOptional()
-  page?: number;
-
-  @IsOptional()
-  limit?: number;
 }

@@ -66,9 +66,10 @@ export class UsersService {
       phoneNumber: dto.phoneNumber,
       password: hashed,
       userType: dto.userType,
-      roleId: dto.roleId ?? undefined,
+      roleId: dto.roleId,
       permissions,
       isActive: true,
+      sites, 
     });
 
     return {
@@ -78,6 +79,8 @@ export class UsersService {
       email: user.email,
       userType: user.userType,
       roleId: user.roleId,
+        sites: user.sites?.map(s => ({ id: s.id, name: s.name })),
+
     };
   }
 

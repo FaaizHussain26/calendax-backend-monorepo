@@ -28,7 +28,6 @@ export class PermissionController {
   }
 
   @Post('group/:groupId')
-  @HttpCode(201)
   create(@Param('groupId') groupId: string, @Body() dto: CreatePermissionDto) {
     return this.service.create(groupId, dto);
   }

@@ -75,6 +75,9 @@ export class QuestionRepository {
   async softDelete(id: string): Promise<void> {
     await this.repo.softDelete(id);
   }
+  async delete(id: string): Promise<void> {
+    await this.repo.delete(id);
+  }
 
   async findOneByCondition(condition: FindOptionsWhere<QuestionEntity>): Promise<QuestionEntity | null> {
     return this.repo.findOne({ where: condition });

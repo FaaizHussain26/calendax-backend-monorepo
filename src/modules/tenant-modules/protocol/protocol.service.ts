@@ -50,7 +50,6 @@ export class ProtocolService {
     tenantId: string,
   ): Promise<{ protocol: ProtocolEntity | null; message: string; data: {jobId:string,id:string} }> {
     const { siteIds, indicationId, ...protocolData } = dto;
-    console.log('file is:', file);
     const existing = await this.protocolRepository.findOneByCondition({
       protocolNumber: protocolData.protocolNumber,
     });

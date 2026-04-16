@@ -378,7 +378,6 @@ export class PermissionGroupSeeder {
         where: { slug: groupData.slug },
       });
       if (existing) {
-        console.log(`⏭️  Skipping existing group: ${groupData.name}`);
         continue;
       }
 

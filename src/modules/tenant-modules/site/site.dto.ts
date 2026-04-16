@@ -1,5 +1,5 @@
 // dto/create-site.dto.ts
-import { IsString, IsOptional, IsEmail, IsArray, IsUUID, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsArray, IsUUID, IsNumber, Min } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateSiteDto {
@@ -23,6 +23,7 @@ export class CreateSiteDto {
 
   @IsNumber()
   @IsOptional()
+  @Min(1)
   patientCount?: number;
 
   @IsString()
@@ -51,5 +52,10 @@ export class CreateSiteDto {
 
   @IsString()
   indicationId: string;
+
+  @IsArray()
+  @IsUUID('4', { each: true })
+  @IsOptional()
+  userIds?: string[];
 }
 export class UpdateSiteDto extends PartialType(CreateSiteDto) {}

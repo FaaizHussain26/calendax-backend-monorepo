@@ -86,7 +86,6 @@ export class AdminSeeder {
 
     const totalpages = await this.pageRepo.count();
     if (totalpages > 0 && totalpages != null) {
-      console.log(`⏭️  Skipping pages insertion`);
       return;
     }
 

@@ -7,6 +7,7 @@ import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { CreateSiteDto, UpdateSiteDto } from './site.dto';
 import { SiteEntity } from './site.entity';
 import { HelperFunctions } from '../../../common/utils/functions';
+import { UserEntity } from '../user/user.entity';
 
 @Injectable()
 export class SiteService {
@@ -33,10 +34,19 @@ export class SiteService {
   }
 
   async create(dto: CreateSiteDto): Promise<SiteEntity | null> {
-    const slug = HelperFunctions.generateSlug(dto.name);
-    const existing = await this.siteRepository.findOneByCondition({ slug: slug });
+    const { userIds, ...siteData } = dto;
+
+    const slug = HelperFunctions.generateSlug(siteData.name);
+    const existing = await this.siteRepository.findOneByCondition({ slug });
     if (existing) throw new ConflictException('Site Already Exists with this name');
-    const site = await this.siteRepository.create({ ...dto, slug });
+    let users: UserEntity[] = [];
+    if (userIds?.length) {
+      users = await this.usersRepository.findByIds(userIds);
+      if (users.length !== userIds.length) {
+        throw new NotFoundException('One or more users not found');
+      }
+    }
+    const site = await this.siteRepository.create({ ...siteData, slug, users });
     return this.siteRepository.findById(site.id)!;
   }
 

@@ -50,13 +50,11 @@ export class QuestionService {
 
   async generateQuestions(
     protocolId: string,
-    documentId: string,
     mongo: Db,
     indication?: string,
     additionalContext?: string,
   ): Promise<{ question: string; summary: string; entity: QuestionEntity | null }> {
-    await this.validateProtocolAndDocument(protocolId, documentId);
-    return this.generate(protocolId, documentId, mongo, indication, additionalContext);
+    return this.generate(protocolId, mongo, indication, additionalContext);
   }
 
   async update(id: string, dto: UpdateQuestionDto): Promise<QuestionEntity> {
@@ -81,15 +79,14 @@ export class QuestionService {
 
   async remove(id: string): Promise<{ message: string }> {
     await this.findById(id);
-    await this.questionRepository.softDelete(id);
+    await this.questionRepository.delete(id);
     return { message: 'Question deleted successfully' };
   }
   async generate(
     protocolId: string,
-    documentId: string,
     mongo: Db,
     indication?: string,
-    additionalContext?: string,
+    additionalContext?: string, 
   ): Promise<{ question: string; summary: string; entity: QuestionEntity }> {
     const currentDoc = await this.protocolDocumentMetaRepository.findCurrentByProtocolId(protocolId);
     if (!currentDoc?.id) {
@@ -176,7 +173,8 @@ export class QuestionService {
   }
 
   private async vectorSearch(mongo: Db, queryEmbedding: number[], protocolId: string): Promise<IProtocolDocument[]> {
-    return mongo
+
+    let data=await mongo
       .collection(PROTOCOL_DOCUMENT_COLLECTION)
       .aggregate<IProtocolDocument>([
         {
@@ -196,8 +194,9 @@ export class QuestionService {
             score: { $meta: 'vectorSearchScore' },
           },
         },
-      ])
-      .toArray();
+      ]).toArray()
+      console.log("embedding data:",data.length)
+      return data
   }
 
   private async getEmbedding(text: string): Promise<number[]> {
@@ -205,6 +204,7 @@ export class QuestionService {
       model: 'text-embedding-3-small',
       input: text,
     });
+    console.log('res of get embedding:',resp.data[0].embedding.length)
     return resp.data[0].embedding;
   }
 
