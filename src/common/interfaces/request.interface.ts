@@ -14,15 +14,8 @@ export interface TenantRequest extends Request {
 }
 
 export interface RequestWithUser extends Request {
-  user: {
-    id: string;
-    role: string;
-    tokenId: string;
-    exp: number;
-    permissions: string[];
-  };
+  user: TokenUser;
 }
-export type AuthUser = RequestWithUser['user'];
 export interface TokenUser {
   id: string;
   role: string;
@@ -30,6 +23,10 @@ export interface TokenUser {
   tenantId?: string;
   userType?: string;
   roleId?: string;
+  tokenId?:string;
+    exp?: number;
+      permissions?: string[];
+
 }
 export interface JwtPayload {
   sub: string;

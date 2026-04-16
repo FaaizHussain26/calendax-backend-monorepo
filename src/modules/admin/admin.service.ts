@@ -155,7 +155,7 @@ export class AdminService {
   async getMyPermissions(user: TokenUser): Promise<PageWithPermissions[]> {
     return this.findAllPagesWithAdminPermissions(user, true);
   }
-  private async findAllPagesWithAdminPermissions(user: TokenUser, isUser: boolean): Promise<any[]> {
+  private async findAllPagesWithAdminPermissions(user: {role:string;id:string}, isUser: boolean): Promise<any[]> {
     const isSuperAdmin = user.role === AdminRoles.SUPER_ADMIN;
     const [pages, adminPermissions] = await Promise.all([
       this.pageService.findAllPages({ all: true, sortBy: 'index', sortOrder: 'ASC' }),
