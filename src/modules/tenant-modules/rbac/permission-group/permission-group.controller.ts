@@ -1,11 +1,12 @@
 // src/modules/tenant-modules/rbac/permission-group/permission-group.controller.ts
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { PermissionGroupService } from './permission-group.service';
 import { JwtAuthGuard } from '../../../../services/jwt/jwt.provider';
 import { TenantGuard } from '../../../../common/guards/tenant.guard';
 import { PermissionsGuard } from '../../../../common/guards/permission.guard';
 import { CreatePermissionGroupDto, UpdatePermissionGroupDto } from '../../../../common/dto/permission.dto';
 import { PaginationDto } from '../../../../common/dto/pagination.dto';
+import type { RequestWithUser } from '../../../../common/interfaces/request.interface';
 
 @Controller('permission-groups')
 @UseGuards(JwtAuthGuard, TenantGuard, PermissionsGuard)
@@ -13,8 +14,13 @@ export class PermissionGroupController {
   constructor(private readonly service: PermissionGroupService) {}
 
   @Get()
-  findAll(@Query() query: PaginationDto) {
+  findAll(@Query() query: PaginationDto, @Req() req: RequestWithUser) {
     return this.service.findAll(query);
+  }
+
+  @Get('/sidebar')
+  findAllPermissionGroupForSidebar(@Req() req: RequestWithUser) {
+    return this.service.getMyPermissionsGroup(req.user);
   }
 
   @Get(':id')

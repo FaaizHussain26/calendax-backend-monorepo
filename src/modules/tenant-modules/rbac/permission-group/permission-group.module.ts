@@ -1,16 +1,17 @@
 // src/modules/tenant-modules/rbac/permission-group/permission-group.module.ts
-import { Module } from '@nestjs/common';
-import { PermissionGroupController } from './permission-group.controller';
-import { PermissionGroupService } from './permission-group.service';
-import { PermissionGroupRepository } from './permission-group.repository';
-import { PermissionGroupEntity } from './permission-group.entity';
-import { PermissionEntity } from '../permission/permission.entity';
+import { forwardRef, Module } from '@nestjs/common';
 import { provideTenantRepository } from '../../../../database/tenant/tenant-repository.helper';
-import { PermissionRepository } from '../permission/permission.repository';
 import { TenantModule } from '../../../tenant/tenant.module';
+import { UserModule } from '../../user/user.module';
+import { PermissionEntity } from '../permission/permission.entity';
+import { PermissionRepository } from '../permission/permission.repository';
+import { PermissionGroupController } from './permission-group.controller';
+import { PermissionGroupEntity } from './permission-group.entity';
+import { PermissionGroupRepository } from './permission-group.repository';
+import { PermissionGroupService } from './permission-group.service';
 
 @Module({
-  imports: [TenantModule],
+  imports: [TenantModule, forwardRef(() => UserModule)],
   controllers: [PermissionGroupController],
   providers: [
     PermissionGroupService,
