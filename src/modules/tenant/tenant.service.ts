@@ -230,22 +230,22 @@ export class TenantService {
       console.log('Rollback also failed:', rollbackError);
     }
   }
-private async deprovisionMongoDatabase(dbName: string) {
-  try {
-    const client = this.mongoAdmin.clientInstance;
-    const collection = client.db(dbName).collection(PROTOCOL_DOCUMENT_COLLECTION);
-
+  private async deprovisionMongoDatabase(dbName: string) {
     try {
-      await collection.dropSearchIndex('vector_index');
-    } catch (_) {}
+      const client = this.mongoAdmin.clientInstance;
+      const collection = client.db(dbName).collection(PROTOCOL_DOCUMENT_COLLECTION);
 
-    await client.db(dbName).dropDatabase();
-    console.log(`Successfully dropped Mongo DB: ${dbName}`);
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    console.warn(`Mongo cleanup warning: ${err.message}`);
+      try {
+        await collection.dropSearchIndex('vector_index');
+      } catch (_) {}
+
+      await client.db(dbName).dropDatabase();
+      console.log(`Successfully dropped Mongo DB: ${dbName}`);
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.warn(`Mongo cleanup warning: ${err.message}`);
+    }
   }
-}
   private async provisionDatabase(dbName: string, dbUser: string, dbPassword: string) {
     const masterConn = this.masterDataSource;
     await masterConn.query(`CREATE DATABASE "${dbName}"`);
@@ -436,51 +436,57 @@ private async deprovisionMongoDatabase(dbName: string) {
     await this.tenantRepository.delete(id);
     return { message: 'Tenant and associated databases deleted successfully' };
   }
-private async createMongoVectorIndex(dbName: string) {
-  const client = this.mongoAdmin.clientInstance;
-  const tenantDb = client.db(dbName);
-  const collection = tenantDb.collection(PROTOCOL_DOCUMENT_COLLECTION);
-
-  await collection.createSearchIndex({
-    name: 'vector_index',
-    type: 'vectorSearch',
-    definition: {
-      fields: [
-        {
-          type: 'vector',
-          path: 'embedding',
-          numDimensions: 1536,
-          similarity: 'cosine',
-        },
-        {
-          type: 'filter',
-          path: 'protocol_id',
-        },
-      ],
-    },
-  });
-
-  await this.waitForVectorIndex(dbName);
-}
-
-private async waitForVectorIndex(dbName: string, indexName = 'vector_index') {
-  const client = this.mongoAdmin.clientInstance;
-  const collection = client.db(dbName).collection(PROTOCOL_DOCUMENT_COLLECTION)
-
-  const maxAttempts = 20; // 60 seconds max
-  for (let i = 0; i < maxAttempts; i++) {
-
-
-const indexes = await collection.listSearchIndexes(indexName).toArray() as SearchIndex[];
-if (indexes[0]?.status === 'READY') {    if (indexes[0]?.status === 'READY') {
-      console.log(`✅ Vector index ready for: ${dbName}`);
-      return;
+  private async createMongoVectorIndex(dbName: string) {
+    const client = this.mongoAdmin.clientInstance;
+    const tenantDb = client.db(dbName);
+    try {
+      await tenantDb.createCollection(PROTOCOL_DOCUMENT_COLLECTION);
+    } catch (err: any) {
+      // Ignore "collection already exists" error (code 48)
+      if (err?.code !== 48) throw err;
     }
-    console.log(`⏳ Waiting for vector index... (${i + 1}/${maxAttempts})`);
-    await new Promise((r) => setTimeout(r, 3000));
+    const collection = tenantDb.collection(PROTOCOL_DOCUMENT_COLLECTION);
+
+    await collection.createSearchIndex({
+      name: 'vector_index',
+      type: 'vectorSearch',
+      definition: {
+        fields: [
+          {
+            type: 'vector',
+            path: 'embedding',
+            numDimensions: 1536,
+            similarity: 'cosine',
+          },
+          {
+            type: 'filter',
+            path: 'protocol_id',
+          },
+        ],
+      },
+    });
+
+    await this.waitForVectorIndex(dbName);
   }
 
-  // Don't throw — index might still be building, provisioning can continue
-  console.warn(`⚠️ Vector index not ready after timeout for: ${dbName}`);
-}}
+  private async waitForVectorIndex(dbName: string, indexName = 'vector_index') {
+    const client = this.mongoAdmin.clientInstance;
+    const collection = client.db(dbName).collection(PROTOCOL_DOCUMENT_COLLECTION);
+
+    const maxAttempts = 20; // 60 seconds max
+    for (let i = 0; i < maxAttempts; i++) {
+      const indexes = (await collection.listSearchIndexes(indexName).toArray()) as SearchIndex[];
+      if (indexes[0]?.status === 'READY') {
+        if (indexes[0]?.status === 'READY') {
+          console.log(`✅ Vector index ready for: ${dbName}`);
+          return;
+        }
+        console.log(`⏳ Waiting for vector index... (${i + 1}/${maxAttempts})`);
+        await new Promise((r) => setTimeout(r, 3000));
+      }
+
+      // Don't throw — index might still be building, provisioning can continue
+      console.warn(`⚠️ Vector index not ready after timeout for: ${dbName}`);
+    }
+  }
 }
