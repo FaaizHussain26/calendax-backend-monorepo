@@ -106,8 +106,8 @@ export class AppModule {
         'roles',
         'patients',
         'sites',
-        'indication',
-        'protocols',"questions"
+        'indications',
+        'protocols',"questions","business-config","agent-config","calling-config","facebook/*"
       );
   }
 }

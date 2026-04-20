@@ -8,10 +8,12 @@ import { SiteModule } from './site/site.module';
 import { IndicationModule } from './indication/indication.module';
 import { ProtocolModule } from './protocol/protocol.module';
 import { QuestionModule } from './question/question.module';
+import { BusinessConfigModule } from './business-config/business-config.module';
+import { AgentConfigModule } from './agent-config/agent-config.module';
 // import { SiteModule } from './site/site.module';
 
 @Module({
-  imports: [AuthModule, OtpModule, RbacModule, UserModule, SiteModule, ProtocolModule, IndicationModule,QuestionModule],
-  exports: [AuthModule, OtpModule, RbacModule, UserModule, SiteModule, ProtocolModule, IndicationModule,QuestionModule],
+  imports: [AuthModule, OtpModule, RbacModule, UserModule, SiteModule, ProtocolModule, IndicationModule,QuestionModule,BusinessConfigModule,AgentConfigModule],
+  exports: [AuthModule, OtpModule, RbacModule, UserModule, SiteModule, ProtocolModule, IndicationModule,QuestionModule,BusinessConfigModule,AgentConfigModule],
 })
 export class TenantModulesModule {}

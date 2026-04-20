@@ -26,6 +26,7 @@
     "db:wipe": "ts-node src/database/master/wipe.script.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-scheduler": "^3.1032.0",
     "@nestjs-modules/ioredis": "^2.2.1",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.0.1",
