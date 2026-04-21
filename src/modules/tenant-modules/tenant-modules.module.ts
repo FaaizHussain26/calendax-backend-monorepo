@@ -10,10 +10,35 @@ import { ProtocolModule } from './protocol/protocol.module';
 import { QuestionModule } from './question/question.module';
 import { BusinessConfigModule } from './business-config/business-config.module';
 import { AgentConfigModule } from './agent-config/agent-config.module';
+import { FacebookModule } from './facebook/facebook.module';
 // import { SiteModule } from './site/site.module';
 
 @Module({
-  imports: [AuthModule, OtpModule, RbacModule, UserModule, SiteModule, ProtocolModule, IndicationModule,QuestionModule,BusinessConfigModule,AgentConfigModule],
-  exports: [AuthModule, OtpModule, RbacModule, UserModule, SiteModule, ProtocolModule, IndicationModule,QuestionModule,BusinessConfigModule,AgentConfigModule],
+  imports: [
+    AuthModule,
+    OtpModule,
+    RbacModule,
+    UserModule,
+    SiteModule,
+    ProtocolModule,
+    IndicationModule,
+    QuestionModule,
+    BusinessConfigModule,
+    AgentConfigModule,
+    FacebookModule,
+  ],
+  exports: [
+    AuthModule,
+    OtpModule,
+    RbacModule,
+    UserModule,
+    SiteModule,
+    ProtocolModule,
+    IndicationModule,
+    QuestionModule,
+    BusinessConfigModule,
+    AgentConfigModule,
+    FacebookModule,
+  ],
 })
 export class TenantModulesModule {}

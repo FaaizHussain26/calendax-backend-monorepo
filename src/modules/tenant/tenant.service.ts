@@ -217,9 +217,7 @@ export class TenantService {
 
     try {
       if (tenant?.id) {
-        await this.tenantRepository.updateTenant(tenant.id, {
-          status: TenantStatus.FAILED,
-        });
+        await this.tenantRepository.delete(tenant.id);
         await this.connectionManager.closeConnection(tenant.id);
       }
 

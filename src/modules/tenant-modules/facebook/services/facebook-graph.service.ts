@@ -1,4 +1,9 @@
-import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 export interface FacebookPage {
   id: string;
@@ -18,10 +23,36 @@ export class FacebookGraphService {
   private readonly logger = new Logger(FacebookGraphService.name);
   private readonly graphBaseUrl = 'https://graph.facebook.com/v19.0';
 
-  async getPages(accessToken: string): Promise<FacebookPage[]> {
+  /**
+   * Verifies the user access token works and returns pages.
+   * Called during upsert to validate before saving.
+   */
+  async verifyUserToken(userAccessToken: string): Promise<void> {
     try {
       const res = await fetch(
-        `${this.graphBaseUrl}/me/accounts?access_token=${accessToken}&fields=id,name,access_token`,
+        `${this.graphBaseUrl}/me/accounts?access_token=${userAccessToken}&fields=id,name`,
+      );
+      const data = await res.json();
+      if (data.error) {
+        throw new UnauthorizedException(
+          `Invalid user access token: ${data.error.message}`,
+        );
+      }
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
+      this.logger.error('Failed to verify user access token', error);
+      throw new InternalServerErrorException('Failed to connect to Facebook.');
+    }
+  }
+
+  /**
+   * Fetches all pages the user has access to.
+   * Requires a user access token — tenant provides this directly.
+   */
+  async getPages(userAccessToken: string): Promise<FacebookPage[]> {
+    try {
+      const res = await fetch(
+        `${this.graphBaseUrl}/me/accounts?access_token=${userAccessToken}&fields=id,name,access_token`,
       );
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
@@ -36,6 +67,10 @@ export class FacebookGraphService {
     }
   }
 
+  /**
+   * Fetches all lead gen forms for a given page.
+   * Uses the page-specific access token returned from getPages.
+   */
   async getFormsByPage(pageId: string, pageAccessToken: string): Promise<FacebookForm[]> {
     try {
       const res = await fetch(
@@ -55,6 +90,10 @@ export class FacebookGraphService {
     }
   }
 
+  /**
+   * Subscribes a page to leadgen webhook events.
+   * Called when a form is connected.
+   */
   async subscribePageToWebhook(pageId: string, pageAccessToken: string): Promise<void> {
     try {
       const res = await fetch(`${this.graphBaseUrl}/${pageId}/subscribed_apps`, {
@@ -73,6 +112,9 @@ export class FacebookGraphService {
     }
   }
 
+  /**
+   * Fetches a single lead's field data after webhook fires.
+   */
   async getLeadData(leadId: string, accessToken: string): Promise<Record<string, string>> {
     try {
       const res = await fetch(

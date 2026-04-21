@@ -107,7 +107,7 @@ export class AppModule {
         'patients',
         'sites',
         'indications',
-        'protocols',"questions","business-config","agent-config","calling-config","facebook/*"
+        'protocols',"questions","business-config","agent-config","calling-config","facebook","facebook-config"
       );
   }
 }

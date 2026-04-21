@@ -48,7 +48,6 @@ export class TenantConnectionManager implements OnModuleDestroy {
 
     const cached = this.cache.get(tenant.id);
     if (cached) return cached;
-    console.log("creating tenant connection",tenant.dbName,cached)
     const dbUrl = this.configService.get<string>('db.postgres.url');
     const dataSource = new DataSource({ 
       type: 'postgres',
@@ -90,18 +89,14 @@ export class TenantConnectionManager implements OnModuleDestroy {
         connectionTimeoutMillis: 10000,
       },
     });
-    console.log("DataSource created for tenant:", tenant.slug);
     if (!tenant.mongoUri) {
       throw new Error(`MongoDB URI missing for tenant: ${tenant.slug}`);
     }
     const mongoClient = new MongoClient(tenant.mongoUri);
-    console.log("Mongo Client created for tenant:", tenant.slug);
    try{ await Promise.all([dataSource.initialize(), mongoClient.connect()]);}
    catch(error){
-    console.error(`Error initializing connections for tenant ${tenant.slug}:`, error);
     throw new Error(`Failed to initialize connections for tenant: ${tenant.slug}`);
    }
-    console.log("Connections established for tenant:", tenant.slug);
     const connectionContext: TenantConnection = {
       sql: dataSource,
       mongo: mongoClient.db(), // Returns the DB from the URI

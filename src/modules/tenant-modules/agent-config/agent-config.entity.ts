@@ -23,6 +23,8 @@ export class AgentConfigEntity {
 
   @Column({ type: 'varchar', nullable: true, comment: 'ElevenLabs agent ID' })
   agentId: string | null;
+  @Column({ type: 'varchar', nullable: true, comment: 'ElevenLabs voice ID' })
+  voiceId: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

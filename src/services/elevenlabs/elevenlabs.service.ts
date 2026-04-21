@@ -53,13 +53,17 @@ export class ElevenLabsService {
    */
   private resolveVoiceId(tone: AgentTone, gender: AgentGender): string {
     const voiceMap: Record<string, string> = {
-      [`${AgentGender.MALE}_${AgentTone.PROFESSIONAL}`]: 'voice_id_male_professional',
-      [`${AgentGender.MALE}_${AgentTone.FRIENDLY}`]: 'voice_id_male_friendly',
-      [`${AgentGender.FEMALE}_${AgentTone.PROFESSIONAL}`]: 'voice_id_female_professional',
-      [`${AgentGender.FEMALE}_${AgentTone.FRIENDLY}`]: 'voice_id_female_friendly',
+      [`${AgentGender.MALE}_${AgentTone.PROFESSIONAL}`]: 'L0Dsvb3SLTyegXwtm47J', // 'voice_id_male_professional',
+      [`${AgentGender.MALE}_${AgentTone.FRIENDLY}`]: 'pqHfZKP75CvOlQylNhV4', // 'voice_id_male_friendly',
+      [`${AgentGender.FEMALE}_${AgentTone.PROFESSIONAL}`]: '0fbdXLXuDBZXm2IHek4L', //'voice_id_female_professional',
+      [`${AgentGender.FEMALE}_${AgentTone.FRIENDLY}`]: 'Xb7hH8MSUJpSbSDYk0k2',
     };
     return voiceMap[`${gender}_${tone}`] ?? 'voice_id_default';
   }
+async getVoiceId(tone: AgentTone, gender: AgentGender): Promise<string> {
+    return this.resolveVoiceId(tone, gender);
+  }
+
 
   async createAgent(payload: ElevenLabsAgentPayload): Promise<string> {
     try {
@@ -69,6 +73,7 @@ export class ElevenLabsService {
         body: JSON.stringify(this.buildAgentBody(payload)),
       });
       const data = await res.json();
+      console.log('data of res:', data);
       if (!res.ok) throw new Error(data?.detail ?? 'ElevenLabs create failed');
       this.logger.log(`ElevenLabs agent created: ${data.agent_id}`);
       return data.agent_id;

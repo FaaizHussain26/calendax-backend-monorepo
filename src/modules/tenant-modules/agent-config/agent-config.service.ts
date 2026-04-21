@@ -18,8 +18,8 @@ export class AgentConfigService {
       openingScript: dto.openingScript,
       endingScript: dto.endingScript,
     });
-
-    const entity = this.repo.create({ ...dto, agentId });
+    const voiceId=await this.elevenLabs.getVoiceId(dto.tone, dto.gender);
+    const entity = this.repo.create({ ...dto, agentId, voiceId });
     return this.repo.save(entity);
   }
 
@@ -59,6 +59,8 @@ export class AgentConfigService {
         endingScript: config.endingScript,
       });
       config.agentId = agentId;
+      const voiceId = await this.elevenLabs.getVoiceId(config.tone, config.gender);
+      config.voiceId = voiceId;
     }
 
     return this.repo.save(config);

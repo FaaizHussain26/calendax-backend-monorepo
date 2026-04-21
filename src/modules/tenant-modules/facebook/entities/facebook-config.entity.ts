@@ -17,8 +17,8 @@ export class FacebookConfigEntity {
   @Column()
   appSecret: string;
 
-  @Column({ nullable: true, comment: 'Long-lived page access token' })
-  accessToken: string | null;
+@Column({ type: 'varchar', nullable: true, default: null })
+accessToken: string | null;
 
   @Column({ type: 'boolean', default: false })
   isConnected: boolean;

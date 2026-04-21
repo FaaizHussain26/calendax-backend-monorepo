@@ -25,7 +25,7 @@ export class BusinessConfigEntity {
   @Column({ type: 'jsonb' })
   workingHours: WorkingHours;
 
-  @Column({})
+  @Column({type:'simple-array'})
   workingDays: string[];
 
   @Column()
