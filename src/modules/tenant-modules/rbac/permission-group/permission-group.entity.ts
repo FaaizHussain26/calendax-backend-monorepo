@@ -4,6 +4,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Generated,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -20,6 +21,10 @@ export class PermissionGroupEntity {
 
   @Column({ type: 'varchar', length: 60, unique: true })
   slug: string;
+
+  @Column({ unique: true })
+  @Generated('increment')
+  index: number;
 
   @Column({ type: 'varchar', length: 60, nullable: true })
   icon: string;

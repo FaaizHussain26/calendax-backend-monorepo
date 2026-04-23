@@ -66,6 +66,9 @@ export class PermissionGroupRepository {
     await this.repo.update(id, payload);
   }
 
+  async updateindex(index: number, payload: Partial<PermissionGroupEntity>) {
+    await this.repo.update({ index: index }, payload);
+  }
   // ─── Delete ───────────────────────────────────────────────────────────────
 
   async softDelete(id: string): Promise<void> {
@@ -75,6 +78,9 @@ export class PermissionGroupRepository {
     await this.repo.delete(id);
   }
 
+  async maxIndex() {
+    return await this.repo.maximum('index');
+  }
   async restore(id: string): Promise<void> {
     await this.repo.restore(id);
   }
