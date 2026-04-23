@@ -1,11 +1,12 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { PageRepository } from './page.repository';
 
-import { CreatePageDto, PageResponseDto, UpdatePageDto, UpdatePageIndexDto } from './page.dto';
+import { CreatePageDto, PageResponseDto, UpdatePageDto } from './page.dto';
 import { plainToInstance } from 'class-transformer';
 import { entityNotFound } from '../../common/exceptions/notFound.exception';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { HelperFunctions } from '../../common/utils/functions';
+import { UpdatePageIndexDto } from '../../common/dto/page.dto';
 
 @Injectable()
 export class PageService {

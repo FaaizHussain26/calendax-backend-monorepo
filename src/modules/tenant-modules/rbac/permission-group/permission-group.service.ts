@@ -1,5 +1,5 @@
 // src/modules/tenant-modules/rbac/permission-group/permission-group.service.ts
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PaginationDto } from '../../../../common/dto/pagination.dto';
 import { CreatePermissionGroupDto, UpdatePermissionGroupDto } from '../../../../common/dto/permission.dto';
 import { TenantUserRoles } from '../../../../common/enums/tenant.enum';
@@ -8,6 +8,7 @@ import { HelperFunctions } from '../../../../common/utils/functions';
 import { UsersRepository } from '../../user/user.repository';
 import { PermissionRepository } from '../permission/permission.repository';
 import { PermissionGroupRepository } from './permission-group.repository';
+import { UpdatePageIndexDto } from '../../../../common/dto/page.dto';
 
 @Injectable()
 export class PermissionGroupService {
@@ -87,6 +88,39 @@ export class PermissionGroupService {
     } else await this.permissionGroupRepo.update(id, dto);
     return this.permissionGroupRepo.findById(id);
   }
+
+async updateByIndex(id: string, payload: UpdatePageIndexDto) {
+    const maxIndex = Number(await this.permissionGroupRepo.maxIndex());
+    const page = await this.permissionGroupRepo.findById(id);
+    if (!page) {
+      throw new BadRequestException('Page with this index does not exist!');
+    }
+    const currentIndex = page.index;
+
+    if (payload.newIndex < 1 || payload.newIndex > maxIndex) {
+      throw new BadRequestException('Requested IndexNumber is not acceptable');
+    }
+
+    if (payload.newIndex === currentIndex) {
+      return { message: 'index numbers updated' };
+    }
+
+    await this.permissionGroupRepo.update(id, { index: -1 });
+
+    if (payload.newIndex > currentIndex) {
+      for (let i = currentIndex + 1; i <= payload.newIndex; i++) {
+        await this.permissionGroupRepo.updateindex(i, { index: i - 1 });
+      }
+    } else {
+      for (let i = currentIndex - 1; i >= payload.newIndex; i--) {
+        await this.permissionGroupRepo.updateindex(i, { index: i + 1 });
+      }
+    }
+
+    await this.permissionGroupRepo.update(id, { index: payload.newIndex });
+    return { message: 'index numbers updated' };
+  }
+
 
   async delete(id: string) {
     const group = await this.permissionGroupRepo.findById(id);

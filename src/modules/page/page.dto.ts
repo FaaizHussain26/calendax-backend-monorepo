@@ -35,9 +35,3 @@ export class UpdatePageDto {
   index?: number;
 }
 
-export class UpdatePageIndexDto {
-  @IsNumber()
-  currentIndex: number;
-  @IsNumber()
-  newIndex: number;
-}
