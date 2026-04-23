@@ -49,7 +49,13 @@ export class UsersRepository {
       ...(userType && { userType }),
       ...(isActive !== undefined && { isActive }),
     };
-
+    let relations: { role: { permissions: boolean }; permissions: boolean; sites?: boolean } = {
+      role: { permissions: true },
+      permissions: true,
+    };
+    if (userType === TenantUserRoles.PRINCIPLE_INVESTIGATOR) {
+      relations.sites = true;
+    }
     const [data, total] = await this.repo.findAndCount({
       where: search
         ? [
@@ -58,10 +64,7 @@ export class UsersRepository {
             { ...baseWhere, email: ILike(`%${search}%`) },
           ]
         : baseWhere,
-      relations: {
-        role: { permissions: true },
-        permissions: true,
-      },
+      relations: relations,
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
