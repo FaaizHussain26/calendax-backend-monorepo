@@ -10,6 +10,17 @@ export class SiteRepository {
   constructor(
     @Inject(`${SiteEntity.name}Repository`)
     private readonly repo: Repository<SiteEntity>,
+    private readonly baseSelect = {
+      name: true,
+      email: true,
+      id: true,
+      city: true,
+      patientCount: true,
+      siteNumber: true,
+      indication: true,
+      slug: true,
+      users: { firstName: true, lastName: true, id: true },
+    },
   ) {}
 
   async findAll(query: PaginationDto) {
@@ -19,7 +30,8 @@ export class SiteRepository {
       where: search ? [{ name: ILike(`%${search}%`) }, { city: ILike(`%${search}%`) }] : {},
       order: { createdAt: 'DESC' },
       ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
-      relations:{indication:true}
+      relations: { indication: true, users: true },
+      select: this.baseSelect,
     });
 
     return { data, total, page, limit };
@@ -30,13 +42,28 @@ export class SiteRepository {
       where: { id },
     });
   }
+  async findDetailedById(id: string): Promise<SiteEntity | null> {
+    return this.repo.findOne({
+      where: { id },
+      relations: { indication: true, users: true },
+      select: {
+        ...this.baseSelect,
+        createdAt: true,
+        updatedAt: true,
+        city: true,
+        state: true,
+        streetAddress: true,
+        zipCode: true,
+      },
+    });
+  }
   async findByIds(ids: string[]) {
     return this.repo.find({ where: { id: In(ids) } });
   }
   async findByAssignedUser(userId: string): Promise<SiteEntity[]> {
     return await this.repo.find({
       where: { users: { id: userId } },
-      relations: { users: true },
+      // relations: { users: true },
     });
   }
 
