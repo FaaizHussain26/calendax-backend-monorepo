@@ -8,10 +8,14 @@ import {
   Param,
   ParseUUIDPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { FacebookFormService, FacebookPageWithForms } from '../services/facebook-form.service';
 import { ConnectFormDto, UpdateFormConnectionDto } from '../dto/facebook-form.dto';
 import { FacebookFormEntity } from '../entities/facebook-form.entity';
+import { PermissionsGuard, TenantGuard } from '@libs/common/index';
+import { JwtAuthGuard } from 'src/services/jwt/jwt.provider';
+@UseGuards(JwtAuthGuard,TenantGuard,PermissionsGuard)
 
 @Controller('facebook')
 export class FacebookFormController {

@@ -24,13 +24,13 @@ export class AwsSqsService {
 
   constructor(private readonly configService: ConfigService) {
     this.client = new SQSClient({
-      region: this.configService.get<string>('AWS_REGION'),
+      region: this.configService.get<string>('aws.region'),
       credentials: {
-        accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
-        secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
+        accessKeyId: this.configService.get<string>('aws.sqs.accessKeyId'),
+        secretAccessKey: this.configService.get<string>('aws.sqs.secretAccessKey'),
       },
     });
-    this.queuePrefix = this.configService.get<string>('SQS_QUEUE_PREFIX') ?? 'calling';
+    this.queuePrefix = this.configService.get<string>('aws.sqs.que_prefix') ?? 'calling';
   }
 
   private queueName(tenantId: string): string {

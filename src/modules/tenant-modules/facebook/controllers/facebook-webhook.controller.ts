@@ -8,10 +8,15 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FacebookWebhookService } from '../services/facebook-webhook.service';
 import type { Response } from 'express';
+
+import { PermissionsGuard, TenantGuard } from '@libs/common/index';
+import { JwtAuthGuard } from 'src/services/jwt/jwt.provider';
+@UseGuards(JwtAuthGuard,TenantGuard,PermissionsGuard)
 
 @Controller('facebook/webhook')
 export class FacebookWebhookController {

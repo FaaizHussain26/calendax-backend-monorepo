@@ -112,7 +112,7 @@ export class AppModule {
         'questions',
         'business-config',
         'agent-config',
-        'calling-config',
+        'calling-config',"internal/calling-configs",
         'facebook',
         'facebook/config',
         'leads',

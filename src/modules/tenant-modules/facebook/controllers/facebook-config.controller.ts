@@ -1,7 +1,10 @@
-import { Controller, Get, Put, Patch, Delete, Body } from '@nestjs/common';
+import { Controller, Get, Put, Patch, Delete, Body, UseGuards } from '@nestjs/common';
 import { FacebookConfigService } from '../services/facebook-config.service';
 import { CreateFacebookConfigDto } from '../dto/facebook-config.dto';
 import { FacebookConfigEntity } from '../entities/facebook-config.entity';
+import { PermissionsGuard, TenantGuard } from '@libs/common/index';
+import { JwtAuthGuard } from 'src/services/jwt/jwt.provider';
+@UseGuards(JwtAuthGuard,TenantGuard,PermissionsGuard)
 
 @Controller('facebook/config')
 export class FacebookConfigController {

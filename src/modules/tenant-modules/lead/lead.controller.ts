@@ -8,6 +8,7 @@ import {
   Param,
   ParseUUIDPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { LeadService, BulkCreateResult, PaginatedLeads } from './lead.service';
 import {
@@ -18,6 +19,9 @@ import {
   LeadQueryDto,
 } from './lead.dto';
 import { LeadEntity } from './lead.entity';
+import { PermissionsGuard, TenantGuard } from '@libs/common/index';
+import { JwtAuthGuard } from 'src/services/jwt/jwt.provider';
+@UseGuards(JwtAuthGuard,TenantGuard,PermissionsGuard)
 
 @Controller('leads')
 export class LeadController {

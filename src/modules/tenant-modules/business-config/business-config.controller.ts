@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseUUIDPipe, HttpCode, HttpStatus, Put } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseUUIDPipe, HttpCode, HttpStatus, Put, UseGuards } from '@nestjs/common';
 import { BusinessConfigService } from './business-config.service';
 import { CreateBusinessConfigDto, UpdateBusinessConfigDto } from './business-config.dto';
 import { BusinessConfigEntity } from './business-config.entity';
-
+import { PermissionsGuard, TenantGuard } from '@libs/common/index';
+import { JwtAuthGuard } from 'src/services/jwt/jwt.provider';
+@UseGuards(JwtAuthGuard,TenantGuard,PermissionsGuard)
 
 @Controller('business-config')
 export class BusinessConfigController {

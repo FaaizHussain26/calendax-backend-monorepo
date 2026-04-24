@@ -7,10 +7,15 @@ import {
   Body,
   Param,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { AgentConfigService } from './agent-config.service';
 import { CreateAgentConfigDto, UpdateAgentConfigDto } from './agent-config.dto';
 import { AgentConfigEntity } from './agent-config.entity';
+import { PermissionsGuard, TenantGuard } from '@libs/common/index';
+import { JwtAuthGuard } from 'src/services/jwt/jwt.provider';
+
+@UseGuards(JwtAuthGuard,TenantGuard,PermissionsGuard)
 
 @Controller('agent-config')
 export class AgentConfigController {

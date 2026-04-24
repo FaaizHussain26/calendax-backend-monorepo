@@ -102,6 +102,9 @@ export class LeadService {
     Object.assign(lead, dto);
     return this.repo.save(lead);
   }
+  async addTranscript(id:string,{transcript:string}){
+    return //add transcript save function here
+  }
 
   async updateStatus(id: string, dto: UpdateLeadStatusDto): Promise<LeadEntity> {
     const lead = await this.findById(id);

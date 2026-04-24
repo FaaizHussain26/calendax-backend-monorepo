@@ -5,10 +5,11 @@ import { CallingConfigRepository } from './calling-config.repository';
 import { provideTenantRepository } from '@libs/database/tenant-repository.helper';
 import { CallingConfigEntity } from './calling-config.entity';
 import { AwsModule } from '@libs/aws/aws.module';
+import { InternalCallingConfigController } from './internal-calling-config.controller';
 
 @Module({
   imports: [AwsModule],
-  controllers: [CallingConfigController],
+  controllers: [CallingConfigController,InternalCallingConfigController],
   providers: [
     CallingConfigService,
     CallingConfigRepository,

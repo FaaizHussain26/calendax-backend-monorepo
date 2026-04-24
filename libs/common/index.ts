@@ -43,3 +43,7 @@ export * from './interfaces/upload.interface';
 
 // utils
 export * from './utils/functions';
+
+//clients
+export * from './clients/internal-api/internal-api.client';
+export * from './clients/internal-api/internal-api.module';

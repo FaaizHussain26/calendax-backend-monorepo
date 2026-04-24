@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseUUIDPipe, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseUUIDPipe, Request, UseGuards } from '@nestjs/common';
 import { CallingConfigService } from './calling-config.service';
 import { CreateCallingConfigDto, UpdateCallingConfigDto } from './calling-config.dto';
 import { CallingConfigEntity } from './calling-config.entity';
 import type { TenantRequest } from '@libs/common/interfaces/request.interface';
-
+import { JwtAuthGuard } from 'src/services/jwt/jwt.provider';
+import { PermissionsGuard, TenantGuard } from '@libs/common/index';
+@UseGuards(JwtAuthGuard,TenantGuard,PermissionsGuard)
 @Controller('calling-config')
 export class CallingConfigController {
   constructor(private readonly service: CallingConfigService) {}
