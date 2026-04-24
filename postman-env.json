@@ -1,0 +1,139 @@
+{
+  "id": "calendax-env-local",
+  "name": "Calendax - Local",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001/api",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Auto-set by Admin Login test script"
+    },
+    {
+      "key": "tenantToken",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Auto-set by Tenant Login test script"
+    },
+    {
+      "key": "tenantId",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Tenant slug — used as x-tenant-id header for all tenant routes"
+    },
+    {
+      "key": "adminId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "pageId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "tenantRecordId",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "UUID of the tenant record in the master DB"
+    },
+    {
+      "key": "permissionGroupId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "permissionId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "roleId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "siteId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "protocolId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "questionId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "documentId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "callingConfigId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "agentConfigId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "indicationId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "leadId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "patientId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "formConnectionId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "exportedAt": "2026-04-23T00:00:00.000Z",
+  "exportedUsing": "Postman"
+}

@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/webhook-handler",
+    "baseUrl": "../.."
+  },
+  "include": [
+    "src/**/*",
+    "../../libs/**/*"
+  ]
+}

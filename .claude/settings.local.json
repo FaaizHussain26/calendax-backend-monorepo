@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /c/Users/mumar/Desktop/projects/calendax/c-mono-server/src/**/*.ts)"
+    ]
+  }
+}

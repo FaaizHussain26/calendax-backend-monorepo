@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+   
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@libs/aws/*": ["libs/aws/*"],
+      "@libs/elevenlabs/*": ["libs/elevenlabs/*"],
+      "@libs/twilio/*": ["libs/twilio/*"],
+      "@libs/common/*": ["libs/common/*"],
+      "@libs/database/*": ["libs/database/*"],
+      "@libs/config/*": ["libs/config/*"]
+    }
+  }
+}
