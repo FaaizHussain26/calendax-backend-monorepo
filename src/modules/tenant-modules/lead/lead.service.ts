@@ -110,11 +110,12 @@ export class LeadService {
     const lead = await this.findById(id);
 
     const validTransitions: Record<LeadStatus, LeadStatus[]> = {
-      [LeadStatus.PENDING]: [LeadStatus.CALLING, LeadStatus.REJECTED],
-      [LeadStatus.CALLING]: [LeadStatus.SCREENED, LeadStatus.PENDING, LeadStatus.REJECTED],
+      [LeadStatus.PENDING]: [LeadStatus.CALLING, LeadStatus.REJECTED,LeadStatus.PAUSED],
+      [LeadStatus.CALLING]: [LeadStatus.SCREENED, LeadStatus.PENDING, LeadStatus.REJECTED,LeadStatus.PAUSED],
       [LeadStatus.SCREENED]: [LeadStatus.CONVERTED, LeadStatus.REJECTED],
       [LeadStatus.CONVERTED]: [],
       [LeadStatus.REJECTED]: [],
+      [LeadStatus.PAUSED]:[]
     };
 
     if (!validTransitions[lead.status].includes(dto.status)) {

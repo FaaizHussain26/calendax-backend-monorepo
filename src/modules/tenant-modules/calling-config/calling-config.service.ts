@@ -27,24 +27,27 @@ export class CallingConfigService {
     return config;
   }
 
-  async create(dto: CreateCallingConfigDto, tenantId: string): Promise<CallingConfigEntity> {
-    if (dto.isDefault) {
-      await this.repo.clearDefaultForProtocol(dto.protocolId);
-    }
-
-    const entity = this.repo.create(dto);
-    const saved = await this.repo.save(entity);
-
-    await this.awsScheduler.createSchedule(
-      tenantId,
-      saved.id,
-      saved.selectedDays,
-      saved.callTimeWindow.startTime,
-    );
-
-    return saved;
+async create(dto: CreateCallingConfigDto, tenantId: string): Promise<CallingConfigEntity> {
+  if (dto.isDefault) {
+    await this.repo.clearDefaultForProtocol(dto.protocolId);
   }
 
+  const entity = this.repo.create(dto);
+  const saved = await this.repo.save(entity);
+
+  const ruleName = await this.awsScheduler.createSchedule(
+    tenantId,
+    saved.id,
+    saved.selectedDays,
+    saved.callTimeWindow.startTime,
+  );
+
+  // save rule name back to entity
+  saved.scheduleRuleName = ruleName;
+  await this.repo.save(saved);
+
+  return saved;
+}
   async update(id: string, dto: UpdateCallingConfigDto,tenantId:string): Promise<CallingConfigEntity> {
     const existing = await this.getById(id);
 

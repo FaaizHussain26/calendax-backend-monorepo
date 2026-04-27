@@ -5,7 +5,7 @@ import { CallingConfigEntity } from './calling-config.entity';
 import type { TenantRequest } from '@libs/common/interfaces/request.interface';
 import { JwtAuthGuard } from 'src/services/jwt/jwt.provider';
 import { PermissionsGuard, TenantGuard } from '@libs/common/index';
-@UseGuards(JwtAuthGuard,TenantGuard,PermissionsGuard)
+@UseGuards(JwtAuthGuard,TenantGuard)
 @Controller('calling-config')
 export class CallingConfigController {
   constructor(private readonly service: CallingConfigService) {}

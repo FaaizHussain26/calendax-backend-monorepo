@@ -22,35 +22,35 @@ export class AwsSqsService {
   private readonly logger = new Logger(AwsSqsService.name);
   private readonly queuePrefix: string;
 
-  constructor(private readonly configService: ConfigService) {
-    this.client = new SQSClient({
-      region: this.configService.get<string>('aws.region'),
-      credentials: {
-        accessKeyId: this.configService.get<string>('aws.sqs.accessKeyId'),
-        secretAccessKey: this.configService.get<string>('aws.sqs.secretAccessKey'),
-      },
-    });
-    this.queuePrefix = this.configService.get<string>('aws.sqs.que_prefix') ?? 'calling';
-  }
+    constructor(private readonly configService: ConfigService) {
+      this.client = new SQSClient({
+        region: this.configService.get<string>('aws.region'),
+        credentials: {
+          accessKeyId: this.configService.get<string>('aws.sqs.accessKeyId'),
+          secretAccessKey: this.configService.get<string>('aws.sqs.secretAccessKey'),
+        },
+      });
+      this.queuePrefix = this.configService.get<string>('aws.sqs.queuePrefix') ?? 'calling';
+    }
 
-  private queueName(tenantId: string): string {
-    return `${this.queuePrefix}-${tenantId}.fifo`;
-  }
-
-  async getQueueUrl(tenantId: string): Promise<string> {
-    const res = await this.client.send(
-      new GetQueueUrlCommand({ QueueName: this.queueName(tenantId) }),
-    );
-    return res.QueueUrl;
+  /**
+   * Builds the per-tenant FIFO queue URL.
+   * Queue must be pre-created in AWS Console or via SDK.
+   * Naming convention: calling-{tenantId}.fifo
+   */
+  private buildQueueUrl(tenantId: string): string {
+    const region = this.configService.get<string>('aws.region');
+    const accountId = this.configService.get<string>('aws.accountId');
+    return `https://sqs.${region}.amazonaws.com/${accountId}/${this.queuePrefix}-${tenantId}.fifo`;
   }
 
   /**
-   * Enqueues a call job for a tenant.
-   * delaySeconds: SQS message delay (0–900s).
-   * Used for immediate dispatch (0) and retries (callDelay * 60).
+   * Enqueues a call job onto the tenant's FIFO queue.
+   * delaySeconds: 0 for immediate, callDelay * 60 for retries.
+   * Note: SQS FIFO queues support max 900 seconds delay.
    */
   async enqueue(job: CallJob, delaySeconds: number = 0): Promise<void> {
-    const queueUrl = await this.getQueueUrl(job.tenantId);
+    const queueUrl = this.buildQueueUrl(job.tenantId);
     try {
       await this.client.send(
         new SendMessageCommand({
@@ -61,10 +61,39 @@ export class AwsSqsService {
           DelaySeconds: Math.min(delaySeconds, 900),
         }),
       );
-      this.logger.log(`Enqueued call job for lead ${job.leadId} · attempt ${job.attemptNumber}`);
+      this.logger.log(
+        `Enqueued call job — lead: ${job.leadId} · attempt: ${job.attemptNumber}`,
+      );
     } catch (error) {
       this.logger.error(`Failed to enqueue job for lead ${job.leadId}`, error);
       throw error;
     }
+  }
+
+  /**
+   * Receives messages from any queue by URL.
+   * Used by call processor to poll per-tenant queues.
+   */
+  async receiveMessages(queueUrl: string, maxMessages = 10) {
+    const result = await this.client.send(
+      new ReceiveMessageCommand({
+        QueueUrl: queueUrl,
+        MaxNumberOfMessages: maxMessages,
+        WaitTimeSeconds: 20,
+      }),
+    );
+    return result.Messages ?? [];
+  }
+
+  /**
+   * Deletes a message after successful processing.
+   */
+  async deleteMessage(queueUrl: string, receiptHandle: string): Promise<void> {
+    await this.client.send(
+      new DeleteMessageCommand({
+        QueueUrl: queueUrl,
+        ReceiptHandle: receiptHandle,
+      }),
+    );
   }
 }

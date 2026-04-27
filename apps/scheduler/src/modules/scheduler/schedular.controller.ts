@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { SchedulerService, SchedulerEvent } from './scheduler.service';
 import { InternalApiKeyGuard } from '@libs/common/guards/internal-api.guard';
 
@@ -20,7 +13,7 @@ export class SchedulerController {
    * Protected by internal API key.
    */
   @Post('trigger')
-        @UseGuards(InternalApiKeyGuard)
+  @UseGuards(InternalApiKeyGuard)
   trigger(@Body() event: SchedulerEvent): Promise<void> {
     return this.service.handleSchedulerEvent(event);
   }

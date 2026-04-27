@@ -1,4 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } from '@aws-sdk/client-sqs';
 import { AwsSqsService, CallJob } from '@libs/aws/aws-sqs.service';
 import { DayOfWeek, InternalApiClient } from '@libs/common/index';
 
@@ -8,25 +10,82 @@ export interface SchedulerEvent {
 }
 
 @Injectable()
-export class SchedulerService {
+export class SchedulerService implements OnModuleInit {
   private readonly logger = new Logger(SchedulerService.name);
+  private readonly triggerClient: SQSClient;
+  private readonly triggerQueueUrl: string;
 
   constructor(
     private readonly internalApi: InternalApiClient,
     private readonly sqsService: AwsSqsService,
-  ) {}
+    private readonly config: ConfigService,
+  ) {
+    const keyId = this.config.get<string>('aws.sqs.accessKeyId');
+    const secret = this.config.get<string>('aws.sqs.secretAccessKey');
+    this.logger.log(
+      `SQS credentials loaded — keyId: ${keyId ? 'SET' : 'MISSING'} · secret: ${secret ? 'SET' : 'MISSING'}`,
+    );
+    this.triggerClient = new SQSClient({
+      region: this.config.get<string>('aws.region'),
+      credentials: {
+        accessKeyId: keyId,
+        secretAccessKey: secret,
+      },
+    });
+    this.triggerQueueUrl = this.config.get<string>('aws.schedular.triggerQueueUrl');
+  }
+
+  onModuleInit() {
+    this.logger.log('Scheduler service started — polling trigger queue');
+    this.poll();
+  }
+
+  /**
+   * Long polls Queue 1 (calendax-scheduler-triggers.fifo).
+   * EventBridge drops { tenantId, callingConfigId } here.
+   * Runs forever — restarts after errors with 5s backoff.
+   */
+  private async poll(): Promise<void> {
+    while (true) {
+      try {
+        const result = await this.triggerClient.send(
+          new ReceiveMessageCommand({
+            QueueUrl: this.triggerQueueUrl,
+            MaxNumberOfMessages: 10,
+            WaitTimeSeconds: 20,
+          }),
+        );
+
+        for (const message of result.Messages ?? []) {
+          try {
+            const event: SchedulerEvent = JSON.parse(message.Body);
+            await this.handleSchedulerEvent(event);
+
+            // only delete after successful processing
+            await this.triggerClient.send(
+              new DeleteMessageCommand({
+                QueueUrl: this.triggerQueueUrl,
+                ReceiptHandle: message.ReceiptHandle,
+              }),
+            );
+          } catch (err) {
+            this.logger.error(`Failed to process trigger message ${message.MessageId}`, err);
+            // don't delete — visibility timeout expires → retries automatically
+          }
+        }
+      } catch (err) {
+        this.logger.error('Polling error — retrying in 5s', err);
+        await new Promise((r) => setTimeout(r, 5000));
+      }
+    }
+  }
 
   async handleSchedulerEvent(event: SchedulerEvent): Promise<void> {
     const { tenantId, callingConfigId } = event;
-    this.logger.log(
-      `Scheduler fired — tenantId: ${tenantId} · configId: ${callingConfigId}`,
-    );
+    this.logger.log(`Scheduler fired — tenantId: ${tenantId} · configId: ${callingConfigId}`);
 
     // ── Step 1: Load CallingConfig from main API ──────────────────────
-    const callingConfig:any = await this.internalApi.getCallingConfig(
-      callingConfigId,
-      tenantId,
-    );
+    const callingConfig: any = await this.internalApi.getCallingConfig(callingConfigId, tenantId);
 
     if (!callingConfig) {
       this.logger.warn(`CallingConfig ${callingConfigId} not found — skipping`);
@@ -35,47 +94,35 @@ export class SchedulerService {
 
     // ── Step 2: Check selectedDays ────────────────────────────────────
     if (!this.isTodaySelected(callingConfig.selectedDays)) {
-      this.logger.log(
-        `Today is not a calling day for config ${callingConfigId} — skipping`,
-      );
+      this.logger.log(`Today is not a calling day — skipping`);
       return;
     }
 
     // ── Step 3: Check callTimeWindow ──────────────────────────────────
     if (!this.isWithinWindow(callingConfig.callTimeWindow)) {
-      this.logger.log(
-        `Outside call window for config ${callingConfigId} — skipping`,
-      );
+      this.logger.log(`Outside call window — skipping`);
       return;
     }
 
     // ── Step 4: Fetch pending leads from main API ─────────────────────
-    const leads:any = await this.internalApi.getPendingLeads(
-      callingConfigId,
-      callingConfig.numOfCalls,
-      tenantId,
-    );
+    const leads: any = await this.internalApi.getPendingLeads(callingConfigId, callingConfig.numOfCalls, tenantId);
 
     if (!leads.length) {
-      this.logger.log(
-        `No pending leads for config ${callingConfigId} — skipping`,
-      );
+      this.logger.log(`No pending leads — skipping`);
       return;
     }
 
-    this.logger.log(
-      `Enqueuing ${leads.length} leads for config ${callingConfigId}`,
-    );
+    this.logger.log(`Enqueuing ${leads.length} leads`);
 
-    // ── Step 5: Enqueue each lead as a CallJob onto SQS ───────────────
+    // ── Step 5: Enqueue each lead onto per-tenant SQS queue ───────────
     for (const lead of leads) {
       /// add lead checks here
-      // also add allow repeatative lead check  
+      // also add allow repeatative lead check
       const job: CallJob = {
         tenantId,
         leadId: lead.id,
         callingConfigId,
-        agentId: '',      // loaded by call processor from AgentConfig
+        agentId: '', // loaded by call processor from AgentConfig
         attemptNumber: lead.callAttempts + 1,
       };
 
@@ -83,34 +130,20 @@ export class SchedulerService {
       this.logger.log(`Enqueued lead ${lead.id} · attempt ${job.attemptNumber}`);
     }
 
-    this.logger.log(
-      `Scheduler complete — ${leads.length} jobs enqueued for tenant ${tenantId}`,
-    );
+    this.logger.log(`Scheduler complete — ${leads.length} jobs enqueued`);
   }
 
-  /**
-   * Checks if today's day of week is in the tenant's selectedDays.
-   * Uses UTC — timezone support to be added in future iteration.
-   */
   private isTodaySelected(selectedDays: string[]): boolean {
     const days = Object.values(DayOfWeek);
     const today = days[new Date().getUTCDay()];
     return selectedDays.map((d) => d.toLowerCase()).includes(today);
   }
 
-  /**
-   * Checks if current UTC time is within callTimeWindow.
-   * startTime and endTime format: "HH:MM" (24hr).
-   */
-  private isWithinWindow(
-    callTimeWindow: { startTime: string; endTime: string },
-  ): boolean {
+  private isWithinWindow(callTimeWindow: { startTime: string; endTime: string }): boolean {
     const now = new Date();
     const currentMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
     const [startH, startM] = callTimeWindow.startTime.split(':').map(Number);
     const [endH, endM] = callTimeWindow.endTime.split(':').map(Number);
-    const startMinutes = startH * 60 + startM;
-    const endMinutes = endH * 60 + endM;
-    return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+    return currentMinutes >= startH * 60 + startM && currentMinutes <= endH * 60 + endM;
   }
 }

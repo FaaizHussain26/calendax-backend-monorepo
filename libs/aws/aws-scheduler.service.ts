@@ -22,17 +22,30 @@ export class AwsSchedulerService {
   private readonly roleArn: string;
   private readonly logger = new Logger(AwsSchedulerService.name);
 
-  constructor(private readonly configService: ConfigService) {
-    this.client = new SchedulerClient({
-      region: this.configService.get<string>('aws.region')!,
-      credentials: {
-        accessKeyId: this.configService.get<string>('aws.accessKeyId')!,
-        secretAccessKey: this.configService.get<string>('aws.secretAccessKey')!,
-      },
-    });
-    this.targetArn = this.configService.get<string>('aws.schedulerServiceArn')!;
-    this.roleArn = this.configService.get<string>('aws.eventbridgeRoleArn')!;
+constructor(private readonly configService: ConfigService) {
+  const region = this.configService.get<string>('aws.region');
+  const accessKeyId = this.configService.get<string>('aws.schedular.accessKeyId');
+  const secretAccessKey = this.configService.get<string>('aws.schedular.secretAccessKey');
+  const targetArn = this.configService.get<string>('aws.schedular.schedulerServiceArn');
+  const roleArn = this.configService.get<string>('aws.schedular.eventbridgeRoleArn');
+
+  this.logger.log(`EventBridge Scheduler init — region: ${region} · keyId: ${accessKeyId ? 'SET' : 'MISSING'} · secret: ${secretAccessKey ? 'SET' : 'MISSING'} · targetArn: ${targetArn || 'MISSING'} · roleArn: ${roleArn || 'MISSING'}`);
+
+  if (!region || !accessKeyId || !secretAccessKey || !targetArn || !roleArn) {
+    this.logger.error('EventBridge credentials incomplete — check aws.schedular config in .env');
   }
+
+  this.client = new SchedulerClient({
+    region,
+    credentials: {
+      accessKeyId,
+      secretAccessKey,
+    },
+  });
+
+  this.targetArn = targetArn;
+  this.roleArn = roleArn;
+}
 
   private buildCronExpression(selectedDays: DayOfWeek[], startTime: string): string {
     const dayMap: Record<DayOfWeek, number> = {
@@ -55,34 +68,42 @@ export class AwsSchedulerService {
    * Rule name is scoped per tenant + config so each CallingConfig
    * gets its own independent EventBridge rule.
    */
-  private buildRuleName(tenantId: string, callingConfigId: string): string {
-    return `tenant-${tenantId}-config-${callingConfigId}`;
-  }
+private buildRuleName(tenantId: string, callingConfigId: string): string {
+  // Use first 8 chars of each UUID to keep under 64 char limit
+  const shortTenant = tenantId.replace(/-/g, '').slice(0, 8);
+  const shortConfig = callingConfigId.replace(/-/g, '').slice(0, 8);
+  return `t${shortTenant}-c${shortConfig}`;
+  // example: td9e4a0df-c2bdadee2 = 19 chars
+}
 
-  private buildScheduleInput(
-    name: string,
-    selectedDays: DayOfWeek[],
-    startTime: string,
-    payload: SchedulePayload,
-  ): CreateScheduleCommandInput {
-    return {
-      Name: name,
-      ScheduleExpression: this.buildCronExpression(selectedDays, startTime),
-      FlexibleTimeWindow: { Mode: FlexibleTimeWindowMode.OFF },
-      Target: {
-        Arn: this.targetArn,
-        RoleArn: this.roleArn,
-        Input: JSON.stringify(payload),
+private buildScheduleInput(
+  name: string,
+  selectedDays: DayOfWeek[],
+  startTime: string,
+  payload: SchedulePayload,
+): CreateScheduleCommandInput {
+  return {
+    Name: name,
+    GroupName:"default",
+    ScheduleExpression: this.buildCronExpression(selectedDays, startTime),
+    ScheduleExpressionTimezone: 'UTC',
+    FlexibleTimeWindow: { Mode: FlexibleTimeWindowMode.OFF },
+    Target: {
+      Arn: this.targetArn,
+      RoleArn: this.roleArn,
+      SqsParameters: {
+        MessageGroupId: name,
       },
-    };
-  }
-
+      Input: JSON.stringify(payload),
+    },
+  };
+}
   async createSchedule(
     tenantId: string,
     callingConfigId: string,
     selectedDays: DayOfWeek[],
     startTime: string,
-  ): Promise<void> {
+  ): Promise<string> {
     const name = this.buildRuleName(tenantId, callingConfigId);
     const input = this.buildScheduleInput(name, selectedDays, startTime, {
       tenantId,
@@ -92,6 +113,7 @@ export class AwsSchedulerService {
     try {
       await this.client.send(new CreateScheduleCommand(input));
       this.logger.log(`Created EventBridge schedule: ${name}`);
+      return name;
     } catch (error) {
       this.logger.error(`Failed to create schedule ${name}`, error);
       throw error;

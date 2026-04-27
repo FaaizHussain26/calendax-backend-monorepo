@@ -82,7 +82,7 @@ import configuration from '@libs/config/configuration';
     TenantModulesModule,
     SeederModule,
     FileUploadModule,
-    DashboardModule,   
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [
@@ -112,7 +112,8 @@ export class AppModule {
         'questions',
         'business-config',
         'agent-config',
-        'calling-config',"internal/calling-configs",
+        'internal/calling-configs',
+        'calling-config',
         'facebook',
         'facebook/config',
         'leads',

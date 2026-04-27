@@ -9,4 +9,5 @@ export enum LeadStatus {
   SCREENED = 'screened',
   CONVERTED = 'converted',
   REJECTED = 'rejected',
+  PAUSED='paused'
 }
