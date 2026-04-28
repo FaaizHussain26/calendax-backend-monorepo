@@ -37,6 +37,7 @@ export class InternalApiClient {
     label: string,
   ): Promise<T> {
     try {
+      console.log("tenant id:",tenantId,url)
       const res = await fetch(url, {
         headers: this.tenantHeaders(tenantId),
       });
@@ -91,7 +92,7 @@ export class InternalApiClient {
     tenantId: string,
   ) {
     return this.request(
-      `${this.baseUrl}/internal/leads/pending?callingConfigId=${callingConfigId}&limit=${limit}`,
+      `${this.baseUrl}/internal/leads/pending?callingConfigId=${callingConfigId}`,//
       tenantId,
       `pending leads for config ${callingConfigId}`,
     );

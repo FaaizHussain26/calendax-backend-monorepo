@@ -9,9 +9,10 @@ import { TenantConnectionManager } from '../../database/tenant/tenant-connection
 import { JwtCommonModule } from '../../services/jwt/jwt.module';
 import { AdminPermissionGroupModule } from '../permission-group/permission-group.module';
 import { MongoAdminModule } from '../../database/master/mongo-admin.module';
+import { AwsModule } from '@libs/aws/aws.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TenantEntity], 'master'), AdminPermissionGroupModule, MongoAdminModule],
+  imports: [TypeOrmModule.forFeature([TenantEntity], 'master'), AdminPermissionGroupModule, MongoAdminModule,AwsModule],
   controllers: [TenantController],
   providers: [TenantService, TenantRepository, TenantConnectionManager],
   exports: [TenantRepository, TenantConnectionManager],

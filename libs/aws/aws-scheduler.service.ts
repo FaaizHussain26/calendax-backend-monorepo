@@ -29,7 +29,6 @@ constructor(private readonly configService: ConfigService) {
   const targetArn = this.configService.get<string>('aws.schedular.schedulerServiceArn');
   const roleArn = this.configService.get<string>('aws.schedular.eventbridgeRoleArn');
 
-  this.logger.log(`EventBridge Scheduler init — region: ${region} · keyId: ${accessKeyId ? 'SET' : 'MISSING'} · secret: ${secretAccessKey ? 'SET' : 'MISSING'} · targetArn: ${targetArn || 'MISSING'} · roleArn: ${roleArn || 'MISSING'}`);
 
   if (!region || !accessKeyId || !secretAccessKey || !targetArn || !roleArn) {
     this.logger.error('EventBridge credentials incomplete — check aws.schedular config in .env');

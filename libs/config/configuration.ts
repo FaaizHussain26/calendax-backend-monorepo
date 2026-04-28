@@ -3,7 +3,7 @@ export default () => ({
   port: parseInt(process.env.PORT!, 10) || 3000,
   defaultPassword: process.env.DEFAULT_PASSWORD,
   internal: {
-    apiUrl: process.env.INTERNAL_API_URL || 'http://localhost:3001',
+    apiUrl: process.env.INTERNAL_API_URL || 'http://localhost:3001/api',
     apiKey: process.env.INTERNAL_API_KEY || 'dev_secret_internal_key',
   },
   jwt: {
@@ -43,6 +43,7 @@ export default () => ({
     key: process.env.OPENAI_API_KEY,
   },
   aws: {
+    accountId:process.env.AWS_ACCOUNT_ID||'',
     region: process.env.AWS_REGION || '',
     schedular: {
       accessKeyId: process.env.EVENT_BRIDGE_USER_ACCESSKEY,

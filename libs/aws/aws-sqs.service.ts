@@ -6,6 +6,7 @@ import {
   ReceiveMessageCommand,
   DeleteMessageCommand,
   GetQueueUrlCommand,
+  CreateQueueCommand,
 } from '@aws-sdk/client-sqs';
 
 export interface CallJob {
@@ -32,18 +33,39 @@ export class AwsSqsService {
       });
       this.queuePrefix = this.configService.get<string>('aws.sqs.queuePrefix') ?? 'calling';
     }
-
+async createTenantQueue(tenantId: string): Promise<string> {
+  const queueName = `${this.queuePrefix}-${tenantId}.fifo`;
+  try {
+    const result = await this.client.send(
+      new CreateQueueCommand({
+        QueueName: queueName,
+        Attributes: {
+          FifoQueue: 'true',
+          ContentBasedDeduplication: 'true',
+          VisibilityTimeout: '300',
+          ReceiveMessageWaitTimeSeconds: '20',
+        },
+      }),
+    );
+    this.logger.log(`Created SQS queue: ${queueName}`);
+    return result.QueueUrl;
+  } catch (error) {
+    this.logger.error(`Failed to create SQS queue ${queueName}`, error);
+    throw error;
+  }
+}
   /**
    * Builds the per-tenant FIFO queue URL.
    * Queue must be pre-created in AWS Console or via SDK.
    * Naming convention: calling-{tenantId}.fifo
    */
-  private buildQueueUrl(tenantId: string): string {
-    const region = this.configService.get<string>('aws.region');
-    const accountId = this.configService.get<string>('aws.accountId');
-    return `https://sqs.${region}.amazonaws.com/${accountId}/${this.queuePrefix}-${tenantId}.fifo`;
-  }
-
+private buildQueueUrl(tenantId: string): string {
+  const region = this.configService.get<string>('aws.region');
+  const accountId = this.configService.get<string>('aws.accountId');
+  const url = `https://sqs.${region}.amazonaws.com/${accountId}/${this.queuePrefix}-${tenantId}.fifo`;
+  this.logger.log(`Built queue URL: ${url}`);
+  return url;
+}
   /**
    * Enqueues a call job onto the tenant's FIFO queue.
    * delaySeconds: 0 for immediate, callDelay * 60 for retries.

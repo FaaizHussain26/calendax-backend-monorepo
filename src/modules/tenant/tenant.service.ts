@@ -27,6 +27,7 @@ import * as bcrypt from 'bcrypt';
 import { MongoAdminService } from '../../database/master/mongo-admin.service';
 import { PROTOCOL_DOCUMENT_COLLECTION } from '@libs/common/interfaces/collections/protocol-document.interface';
 import { SearchIndex } from '@libs/common/interfaces/mongo.interface';
+import { AwsSqsService } from '@libs/aws/aws-sqs.service';
 @Injectable()
 export class TenantService {
   constructor(
@@ -37,6 +38,7 @@ export class TenantService {
     private readonly configService: ConfigService,
     private readonly adminPermissionGroupRepository: AdminPermissionGroupRepository,
     private readonly mongoAdmin: MongoAdminService,
+    private readonly sqsService:AwsSqsService
   ) {}
 
   async getAllTenants(query: findTenantDto) {
@@ -104,6 +106,7 @@ export class TenantService {
       await this.tenantRepository.updateTenant(tenant.id, {
         status: TenantStatus.ACTIVE,
       });
+      await this.sqsService.createTenantQueue(tenant.id);
       return tenant;
     } catch (error) {
       // 5. Rollback everything if anything fails

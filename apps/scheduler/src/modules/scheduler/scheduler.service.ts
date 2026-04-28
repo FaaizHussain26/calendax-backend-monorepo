@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } from '@aws-sdk/client-sqs';
 import { AwsSqsService, CallJob } from '@libs/aws/aws-sqs.service';
 import { DayOfWeek, InternalApiClient } from '@libs/common/index';
+import { validate } from 'uuid';
 
 export interface SchedulerEvent {
   tenantId: string;
@@ -45,48 +46,66 @@ export class SchedulerService implements OnModuleInit {
    * EventBridge drops { tenantId, callingConfigId } here.
    * Runs forever — restarts after errors with 5s backoff.
    */
-  private async poll(): Promise<void> {
-    while (true) {
-      try {
-        const result = await this.triggerClient.send(
-          new ReceiveMessageCommand({
-            QueueUrl: this.triggerQueueUrl,
-            MaxNumberOfMessages: 10,
-            WaitTimeSeconds: 20,
-          }),
-        );
+ private async poll(): Promise<void> {
+  while (true) {
+    try {
+      const result = await this.triggerClient.send(
+        new ReceiveMessageCommand({
+          QueueUrl: this.triggerQueueUrl,
+          MaxNumberOfMessages: 10,
+          WaitTimeSeconds: 20,
+        }),
+      );
 
-        for (const message of result.Messages ?? []) {
-          try {
-            const event: SchedulerEvent = JSON.parse(message.Body);
-            await this.handleSchedulerEvent(event);
+      for (const message of result.Messages ?? []) {
+        try {
+          const event: SchedulerEvent = JSON.parse(message.Body);
+          await this.handleSchedulerEvent(event);
 
-            // only delete after successful processing
+          // only delete after successful processing
+          await this.triggerClient.send(
+            new DeleteMessageCommand({
+              QueueUrl: this.triggerQueueUrl,
+              ReceiptHandle: message.ReceiptHandle,
+            }),
+          );
+        } catch (err) {
+          if (err instanceof SyntaxError) {
+            this.logger.warn(`Invalid JSON — deleting poison pill message ${message.MessageId}`);
             await this.triggerClient.send(
               new DeleteMessageCommand({
                 QueueUrl: this.triggerQueueUrl,
                 ReceiptHandle: message.ReceiptHandle,
               }),
             );
-          } catch (err) {
-            this.logger.error(`Failed to process trigger message ${message.MessageId}`, err);
+          } else {
+            this.logger.error(`Failed to process message ${message.MessageId}`, err);
             // don't delete — visibility timeout expires → retries automatically
           }
         }
-      } catch (err) {
-        this.logger.error('Polling error — retrying in 5s', err);
-        await new Promise((r) => setTimeout(r, 5000));
       }
+    } catch (err) {
+      this.logger.error('Polling error — retrying in 5s', err);
+      await new Promise((r) => setTimeout(r, 5000));
     }
   }
+}
 
   async handleSchedulerEvent(event: SchedulerEvent): Promise<void> {
+    const isProd = process.env.NODE_ENV === 'production';
     const { tenantId, callingConfigId } = event;
     this.logger.log(`Scheduler fired — tenantId: ${tenantId} · configId: ${callingConfigId}`);
-
+    if (!callingConfigId || !tenantId) {
+      this.logger.warn(`Required props missing — skipping`);
+      return;
+    }
+    if (!validate(tenantId)) {
+      this.logger.warn(`Invalid tenantId format — skipping`);
+      return;
+    }
     // ── Step 1: Load CallingConfig from main API ──────────────────────
-    const callingConfig: any = await this.internalApi.getCallingConfig(callingConfigId, tenantId);
-
+    const { data: callingConfig }: any = await this.internalApi.getCallingConfig(callingConfigId, tenantId);
+    console.log('calling config is:',isProd, callingConfig);
     if (!callingConfig) {
       this.logger.warn(`CallingConfig ${callingConfigId} not found — skipping`);
       return;
@@ -95,17 +114,17 @@ export class SchedulerService implements OnModuleInit {
     // ── Step 2: Check selectedDays ────────────────────────────────────
     if (!this.isTodaySelected(callingConfig.selectedDays)) {
       this.logger.log(`Today is not a calling day — skipping`);
-      return;
+      if (isProd) return;
     }
 
     // ── Step 3: Check callTimeWindow ──────────────────────────────────
     if (!this.isWithinWindow(callingConfig.callTimeWindow)) {
       this.logger.log(`Outside call window — skipping`);
-      return;
+      if (isProd) return;
     }
 
     // ── Step 4: Fetch pending leads from main API ─────────────────────
-    const leads: any = await this.internalApi.getPendingLeads(callingConfigId, callingConfig.numOfCalls, tenantId);
+    const {data:leads}: any = await this.internalApi.getPendingLeads(callingConfigId, callingConfig.numOfCalls, tenantId);
 
     if (!leads.length) {
       this.logger.log(`No pending leads — skipping`);
@@ -136,14 +155,16 @@ export class SchedulerService implements OnModuleInit {
   private isTodaySelected(selectedDays: string[]): boolean {
     const days = Object.values(DayOfWeek);
     const today = days[new Date().getUTCDay()];
-    return selectedDays.map((d) => d.toLowerCase()).includes(today);
+    console.log('today is:', today);
+    return selectedDays?.map((d) => d.toLowerCase()).includes(today?.toLowerCase());
   }
 
   private isWithinWindow(callTimeWindow: { startTime: string; endTime: string }): boolean {
+    console.log('calling time window', callTimeWindow);
     const now = new Date();
     const currentMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
-    const [startH, startM] = callTimeWindow.startTime.split(':').map(Number);
-    const [endH, endM] = callTimeWindow.endTime.split(':').map(Number);
+    const [startH, startM] = callTimeWindow?.startTime?.split(':')?.map(Number);
+    const [endH, endM] = callTimeWindow?.endTime?.split(':')?.map(Number);
     return currentMinutes >= startH * 60 + startM && currentMinutes <= endH * 60 + endM;
   }
 }

@@ -116,6 +116,7 @@ export class AppModule {
         'calling-config',
         'facebook',
         'facebook/config',
+        'internal/leads',
         'leads',
         'patients',
       );
