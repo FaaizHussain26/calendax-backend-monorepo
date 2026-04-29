@@ -21,7 +21,7 @@ export class SiteRepository {
     slug: true,
     streetAddress:true,
     state:true,zipCode:true,prefix:true,
-    link:true,location:true,
+    link:true,
     users: { firstName: true, lastName: true, id: true },
   };
 
