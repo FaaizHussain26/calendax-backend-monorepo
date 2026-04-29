@@ -18,7 +18,6 @@ export class TenantContextMiddleware implements NestMiddleware {
   ) {}
   private async resolveTenant(tenantId: string): Promise<TenantEntity | null> {
     const cacheKey = tenantCacheKey(tenantId);
-
     const cached = await this.redisHelper.get<TenantEntity>(cacheKey);
     if (cached) return cached;
 

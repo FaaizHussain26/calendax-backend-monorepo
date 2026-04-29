@@ -1,16 +1,20 @@
 // src/modules/tenant-modules/rbac/permission-group/permission-group.service.ts
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { PermissionGroupRepository } from './permission-group.repository';
-import { CreatePermissionGroupDto, UpdatePermissionGroupDto } from '../../../../common/dto/permission.dto';
-import { HelperFunctions } from '../../../../common/utils/functions';
-import { PermissionRepository } from '../permission/permission.repository';
 import { PaginationDto } from '../../../../common/dto/pagination.dto';
+import { CreatePermissionGroupDto, UpdatePermissionGroupDto } from '../../../../common/dto/permission.dto';
+import { TenantUserRoles } from '../../../../common/enums/tenant.enum';
+import { TokenUser } from '../../../../common/interfaces/request.interface';
+import { HelperFunctions } from '../../../../common/utils/functions';
+import { UsersRepository } from '../../user/user.repository';
+import { PermissionRepository } from '../permission/permission.repository';
+import { PermissionGroupRepository } from './permission-group.repository';
 
 @Injectable()
 export class PermissionGroupService {
   constructor(
     private readonly permissionGroupRepo: PermissionGroupRepository,
     private readonly permissionRepo: PermissionRepository,
+    private readonly usersRepository: UsersRepository,
   ) {}
 
   async findAll(query: PaginationDto) {
@@ -23,6 +27,22 @@ export class PermissionGroupService {
     return group;
   }
 
+  async getMyPermissionsGroup(user: TokenUser) {
+    const isTenantAdmin = user.userType === TenantUserRoles.TENANT_ADMIN;
+    if (isTenantAdmin) {
+      const permissionGroup = await this.permissionGroupRepo.findAll({ all: true });
+      return permissionGroup;
+    }
+    let data;
+    data = await this.usersRepository.findDetailsById(user.id);
+    const rolePermissions = data.role?.permissions?.map((p) => p.groupId) ?? [];
+    const directPermissions = data.permissions?.map((p) => p.groupId) ?? [];
+    const allPermissions = [...new Set([...rolePermissions, ...directPermissions])];
+    const permissionGroup = await this.permissionGroupRepo.findByPermissionIds(allPermissions);
+
+    return permissionGroup;
+  }
+
   async create(dto: CreatePermissionGroupDto) {
     const slug = HelperFunctions.generateSlug(dto.name);
 
@@ -31,6 +51,7 @@ export class PermissionGroupService {
 
     const group = await this.permissionGroupRepo.create({
       name: dto.name,
+      icon: dto.icon,
       slug,
       href: dto.href,
       description: dto.description,

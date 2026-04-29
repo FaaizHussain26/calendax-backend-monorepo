@@ -36,7 +36,17 @@ export default () => ({
       url: process.env.DATABASE_URL || '',
     },
   },
-  openai:{
-    key:process.env.OPENAI_API_KEY
+  openai: {
+    key: process.env.OPENAI_API_KEY,
+  },
+  aws: {
+    region: process.env.AWS_REGION || '',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    schedulerServiceArn: process.env.AWS_SCHEDULER_SERVICE_ARN || '',
+    eventbridgeRoleArn: process.env.AWS_EVENTBRIDGE_ROLE_ARN || '',
+  },
+  elevenlabs:{
+    apiKey: process.env.ELEVENLABS_API_KEY,
   }
 });

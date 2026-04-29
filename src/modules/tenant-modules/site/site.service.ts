@@ -49,7 +49,7 @@ export class SiteService {
     const site = await this.siteRepository.create({ ...siteData, slug, users });
     return this.siteRepository.findById(site.id)!;
   }
-
+ 
 async update(id: string, dto: UpdateSiteDto): Promise<SiteEntity | null> {
   await this.findById(id);
 

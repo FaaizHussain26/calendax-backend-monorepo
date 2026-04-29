@@ -1,6 +1,6 @@
 // src/modules/tenant-modules/rbac/permission-group/permission-group.repository.ts
 import { Inject, Injectable, Scope } from '@nestjs/common';
-import { ILike, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { PermissionGroupEntity } from './permission-group.entity';
 import { PaginationDto } from '../../../../common/dto/pagination.dto';
 
@@ -50,6 +50,14 @@ export class PermissionGroupRepository {
 
   async findBySlug(slug: string): Promise<PermissionGroupEntity | null> {
     return this.repo.findOne({ where: { slug } });
+  }
+
+  async findByPermissionIds(ids: string[]): Promise<PermissionGroupEntity[] | null> {
+    return await this.repo.find({
+      where: {
+        id: In(ids),
+      },
+    });
   }
 
   // ─── Update ───────────────────────────────────────────────────────────────
