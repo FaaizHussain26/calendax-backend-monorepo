@@ -14,7 +14,6 @@ import {
 import { LeadService } from './lead.service';
 import { LeadEntity } from './lead.entity';
 
-
 class UpdateStatusDto {
   status: string;
 }
@@ -24,7 +23,7 @@ class SaveTranscriptDto {
 }
 
 @Controller('internal/leads')
-@UseGuards(InternalApiKeyGuard,TenantGuard)
+@UseGuards(InternalApiKeyGuard, TenantGuard)
 export class InternalLeadController {
   constructor(private readonly leadService: LeadService) {}
 
@@ -39,10 +38,7 @@ export class InternalLeadController {
   ): Promise<LeadEntity[]> {
     if (!callingConfigId) throw new BadRequestException('callingConfigId is required.');
 
-    return this.leadService.findPendingByCallingConfig(
-      callingConfigId,
-      parseInt(limit) || 10,
-    );
+    return this.leadService.findPendingByCallingConfig(callingConfigId, parseInt(limit) || 10);
   }
 
   /**
@@ -50,10 +46,7 @@ export class InternalLeadController {
    * Used by call processor + webhook handler to update call state.
    */
   @Patch(':id/status')
-  async updateStatus(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateStatusDto,
-  ): Promise<LeadEntity> {
+  async updateStatus(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateStatusDto): Promise<LeadEntity> {
     return this.leadService.updateStatus(id, { status: dto.status as any });
   }
 
@@ -62,11 +55,18 @@ export class InternalLeadController {
    * Used by webhook handler to save call transcript.
    */
   @Patch(':id/transcript')
-  async saveTranscript(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: SaveTranscriptDto,
-  ) {
-    const lead = await this.leadService.findById(id);
+  async saveTranscript(@Param('id', ParseUUIDPipe) id: string, @Body() dto: SaveTranscriptDto) {
+    await this.leadService.findById(id);
     return this.leadService.addTranscript(id, { transcript: dto.transcript });
+  }
+
+  @Get(':id')
+  async getById(@Param('id', ParseUUIDPipe) id: string) {
+    return this.leadService.findById(id);
+  }
+
+  @Patch(':id/call-sid')
+  async saveCallSid(@Param('id', ParseUUIDPipe) id: string, @Body() body: { callSid: string }) {
+    return this.leadService.update(id, { callSid: body.callSid } as any);
   }
 }

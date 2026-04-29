@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { CallProcessorModule } from './modules/call-processor/call-processor.module';
+import { TwilioModule } from '@libs/twilio/twilio.module';
+import configuration from '@libs/config/configuration';
+import { InternalApiModule } from '@libs/common/index';
+import { CallProcessorModule } from './call-processor.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
+    TwilioModule,
+    InternalApiModule,
     CallProcessorModule,
   ],
 })

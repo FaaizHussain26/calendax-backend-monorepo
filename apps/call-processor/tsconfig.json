@@ -1,7 +1,9 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "../.."
+    "rootDir": "../..",
+    "outDir": "../../dist/call-processor",
+    // "baseUrl": "../.."
   },
   "include": [
     "src/**/*",

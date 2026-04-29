@@ -15,6 +15,9 @@ export class SiteRepository {
     patientCount: true,
     siteNumber: true,
     indication: true,
+    createdAt:true,
+    phoneNumber:true,
+    updatedAt:true,
     slug: true,
     users: { firstName: true, lastName: true, id: true },
   };

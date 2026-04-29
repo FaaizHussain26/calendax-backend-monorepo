@@ -5,10 +5,11 @@ import { AgentConfigRepository } from './agent-config.repository';
 import { provideTenantRepository } from '@libs/database/tenant-repository.helper';
 import { AgentConfigEntity } from './agent-config.entity';
 import { ElevenLabsModule } from '@libs/elevenlabs/elevenlabs.module';
+import { InternalAgentConfigController } from './internal-agent-config.controller';
 
 @Module({
   imports: [ElevenLabsModule],
-  controllers: [AgentConfigController],
+  controllers: [AgentConfigController,InternalAgentConfigController],
   providers: [
     AgentConfigService,
     AgentConfigRepository,

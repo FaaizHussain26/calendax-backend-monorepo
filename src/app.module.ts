@@ -107,7 +107,7 @@ export class AppModule {
         'roles',
         'patients',
         'sites',
-        'indications',
+        'indication',
         'protocols',
         'questions',
         'business-config',

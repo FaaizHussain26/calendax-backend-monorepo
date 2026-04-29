@@ -97,7 +97,30 @@ export class InternalApiClient {
       `pending leads for config ${callingConfigId}`,
     );
   }
+async getLeadById(leadId: string, tenantId: string): Promise<any> {
+  return this.request<any>(
+    `${this.baseUrl}/internal/leads/${leadId}`,
+    tenantId,
+    `lead ${leadId}`,
+  );
+}
 
+async getCurrentAgentConfig(tenantId: string): Promise<any> {
+  return this.request<any>(
+    `${this.baseUrl}/internal/agent-config/current`,
+    tenantId,
+    `agent config`,
+  );
+}
+
+async saveCallSid(leadId: string, callSid: string, tenantId: string): Promise<void> {
+  const res = await fetch(`${this.baseUrl}/internal/leads/${leadId}/call-sid`, {
+    method: 'PATCH',
+    headers: this.tenantHeaders(tenantId),
+    body: JSON.stringify({ callSid }),
+  });
+  if (!res.ok) throw new InternalServerErrorException(`Failed to save CallSid: ${res.status}`);
+}
   async updateLeadStatus(
     leadId: string,
     status: string,
