@@ -50,15 +50,26 @@ export class SiteService {
     return this.siteRepository.findById(site.id)!;
   }
 
-  async update(id: string, dto: UpdateSiteDto): Promise<SiteEntity | null> {
-    await this.findById(id);
+async update(id: string, dto: UpdateSiteDto): Promise<SiteEntity | null> {
+  await this.findById(id);
 
-    if (Object.keys(dto).length) {
-      await this.siteRepository.update(id, dto);
-    }
+  const { userIds, ...siteData } = dto;  // ✅ strip userIds
 
-    return this.siteRepository.findById(id);
+  if (Object.keys(siteData).length) {
+    await this.siteRepository.update(id, siteData);  // ✅ only pass siteData
   }
+
+  // handle userIds separately if provided
+  if (userIds?.length) {
+    const users = await this.usersRepository.findByIds(userIds);
+    if (users.length !== userIds.length) {
+      throw new NotFoundException('One or more users not found');
+    }
+    await this.siteRepository.assignUsers(id, users);
+  }
+
+  return this.siteRepository.findById(id);
+}
 
   async remove(id: string): Promise<void> {
     await this.findById(id);
