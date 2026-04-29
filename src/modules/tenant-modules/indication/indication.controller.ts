@@ -7,7 +7,7 @@ import { TenantGuard } from '@libs/common/guards/tenant.guard';
 import { JwtAuthGuard } from '../../../services/jwt/jwt.provider';
 @UseGuards(JwtAuthGuard, TenantGuard, PermissionsGuard)
 
-@Controller('indication')
+@Controller('indications')
 export class IndicationController {
   constructor(private readonly service: IndicationService) {}
 

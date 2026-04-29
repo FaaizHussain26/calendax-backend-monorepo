@@ -86,7 +86,7 @@ export class QuestionService {
     protocolId: string,
     mongo: Db,
     indication?: string,
-    additionalContext?: string, 
+    additionalContext?: string,
   ): Promise<{ question: string; summary: string; entity: QuestionEntity }> {
     const currentDoc = await this.protocolDocumentMetaRepository.findCurrentByProtocolId(protocolId);
     if (!currentDoc?.id) {
@@ -97,7 +97,7 @@ export class QuestionService {
     // 1. check if approved question exists — cannot regenerate
     const existing = await this.questionRepository.findOneByCondition({
       protocolId,
-      documentId:currentDoc.id,
+      documentId: currentDoc.id,
       status: QuestionStatus.APPROVED,
     });
     if (existing) {
@@ -142,7 +142,7 @@ export class QuestionService {
     // 6. upsert — update existing pending or create new
     const pendingQuestion = await this.questionRepository.findOneByCondition({
       protocolId,
-      documentId:currentDoc.id,
+      documentId: currentDoc.id,
       status: QuestionStatus.PENDING,
     });
 
@@ -160,7 +160,7 @@ export class QuestionService {
       // create new
       entity = await this.questionRepository.create({
         protocolId,
-        documentId:currentDoc.id,
+        documentId: currentDoc.id,
         question,
         summary,
         indication,
@@ -173,8 +173,8 @@ export class QuestionService {
   }
 
   private async vectorSearch(mongo: Db, queryEmbedding: number[], protocolId: string): Promise<IProtocolDocument[]> {
-
-    let data=await mongo
+    console.log('mongo::,', mongo.databaseName, protocolId, PROTOCOL_DOCUMENT_COLLECTION);
+    let data = await mongo
       .collection(PROTOCOL_DOCUMENT_COLLECTION)
       .aggregate<IProtocolDocument>([
         {
@@ -194,9 +194,10 @@ export class QuestionService {
             score: { $meta: 'vectorSearchScore' },
           },
         },
-      ]).toArray()
-      console.log("embedding data:",data.length)
-      return data
+      ])
+      .toArray();
+    console.log('embedding data:', data.length);
+    return data;
   }
 
   private async getEmbedding(text: string): Promise<number[]> {
@@ -204,7 +205,7 @@ export class QuestionService {
       model: 'text-embedding-3-small',
       input: text,
     });
-    console.log('res of get embedding:',resp.data[0].embedding.length)
+    console.log('res of get embedding:', resp.data[0].embedding.length);
     return resp.data[0].embedding;
   }
 

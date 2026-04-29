@@ -7,7 +7,7 @@ import { PaginationDto } from '@libs/common/dto/pagination.dto';
 
 @Injectable({ scope: Scope.REQUEST }) // 👈 REQUEST scope — tenant DB connection
 export class SiteRepository {
-    private readonly baseSelect = {
+  private readonly baseSelect = {
     name: true,
     email: true,
     id: true,
@@ -15,16 +15,21 @@ export class SiteRepository {
     patientCount: true,
     siteNumber: true,
     indication: true,
-    createdAt:true,
-    phoneNumber:true,
-    updatedAt:true,
+    createdAt: true,
+    phoneNumber: true,
+    updatedAt: true,
     slug: true,
+    streetAddress: true,
+    state: true,
+    zipCode: true,
+    prefix: true,
+    link: true,
     users: { firstName: true, lastName: true, id: true },
   };
 
   constructor(
     @Inject(`${SiteEntity.name}Repository`)
-    private readonly repo: Repository<SiteEntity>
+    private readonly repo: Repository<SiteEntity>,
   ) {}
 
   async findAll(query: PaginationDto) {

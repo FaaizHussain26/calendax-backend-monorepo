@@ -8,14 +8,13 @@ import {
   Message,
 } from '@aws-sdk/client-sqs';
 import { TwilioService } from '@libs/twilio/twilio.service';
-import { LeadStatus } from '@libs/common/enums/lead.enum';
 import { InternalApiClient } from '@libs/common/index';
+import { LeadStatus } from '@libs/common/enums/lead.enum';
 
 export interface CallJob {
   tenantId: string;
   leadId: string;
   callingConfigId: string;
-  agentId: string;
   attemptNumber: number;
 }
 
@@ -27,6 +26,7 @@ export class CallProcessorService implements OnModuleInit {
   private readonly accountId: string;
   private readonly region: string;
   private readonly webhookBaseUrl: string;
+  private pollingTenants = new Set<string>();
 
   constructor(
     private readonly config: ConfigService,
@@ -51,31 +51,41 @@ export class CallProcessorService implements OnModuleInit {
     );
   }
 
-  onModuleInit() {
-    this.logger.log('Call processor started — polling tenant queues');
-    const tenantQueueUrls = this.resolveTenantQueueUrls();
-    if (!tenantQueueUrls.length) {
-      this.logger.warn('No TENANT_IDS configured — not polling any queues');
-      return;
-    }
-    for (const queueUrl of tenantQueueUrls) {
-      this.pollQueue(queueUrl);
-    }
+  async onModuleInit() {
+    this.logger.log('Call processor started');
+    await this.refreshTenantPolling();
+
+    // Refresh tenant list every 5 minutes to pick up newly onboarded tenants
+    setInterval(() => this.refreshTenantPolling(), 5 * 60 * 1000);
   }
 
   /**
-   * Resolves tenant queue URLs from TENANT_IDS env var.
-   * Format: comma-separated tenant UUIDs
-   * e.g. TENANT_IDS=uuid1,uuid2,uuid3
+   * Fetches active tenants from main API and starts polling
+   * any new tenant queues not already being polled.
+   * Safe to call repeatedly — won't start duplicate pollers.
    */
-  private resolveTenantQueueUrls(): string[] {
-    const tenantIds = this.config.get<string>('tenantIds') ?? '';
-    if (!tenantIds) return [];
-    return tenantIds
-      .split(',')
-      .map((id) => id.trim())
-      .filter(Boolean)
-      .map((id) => this.buildQueueUrl(id));
+  private async refreshTenantPolling(): Promise<void> {
+    try {
+      const tenants = await this.internalApi.getActiveTenants();
+
+      if (!tenants.length) {
+        this.logger.warn('No active tenants found — not polling any queues');
+        return;
+      }
+
+      for (const tenant of tenants) {
+        if (!this.pollingTenants.has(tenant.id)) {
+          this.pollingTenants.add(tenant.id);
+          const queueUrl = this.buildQueueUrl(tenant.id);
+          this.logger.log(`Starting poller for tenant: ${tenant.slug} → ${queueUrl}`);
+          this.pollQueue(queueUrl, tenant.id);
+        }
+      }
+
+      this.logger.log(`Polling ${this.pollingTenants.size} tenant queue(s)`);
+    } catch (err) {
+      this.logger.error('Failed to fetch active tenants — will retry in 5 minutes', err);
+    }
   }
 
   private buildQueueUrl(tenantId: string): string {
@@ -84,17 +94,16 @@ export class CallProcessorService implements OnModuleInit {
 
   /**
    * Polls a single tenant queue continuously.
-   * Each tenant runs its own independent polling loop.
+   * Each tenant runs its own independent async loop.
    */
-  private async pollQueue(queueUrl: string): Promise<void> {
-    this.logger.log(`Polling queue: ${queueUrl}`);
+  private async pollQueue(queueUrl: string, tenantId: string): Promise<void> {
     while (true) {
       try {
         const result = await this.sqsClient.send(
           new ReceiveMessageCommand({
             QueueUrl: queueUrl,
-            MaxNumberOfMessages: 1, // one call at a time per tenant
-            WaitTimeSeconds: 20,    // long polling
+            MaxNumberOfMessages: 1,  // one call at a time per tenant
+            WaitTimeSeconds: 20,     // long polling
           }),
         );
 
@@ -102,7 +111,10 @@ export class CallProcessorService implements OnModuleInit {
           await this.processMessage(queueUrl, message);
         }
       } catch (err) {
-        this.logger.error(`Polling error for ${queueUrl} — retrying in 5s`, err);
+        this.logger.error(
+          `Polling error for tenant ${tenantId} — retrying in 5s`,
+          err,
+        );
         await new Promise((r) => setTimeout(r, 5000));
       }
     }
@@ -113,7 +125,7 @@ export class CallProcessorService implements OnModuleInit {
    * Handles all edge cases before dialing.
    */
   private async processMessage(queueUrl: string, message: Message): Promise<void> {
-    // ── Parse job ────────────────────────────────────────────────────
+    // ── Parse job ─────────────────────────────────────────────────────
     let job: CallJob;
     try {
       job = JSON.parse(message.Body);
@@ -147,18 +159,16 @@ export class CallProcessorService implements OnModuleInit {
     // ── Edge case 2: Check lead status ────────────────────────────────
     if (lead.status === LeadStatus.CALLING) {
       this.logger.warn(
-        `Lead ${leadId} already in CALLING state — extending visibility`,
+        `Lead ${leadId} already CALLING — extending visibility`,
       );
       await this.extendVisibility(queueUrl, message.ReceiptHandle, 3600);
       return;
     }
 
     if (
-      [
-        LeadStatus.SCREENED,
-        LeadStatus.CONVERTED,
-        LeadStatus.REJECTED,
-      ].includes(lead.status)
+      [LeadStatus.SCREENED, LeadStatus.CONVERTED, LeadStatus.REJECTED].includes(
+        lead.status,
+      )
     ) {
       this.logger.log(
         `Lead ${leadId} in terminal state ${lead.status} — deleting job`,
@@ -175,25 +185,21 @@ export class CallProcessorService implements OnModuleInit {
         tenantId,
       );
     } catch {
-      this.logger.warn(
-        `CallingConfig ${callingConfigId} not found — deleting job`,
-      );
+      this.logger.warn(`CallingConfig ${callingConfigId} not found — deleting job`);
       await this.deleteMessage(queueUrl, message.ReceiptHandle);
       return;
     }
 
     // ── Edge case 4: Check call time window ───────────────────────────
     if (!this.isWithinWindow(callingConfig.callTimeWindow)) {
-      const secondsUntilWindow = this.secondsUntilWindowOpen(
-        callingConfig.callTimeWindow,
-      );
+      const secondsUntil = this.secondsUntilWindowOpen(callingConfig.callTimeWindow);
       this.logger.log(
-        `Outside call window — extending visibility by ${secondsUntilWindow}s`,
+        `Outside call window — extending visibility by ${secondsUntil}s`,
       );
       await this.extendVisibility(
         queueUrl,
         message.ReceiptHandle,
-        Math.min(secondsUntilWindow + 60, 43200),
+        Math.min(secondsUntil + 60, 43200),
       );
       return;
     }
@@ -203,11 +209,7 @@ export class CallProcessorService implements OnModuleInit {
       this.logger.warn(
         `Lead ${leadId} hit max retries (${callingConfig.maxRetries}) — rejecting`,
       );
-      await this.internalApi.updateLeadStatus(
-        leadId,
-        LeadStatus.REJECTED,
-        tenantId,
-      );
+      await this.internalApi.updateLeadStatus(leadId, LeadStatus.REJECTED, tenantId);
       await this.deleteMessage(queueUrl, message.ReceiptHandle);
       return;
     }
@@ -218,14 +220,14 @@ export class CallProcessorService implements OnModuleInit {
       agentConfig = await this.internalApi.getCurrentAgentConfig(tenantId);
     } catch {
       this.logger.error(
-        `Failed to fetch agent config for tenant ${tenantId} — will retry`,
+        `No agent config for tenant ${tenantId} — will retry on visibility timeout`,
       );
-      return; // don't delete — let visibility timeout expire for retry
+      return;
     }
 
     if (!agentConfig?.agentId) {
       this.logger.error(
-        `AgentId missing for tenant ${tenantId} — will retry`,
+        `AgentId missing for tenant ${tenantId} — will retry on visibility timeout`,
       );
       return;
     }
@@ -233,29 +235,24 @@ export class CallProcessorService implements OnModuleInit {
     // ── Edge case 7: Validate phone number ────────────────────────────
     if (!this.isValidPhone(lead.phone)) {
       this.logger.warn(
-        `Invalid phone number for lead ${leadId}: ${lead.phone} — rejecting`,
+        `Invalid phone for lead ${leadId}: ${lead.phone} — rejecting`,
       );
-      await this.internalApi.updateLeadStatus(
-        leadId,
-        LeadStatus.REJECTED,
-        tenantId,
-      );
+      await this.internalApi.updateLeadStatus(leadId, LeadStatus.REJECTED, tenantId);
       await this.deleteMessage(queueUrl, message.ReceiptHandle);
       return;
     }
 
-    // ── Step 8: Update lead status → calling ──────────────────────────
-    await this.internalApi.updateLeadStatus(
-      leadId,
-      LeadStatus.CALLING,
-      tenantId,
-    );
-    this.logger.log(`Lead ${leadId} status → calling`);
+    // ── Step 8: Mark lead as calling ──────────────────────────────────
+    await this.internalApi.updateLeadStatus(leadId, LeadStatus.CALLING, tenantId);
+    this.logger.log(`Lead ${leadId} → CALLING`);
 
     // ── Step 9: Start heartbeat ───────────────────────────────────────
     const heartbeat = this.startHeartbeat(queueUrl, message.ReceiptHandle);
 
-    // ── Step 10: Initiate Twilio call ─────────────────────────────────
+    // ── Step 10: Initiate call via Twilio ─────────────────────────────
+    // Twilio connects the call to ElevenLabs agent automatically via the
+    // agent URL. ElevenLabs AI handles the entire conversation.
+    // Your code just hands off — Twilio + ElevenLabs take it from here.
     try {
       const callSid = await this.twilioService.initiateCall({
         to: lead.phone,
@@ -263,38 +260,30 @@ export class CallProcessorService implements OnModuleInit {
         callbackUrl: `${this.webhookBaseUrl}/twilio/status`,
       });
 
-      this.logger.log(`Call initiated — SID: ${callSid} · lead: ${leadId}`);
+      this.logger.log(
+        `Call initiated — SID: ${callSid} · lead: ${leadId} · agent: ${agentConfig.agentId}`,
+      );
 
-      // ── Step 11: Save CallSid on lead ─────────────────────────────
+      // ── Step 11: Save CallSid for webhook handler to match later ──
       await this.internalApi.saveCallSid(leadId, callSid, tenantId);
 
-      // ── Step 12: Stop heartbeat + delete job ──────────────────────
+      // ── Step 12: Clean up ─────────────────────────────────────────
       clearInterval(heartbeat);
       await this.deleteMessage(queueUrl, message.ReceiptHandle);
 
-      this.logger.log(
-        `Call job complete — lead: ${leadId} · SID: ${callSid}`,
-      );
+      this.logger.log(`Call job complete — lead: ${leadId}`);
     } catch (error) {
       clearInterval(heartbeat);
-      this.logger.error(
-        `Failed to initiate call for lead ${leadId}`,
-        error,
-      );
+      this.logger.error(`Failed to initiate call for lead ${leadId}`, error);
 
-      // revert lead status back to pending
-      await this.internalApi.updateLeadStatus(
-        leadId,
-        LeadStatus.PENDING,
-        tenantId,
-      );
-      // don't delete — let visibility timeout expire for retry
+      // revert lead status — allow retry on next visibility timeout
+      await this.internalApi.updateLeadStatus(leadId, LeadStatus.PENDING, tenantId);
     }
   }
 
   /**
-   * Heartbeat — resets visibility timeout every 10 minutes.
-   * Prevents job from reappearing during a long call (30-40 min).
+   * Resets visibility timeout every 10 minutes while call is active.
+   * Prevents job reappearing during 30-40 min calls.
    */
   private startHeartbeat(
     queueUrl: string,
@@ -303,12 +292,11 @@ export class CallProcessorService implements OnModuleInit {
     return setInterval(async () => {
       try {
         await this.extendVisibility(queueUrl, receiptHandle, 3600);
-        this.logger.log('Heartbeat — visibility extended to 1hr');
+        this.logger.log('Heartbeat — visibility reset to 1hr');
       } catch (err) {
-        this.logger.error('Heartbeat failed', err);
-        // log but don't crash — duplicate call prevention handles worst case
+        this.logger.error('Heartbeat failed — job may reappear if call is long', err);
       }
-    }, 10 * 60 * 1000); // every 10 minutes
+    }, 10 * 60 * 1000);
   }
 
   private async extendVisibility(
@@ -351,13 +339,7 @@ export class CallProcessorService implements OnModuleInit {
     );
   }
 
-  /**
-   * Calculates seconds until the call window opens.
-   * Used to set visibility timeout so job reappears exactly at window open.
-   */
-  private secondsUntilWindowOpen(callTimeWindow: {
-    startTime: string;
-  }): number {
+  private secondsUntilWindowOpen(callTimeWindow: { startTime: string }): number {
     const now = new Date();
     const currentMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
     const [startH, startM] = callTimeWindow.startTime.split(':').map(Number);
@@ -365,14 +347,9 @@ export class CallProcessorService implements OnModuleInit {
     if (currentMinutes < startMinutes) {
       return (startMinutes - currentMinutes) * 60;
     }
-    // window passed today — calculate for tomorrow
     return (24 * 60 - currentMinutes + startMinutes) * 60;
   }
 
-  /**
-   * Validates E.164 phone format: +[country code][number]
-   * e.g. +14155552671
-   */
   private isValidPhone(phone: string): boolean {
     return /^\+[1-9]\d{6,14}$/.test(phone);
   }

@@ -172,4 +172,17 @@ async saveCallSid(leadId: string, callSid: string, tenantId: string): Promise<vo
       throw new InternalServerErrorException('Failed to save transcript.');
     }
   }
+  async getActiveTenants(): Promise<Array<{ id: string; slug: string }>> {
+  try {
+    const res = await fetch(`${this.baseUrl}/internal/tenants/active`, {
+      headers: this.baseHeaders,
+    });
+    if (!res.ok) throw new InternalServerErrorException('Failed to fetch active tenants');
+    return res.json();
+  } catch (error) {
+    if (error instanceof InternalServerErrorException) throw error;
+    this.logger.error('Failed to fetch active tenants', error);
+    throw new InternalServerErrorException('Failed to reach internal API.');
+  }
+}
 }
