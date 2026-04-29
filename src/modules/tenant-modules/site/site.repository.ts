@@ -19,6 +19,9 @@ export class SiteRepository {
     phoneNumber:true,
     updatedAt:true,
     slug: true,
+    streetAddress:true,
+    state:true,zipCode:true,prefix:true,
+    link:true,location:true,
     users: { firstName: true, lastName: true, id: true },
   };
 
