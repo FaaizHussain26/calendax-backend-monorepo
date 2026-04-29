@@ -173,6 +173,7 @@ export class QuestionService {
   }
 
   private async vectorSearch(mongo: Db, queryEmbedding: number[], protocolId: string): Promise<IProtocolDocument[]> {
+console.log("mongo::,",mongo.databaseName,protocolId)
 
     let data=await mongo
       .collection(PROTOCOL_DOCUMENT_COLLECTION)
