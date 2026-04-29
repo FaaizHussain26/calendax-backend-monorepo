@@ -15,9 +15,16 @@ export class SiteRepository {
     patientCount: true,
     siteNumber: true,
     indication: true,
+    createdAt:true,
+    phoneNumber:true,
+    updatedAt:true,
     slug: true,
+    streetAddress:true,
+    state:true,zipCode:true,prefix:true,
+    link:true,location:true,
     users: { firstName: true, lastName: true, id: true },
   };
+
 
   constructor(
     @Inject(`${SiteEntity.name}Repository`)
