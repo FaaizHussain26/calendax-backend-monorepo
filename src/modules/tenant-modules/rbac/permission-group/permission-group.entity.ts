@@ -21,6 +21,9 @@ export class PermissionGroupEntity {
   @Column({ type: 'varchar', length: 60, unique: true })
   slug: string;
 
+  @Column({ type: 'varchar', length: 60, nullable: true })
+  icon: string;
+
   @Column({ type: 'varchar', length: 255, nullable: true })
   href: string;
 

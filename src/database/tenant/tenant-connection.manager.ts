@@ -16,6 +16,11 @@ import { ProtocolEntity } from '../../modules/tenant-modules/protocol/protocol.e
 import { IndicationEntity } from '../../modules/tenant-modules/indication/indication.entity';
 import { ProtocolDocumentMetaEntity } from '../../modules/tenant-modules/protocol/document/document-meta.entity';
 import { QuestionEntity } from '../../modules/tenant-modules/question/question.entity';
+import { BusinessConfigEntity } from '../../modules/tenant-modules/business-config/business-config.entity';
+import { AgentConfigEntity } from '../../modules/tenant-modules/agent-config/agent-config.entity';
+import { CallingConfigEntity } from '../../modules/tenant-modules/calling-config/calling-config.entity';
+import { FacebookConfigEntity } from '../../modules/tenant-modules/facebook/entities/facebook-config.entity';
+import { FacebookFormEntity } from '../../modules/tenant-modules/facebook/entities/facebook-form.entity';
 export type TenantConnection = {
   sql: DataSource;
   mongo: Db;
@@ -43,9 +48,8 @@ export class TenantConnectionManager implements OnModuleDestroy {
 
     const cached = this.cache.get(tenant.id);
     if (cached) return cached;
-    console.log("creating tenant connection",tenant.dbName)
     const dbUrl = this.configService.get<string>('db.postgres.url');
-    const dataSource = new DataSource({
+    const dataSource = new DataSource({ 
       type: 'postgres',
       ...(dbUrl
         ? {
@@ -71,7 +75,7 @@ export class TenantConnectionManager implements OnModuleDestroy {
         ProtocolEntity,
         IndicationEntity,
         ProtocolDocumentMetaEntity,
-        QuestionEntity,
+        QuestionEntity,BusinessConfigEntity,AgentConfigEntity,CallingConfigEntity,FacebookConfigEntity,FacebookFormEntity
       ],
 
       migrations: [
@@ -89,7 +93,10 @@ export class TenantConnectionManager implements OnModuleDestroy {
       throw new Error(`MongoDB URI missing for tenant: ${tenant.slug}`);
     }
     const mongoClient = new MongoClient(tenant.mongoUri);
-    await Promise.all([dataSource.initialize(), mongoClient.connect()]);
+   try{ await Promise.all([dataSource.initialize(), mongoClient.connect()]);}
+   catch(error){
+    throw new Error(`Failed to initialize connections for tenant: ${tenant.slug}`);
+   }
     const connectionContext: TenantConnection = {
       sql: dataSource,
       mongo: mongoClient.db(), // Returns the DB from the URI
