@@ -17,7 +17,7 @@ export class TenantRepository {
     return await this.tenantRepository.count();
   }
 
-  async getAllTenants(query: findTenantDto) {
+  async getAllTenants(query: findTenantDto,  select?: FindOptionsSelect<TenantEntity>,) {
     const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC', status } = query;
 
     const [data, total] = await this.tenantRepository.findAndCount({
@@ -28,6 +28,8 @@ export class TenantRepository {
       order: { [sortBy]: sortOrder },
       skip: (page - 1) * limit,
       take: limit,
+        ...(select && { select }),
+
     });
 
     return { data, total, page, limit };

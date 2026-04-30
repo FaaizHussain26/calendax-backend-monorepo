@@ -66,4 +66,9 @@ export default () => ({
   elevenlabs: {
     apiKey: process.env.ELEVENLABS_API_KEY,
   },
+  twilio:{
+    sid:process.env.TWILIO_SID,
+    authToken:process.env.TWILIO_AUTH_TOKEN,
+    phoneNumber:process.env.TWILIO_PHONENUMBER
+  }
 });

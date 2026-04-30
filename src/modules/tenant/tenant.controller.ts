@@ -38,9 +38,5 @@ export class TenantController {
   async deleteTenant(@Param('id', ParseUUIDPipe) id: string) {
     return await this.tenantService.deleteTenant(id);
   }
-  @Get('internal/tenants/:id')
-@UseGuards(InternalApiKeyGuard)
-getForInternalService(@Param('id') id: string) {
-  return this.tenantService.getConnectionDetails(id);
-}
+
 }

@@ -44,6 +44,13 @@ export class TenantService {
   async getAllTenants(query: findTenantDto) {
     return await this.tenantRepository.getAllTenants(query);
   }
+  async getActiveTenants(): Promise<Array<{ id: string; slug: string }>> {
+const { data: tenants } = await this.tenantRepository.getAllTenants(
+  { status: TenantStatus.ACTIVE },
+  { id: true, slug: true },
+);  return tenants;
+}
+ 
 
   async getTenantById(id: string) {
     const tenant = await this.tenantRepository.getDetailedByTenantId(id);
