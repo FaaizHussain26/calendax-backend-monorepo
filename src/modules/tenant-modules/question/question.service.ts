@@ -19,7 +19,7 @@ export class QuestionService {
 
   constructor(
     private readonly questionRepository: QuestionRepository,
-    private readonly protocolService: ProtocolService,
+    // private readonly protocolService: ProtocolService,
     private readonly configService: ConfigService,
     private readonly protocolDocumentMetaRepository: ProtocolDocumentMetaRepository,
   ) {
@@ -39,14 +39,20 @@ export class QuestionService {
   }
 
   async findByProtocolId(protocolId: string): Promise<QuestionEntity[]> {
-    await this.protocolService.findById(protocolId); // validate protocol exists
+    // await this.protocolService.findById(protocolId); // validate protocol exists
     return this.questionRepository.findByProtocolId(protocolId);
   }
-
+  async findByProtocolAndDocId(protocolId: string, documentId: string) {
+    // await this.protocolService.findById(protocolId);
+    return this.questionRepository.findOneByCondition({ protocolId, documentId });
+  }
   async create(dto: CreateQuestionDto): Promise<QuestionEntity> {
     await this.validateProtocolAndDocument(dto.protocolId, dto.documentId);
     return this.questionRepository.create(dto);
   }
+async existsByProtocolIds(protocolIds: string[]): Promise<Map<string, boolean>> {
+  return this.questionRepository.existsByProtocolIds(protocolIds);
+}
 
   async generateQuestions(
     protocolId: string,
@@ -86,7 +92,7 @@ export class QuestionService {
     protocolId: string,
     mongo: Db,
     indication?: string,
-    additionalContext?: string, 
+    additionalContext?: string,
   ): Promise<{ question: string; summary: string; entity: QuestionEntity }> {
     const currentDoc = await this.protocolDocumentMetaRepository.findCurrentByProtocolId(protocolId);
     if (!currentDoc?.id) {
@@ -97,7 +103,7 @@ export class QuestionService {
     // 1. check if approved question exists — cannot regenerate
     const existing = await this.questionRepository.findOneByCondition({
       protocolId,
-      documentId:currentDoc.id,
+      documentId: currentDoc.id,
       status: QuestionStatus.APPROVED,
     });
     if (existing) {
@@ -142,7 +148,7 @@ export class QuestionService {
     // 6. upsert — update existing pending or create new
     const pendingQuestion = await this.questionRepository.findOneByCondition({
       protocolId,
-      documentId:currentDoc.id,
+      documentId: currentDoc.id,
       status: QuestionStatus.PENDING,
     });
 
@@ -160,7 +166,7 @@ export class QuestionService {
       // create new
       entity = await this.questionRepository.create({
         protocolId,
-        documentId:currentDoc.id,
+        documentId: currentDoc.id,
         question,
         summary,
         indication,
@@ -173,9 +179,9 @@ export class QuestionService {
   }
 
   private async vectorSearch(mongo: Db, queryEmbedding: number[], protocolId: string): Promise<IProtocolDocument[]> {
-console.log("mongo::,",mongo.databaseName,protocolId,PROTOCOL_DOCUMENT_COLLECTION)
+    console.log('mongo::,', mongo.databaseName, protocolId, PROTOCOL_DOCUMENT_COLLECTION);
 
-    let data=await mongo
+    let data = await mongo
       .collection(PROTOCOL_DOCUMENT_COLLECTION)
       .aggregate<IProtocolDocument>([
         {
@@ -195,9 +201,10 @@ console.log("mongo::,",mongo.databaseName,protocolId,PROTOCOL_DOCUMENT_COLLECTIO
             score: { $meta: 'vectorSearchScore' },
           },
         },
-      ]).toArray()
-      console.log("embedding data:",data.length)
-      return data
+      ])
+      .toArray();
+    console.log('embedding data:', data.length);
+    return data;
   }
 
   private async getEmbedding(text: string): Promise<number[]> {
@@ -205,7 +212,7 @@ console.log("mongo::,",mongo.databaseName,protocolId,PROTOCOL_DOCUMENT_COLLECTIO
       model: 'text-embedding-3-small',
       input: text,
     });
-    console.log('res of get embedding:',resp.data[0].embedding.length)
+    console.log('res of get embedding:', resp.data[0].embedding.length);
     return resp.data[0].embedding;
   }
 
@@ -243,7 +250,7 @@ Format your response EXACTLY as:
     };
   }
   private async validateProtocolAndDocument(protocolId: string, documentId: string): Promise<void> {
-    await this.protocolService.findById(protocolId);
+    // await this.protocolService.findById(protocolId);
 
     const document = await this.protocolDocumentMetaRepository.findCurrentByProtocolId(protocolId);
     if (!document || document.id !== documentId) {

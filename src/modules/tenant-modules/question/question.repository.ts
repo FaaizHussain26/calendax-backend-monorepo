@@ -1,5 +1,5 @@
 import { Inject, Injectable, Scope } from '@nestjs/common';
-import { FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import { QuestionEntity } from './question.entity';
 import { QuestionStatus } from '../../../common/enums/question.enum';
 import { ListQuestionsQueryDto } from './question.dto';
@@ -82,4 +82,14 @@ export class QuestionRepository {
   async findOneByCondition(condition: FindOptionsWhere<QuestionEntity>): Promise<QuestionEntity | null> {
     return this.repo.findOne({ where: condition });
   }
+  async existsByProtocolIds(protocolIds: string[]): Promise<Map<string, boolean>> {
+  if (!protocolIds.length) return new Map();
+
+  const results = await this.repo.find({
+    where: { protocolId: In(protocolIds) },
+    select: { protocolId: true },
+  });
+
+  return new Map(results.map((r) => [r.protocolId, true]));
+}
 }

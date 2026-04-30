@@ -3,8 +3,9 @@ import { Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import { ProtocolEntity } from './protocol.entity';
 import { SiteEntity } from '../site/site.entity';
-import { ProtocolStatus } from '../../../common/enums/protocol.enum';
+import { ProtocolDocumentStatus, ProtocolStatus } from '../../../common/enums/protocol.enum';
 import { ListAllProtocolQueryDto } from './protocol.dto';
+import { QuestionService } from '../question/question.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProtocolRepository {
@@ -13,25 +14,25 @@ export class ProtocolRepository {
     private readonly repo: Repository<ProtocolEntity>,
   ) {}
 
-  async findAll(query: ListAllProtocolQueryDto) {
-    const { search, page = 1, limit = 10, all = false, status } = query;
-    const baseWhere = {
-      ...(status && { status }),
-    };
-    const [data, total] = await this.repo.findAndCount({
-      where: search
-        ? [
-            { ...baseWhere, name: ILike(`%${search}%`) },
-            { ...baseWhere, protocolNumber: ILike(`%${search}%`) },
-          ]
-        : baseWhere,
-      relations: { indication: true, sites: true, documents: true },
-      order: { createdAt: 'DESC' },
-      ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
-    });
+async findAll(query: ListAllProtocolQueryDto) {
+  const { search, page = 1, limit = 10, all = false, status } = query;
+  const baseWhere = {
+    ...(status && { status }),
+  };
+  const [data, total] = await this.repo.findAndCount({
+    where: search
+      ? [
+          { ...baseWhere, name: ILike(`%${search}%`) },
+          { ...baseWhere, protocolNumber: ILike(`%${search}%`) },
+        ]
+      : baseWhere,
+    relations: { indication: true, sites: true, documents: true },
+    order: { createdAt: 'DESC' },
+    ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
+  });
 
-    return { data, total, page, limit };
-  }
+  return { data, total, page, limit };
+}
 
   async findById(id: string): Promise<ProtocolEntity | null> {
     console.log('id:', id);

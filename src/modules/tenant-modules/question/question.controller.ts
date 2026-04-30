@@ -23,6 +23,10 @@ export class QuestionController {
     return this.questionService.findByProtocolId(protocolId);
   }
 
+  @Get('protocol/:id/doc/:docId')
+  findByProtocolAndDocId(@Param('id', ParseUUIDPipe) id: string, @Param('docId', ParseUUIDPipe) docId: string) {
+    return this.questionService.findByProtocolAndDocId(id, docId);
+  }
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.questionService.findById(id);

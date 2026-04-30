@@ -12,16 +12,23 @@ import { DocumentModule } from '../../../services/doc/doc.module';
 import { ProtocolDocumentMetaRepository } from './document/document-meta.repository';
 import { DocumentProcessorService } from '../../../services/doc/document-processor.service';
 import { ProtocolDocumentMetaEntity } from './document/document-meta.entity';
+import { QuestionModule } from '../question/question.module';
 
 @Module({
-  imports: [TenantModule, IndicationModule, forwardRef(() => SiteModule), DocumentModule],
+  imports: [
+    TenantModule,
+    IndicationModule,
+    forwardRef(() => SiteModule),
+    forwardRef(() => QuestionModule),
+    DocumentModule,
+  ],
   providers: [
     ProtocolService,
     ProtocolRepository,
     ProtocolDocumentMetaRepository,
     DocumentProcessorService,
     provideTenantRepository(ProtocolEntity),
-    provideTenantRepository(ProtocolDocumentMetaEntity), 
+    provideTenantRepository(ProtocolDocumentMetaEntity),
   ],
   controllers: [ProtocolController],
   exports: [ProtocolService, ProtocolRepository, ProtocolDocumentMetaRepository],

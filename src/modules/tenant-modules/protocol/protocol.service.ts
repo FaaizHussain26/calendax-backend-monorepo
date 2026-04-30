@@ -14,8 +14,9 @@ import { DocumentChunk } from '../../../common/interfaces/document.interface';
 import { ProtocolDocumentMetaRepository } from './document/document-meta.repository';
 import { ProtocolDocumentStatus, ProtocolStatus } from '../../../common/enums/protocol.enum';
 import { DocumentQueueService } from '../../../services/queues/services/document-queue.service';
+import { QuestionService } from '../question/question.service';
 
-@Injectable()
+@Injectable({scope:Scope.REQUEST})
 export class ProtocolService {
   constructor(
     private readonly protocolRepository: ProtocolRepository,
@@ -24,12 +25,27 @@ export class ProtocolService {
     private readonly documentProcessor: DocumentProcessorService,
     private readonly protocolDocumentMetaRepository: ProtocolDocumentMetaRepository,
     private readonly documentQueueService: DocumentQueueService,
+    private readonly questionService:QuestionService
   ) {}
 
   async findAll(query: ListAllProtocolQueryDto) {
-    return this.protocolRepository.findAll(query);
-  }
+  const { data, total, page, limit } = await this.protocolRepository.findAll(query);
 
+  // batch check instead of N individual awaits
+  const eligibleIds = data
+    .filter((p) => p.documentId && p.documentStatus === ProtocolDocumentStatus.COMPLETED)
+    .map((p) => p.id);
+
+  const questionExistsMap = await this.questionService.existsByProtocolIds(eligibleIds);
+
+  const mapped = data.map((protocol) => ({
+    ...protocol,
+    document: protocol.documents?.find((doc) => doc.isCurrent) ?? null,
+    isQuestionGenerated: questionExistsMap.get(protocol.id) ?? false,
+  }));
+
+  return { data: mapped, total, page, limit };
+}
   async findById(id: string): Promise<ProtocolEntity> {
     const protocol = await this.protocolRepository.findById(id);
     if (!protocol) throw new NotFoundException('Protocol not found');
