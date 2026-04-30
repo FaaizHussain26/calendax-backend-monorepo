@@ -25,7 +25,7 @@ export class ProtocolRepository {
             { ...baseWhere, protocolNumber: ILike(`%${search}%`) },
           ]
         : baseWhere,
-      relations: { indication: true, sites: true,documents:true },
+      relations: { indication: true, sites: true, documents: true },
       order: { createdAt: 'DESC' },
       ...(all ? {} : { skip: (page - 1) * limit, take: limit }),
     });
